@@ -1,6 +1,10 @@
 # SonarQube Issues Exporter
 
-A Node.js tool to export SonarQube issues into an interactive HTML report with filtering and search capabilities.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub issues](https://img.shields.io/github/issues/The-Lone-Druid/sonarqube-issues-exporter)](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/issues)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
+
+A Node.js tool to export SonarQube issues into an interactive HTML report with filtering and search capabilities. Transform your SonarQube analysis results into a beautiful, responsive, and feature-rich HTML report.
 
 ## Features
 
