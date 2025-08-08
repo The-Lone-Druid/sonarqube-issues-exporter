@@ -87,14 +87,6 @@ function generateHtml(issues) {
     type: issue.type,
   }));
 
-  const severityColors = {
-    CRITICAL: "bg-red-100 text-red-800",
-    MAJOR: "bg-orange-100 text-orange-800",
-    MINOR: "bg-yellow-100 text-yellow-800",
-    INFO: "bg-blue-100 text-blue-800",
-    BLOCKER: "bg-purple-100 text-purple-800",
-  };
-
   return `
     <!DOCTYPE html>
     <html lang="en">
@@ -284,7 +276,9 @@ function generateHtml(issues) {
 
 // Process and export issues
 async function exportIssues() {
-  const issues = await fetchIssues();
+  let issues = await fetchIssues();
+  // Filter out issues with status 'CLOSED'
+  issues = issues.filter(issue => issue.status !== 'CLOSED');
 
   if (!issues.length) {
     console.log(
