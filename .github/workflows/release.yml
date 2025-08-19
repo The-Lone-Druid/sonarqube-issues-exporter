@@ -60,6 +60,13 @@ jobs:
       - name: 📦 Install dependencies
         run: npm ci
 
+      - name: 🔧 Configure NPM authentication
+        run: |
+          echo "//registry.npmjs.org/:_authToken=\${NODE_AUTH_TOKEN}" > ~/.npmrc
+          echo "registry=https://registry.npmjs.org/" >> ~/.npmrc
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: 🏗️ Build project
         run: npm run build
 
@@ -72,17 +79,12 @@ jobs:
             echo "changes=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: 🏷️ Generate release
+      - name: 🏷️ Generate release and push
         if: steps.check-changes.outputs.changes == 'true'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           npm run release
-
-      - name: 🚀 Push changes
-        if: steps.check-changes.outputs.changes == 'true'
-        run: |
-          git push --follow-tags origin main
 
       - name: 📢 Create GitHub Release
         if: steps.check-changes.outputs.changes == 'true'
@@ -109,4 +111,8 @@ jobs:
         if: steps.check-changes.outputs.changes == 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public
+        run: |
+          # Verify npm is authenticated
+          npm whoami
+          # Publish with explicit registry and access
+          npm publish --access public --registry https://registry.npmjs.org/
