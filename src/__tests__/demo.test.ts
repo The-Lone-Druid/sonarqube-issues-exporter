@@ -9,6 +9,20 @@ import { loadConfig } from '../config';
 import { escapeHtml, extractFilename } from '../utils/helpers';
 
 describe('🚀 SonarQube Issues Exporter - How It Works', () => {
+  beforeEach(() => {
+    // Set up default environment variables for tests
+    process.env.SONARQUBE_URL = 'http://localhost:9000';
+    process.env.SONARQUBE_TOKEN = 'test-token';
+    process.env.SONARQUBE_PROJECT_KEY = 'test-project';
+  });
+
+  afterEach(() => {
+    // Clean up any test environment variables
+    delete process.env.SONARQUBE_URL;
+    delete process.env.SONARQUBE_TOKEN;
+    delete process.env.SONARQUBE_PROJECT_KEY;
+  });
+
   describe('📋 1. Configuration System', () => {
     it('supports multiple configuration methods', () => {
       // Save current env vars
