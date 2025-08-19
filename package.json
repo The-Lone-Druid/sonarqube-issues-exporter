@@ -46,7 +46,7 @@
     "copy-templates": "node -e \"const fs=require('fs-extra'); fs.copySync('src/templates', 'dist/templates'); fs.copySync('src/assets', 'dist/assets');\" || echo 'Templates and assets copied'",
     "commit": "cz",
     "commit:lint": "commitlint --edit",
-    "release": "standard-version",
+    "release": "standard-version --release-as patch",
     "release:minor": "standard-version --release-as minor",
     "release:major": "standard-version --release-as major",
     "release:patch": "standard-version --release-as patch",
