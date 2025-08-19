@@ -1,7 +1,7 @@
 {
   "name": "sonarqube-issues-exporter",
   "version": "3.0.1",
-  "description": "Enterprise-level SonarQube issues exporter with TypeScript support for generating shareable HTML reports",
+  "description": "Enterprise-level SonarQube issues exporter with TypeScript support for generating comprehensive HTML reports with dark theme",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
