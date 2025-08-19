@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.1.0](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/compare/v3.0.0...v3.1.0) (2025-08-19)
+
+
+### 🔧 Maintenance
+
+* package identification ([fec602c](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/fec602c4bc91e057447884f76addd6ea85f878eb))
+
+
+### 🐛 Bug Fixes
+
+* cli ([631d414](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/631d4149f76e3c67ee73f717e6dcc4fad04acc69))
+* github ci ([55d86a3](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/55d86a3f2008722bc487b862614b696bb657eb8a))
+* set environment variables before imports in test files to fix ci validation errors ([9994d92](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/9994d92e477d651bf2c624a498948c7b5ee8b556))
+
+
+### 🚀 Features
+
+* improve auto-deployment workflow with better error handling and permissions ([a014ab4](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/a014ab46a0ad7aa4a08cb0b3ac496f7e4f11053f))
+
+
+### 📚 Documentation
+
+* **.md:** updated all .md files to reflect proper changes and concise documentation ([206c6eb](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/206c6eb1157887d86dc1b6e4336827660cbb38f6))
+* enhance package description to highlight dark theme feature ([887fecc](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/887fecc10e2f12e5edb57700d091072a6b293a3b))
+
 ## 3.0.0 (2025-08-19)
 
 ### ⚠ BREAKING CHANGES
