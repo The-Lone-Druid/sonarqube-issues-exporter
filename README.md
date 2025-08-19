@@ -75,45 +75,238 @@ npm run build
 
 ### Configuration
 
-1. **Environment Variables** (Quick Setup):
+The SonarQube Issues Exporter supports multiple ways to configure your connection and export settings. Choose the method that works best for your workflow.
 
-   ```bash
-   cp .env.example .env
-   # Edit .env with your SonarQube configuration
-   ```
+#### 🎯 Quick Setup (Interactive)
 
-2. **Configuration File** (Recommended):
-   ```bash
-   cp config.example.json config.json
-   # Edit config.json with your settings
-   ```
-
-### Basic Usage
-
-#### Using Global Installation
+For first-time users, use the interactive setup command:
 
 ```bash
-# Export with default configuration
-sonarqube-exporter
-
-# Export with custom options
-sonarqube-exporter --url https://sonarqube.company.com --token your-token --project your-project
-
-# Use short alias
-sq-exporter --output ./reports --filename my-report.html --verbose
+sonarqube-exporter setup
 ```
 
-#### Using NPX (Local Installation)
+This will prompt you for your SonarQube details and create a configuration file for you.
+
+#### 🔧 Configuration Methods (in order of precedence)
+
+1. **CLI Options** (highest priority)
+2. **Environment Variables**
+3. **Configuration Files**
+4. **Default Values** (lowest priority)
+
+#### 📄 Configuration Files
+
+The exporter looks for configuration files in the following order:
+
+1. Custom path via `--config` option
+2. `.sonarqube-exporter.json` (current directory)
+3. `.sonarqube-exporter.js` (current directory)
+4. `sonarqube-exporter.config.json` (current directory)
+5. `~/.sonarqube-exporter.json` (user home directory)
+
+**Example configuration file (`.sonarqube-exporter.json`):**
+
+```json
+{
+  "sonarqube": {
+    "url": "https://sonarqube.company.com",
+    "token": "your-sonarqube-token",
+    "projectKey": "your-project-key",
+    "organization": "your-org"
+  },
+  "export": {
+    "outputPath": "./reports",
+    "filename": "sonarqube-issues-report.html",
+    "excludeStatuses": ["CLOSED"],
+    "includeResolvedIssues": false,
+    "maxIssues": 10000,
+    "template": "default"
+  },
+  "logging": {
+    "level": "info"
+  }
+}
+```
+
+#### 🌍 Environment Variables
+
+| Variable                  | Description                         | Default                        |
+| ------------------------- | ----------------------------------- | ------------------------------ |
+| `SONARQUBE_URL`           | SonarQube server URL                | `http://localhost:9000`        |
+| `SONARQUBE_TOKEN`         | User token for authentication       | **Required**                   |
+| `SONARQUBE_PROJECT_KEY`   | Project key to export               | **Required**                   |
+| `SONARQUBE_ORGANIZATION`  | Organization key (SonarCloud)       | Optional                       |
+| `EXPORT_OUTPUT_PATH`      | Output directory for reports        | `./reports`                    |
+| `EXPORT_FILENAME`         | Output filename                     | `sonarqube-issues-report.html` |
+| `EXPORT_EXCLUDE_STATUSES` | Comma-separated statuses to exclude | `CLOSED`                       |
+| `EXPORT_INCLUDE_RESOLVED` | Include resolved issues             | `false`                        |
+| `EXPORT_MAX_ISSUES`       | Maximum issues to fetch             | `10000`                        |
+| `EXPORT_TEMPLATE`         | Template name for reports           | `default`                      |
+| `LOG_LEVEL`               | Logging level                       | `info`                         |
+
+**Example environment setup:**
+
+```bash
+export SONARQUBE_URL="https://sonarcloud.io"
+export SONARQUBE_TOKEN="your-token-here"
+export SONARQUBE_PROJECT_KEY="your-project-key"
+export SONARQUBE_ORGANIZATION="your-organization"
+sonarqube-exporter export
+```
+
+#### ⚡ CLI Options
+
+All configuration can be overridden via command-line options:
+
+```bash
+# Basic usage with CLI options
+sonarqube-exporter export \
+  --url "https://sonarqube.company.com" \
+  --token "your-token" \
+  --project "your-project-key" \
+  --output "./reports" \
+  --filename "custom-report.html"
+
+# Using short options
+sq-exporter export \
+  -c "./config.json" \
+  -o "./custom-reports" \
+  -f "weekly-report.html" \
+  -v
+
+# Validate configuration
+sonarqube-exporter validate \
+  --url "https://sonarqube.company.com" \
+  --token "your-token" \
+  --project "your-project-key"
+```
+
+### Usage Examples
+
+#### 🚀 Quick Start Examples
+
+```bash
+# 1. Interactive setup (first time)
+sonarqube-exporter setup
+
+# 2. Export with default settings
+sonarqube-exporter export
+
+# 3. Export with custom filename
+sonarqube-exporter export --filename "security-audit-$(date +%Y%m%d).html"
+
+# 4. Export only critical and high severity issues
+sonarqube-exporter export --exclude-statuses "CLOSED,RESOLVED"
+
+# 5. Validate your configuration
+sonarqube-exporter validate
+
+# 6. Export with verbose logging
+sonarqube-exporter export --verbose
+```
+
+#### 🏢 Enterprise Usage Examples
+
+```bash
+# Daily security report
+sonarqube-exporter export \
+  --project "banking-api" \
+  --filename "security-$(date +%Y%m%d).html" \
+  --exclude-statuses "CLOSED" \
+  --max-issues 5000
+
+# Team review report
+sonarqube-exporter export \
+  --project "frontend-app" \
+  --include-resolved \
+  --output "./team-reports" \
+  --filename "code-review-$(date +%Y-%m-%d).html"
+
+# CI/CD Integration
+sonarqube-exporter export \
+  --project "$CI_PROJECT_NAME" \
+  --output "$CI_PROJECT_DIR/artifacts" \
+  --filename "sonarqube-report-$CI_PIPELINE_ID.html"
+```
+
+#### 🐳 Docker Usage
+
+```bash
+# Using environment variables
+docker run --rm \
+  -e SONARQUBE_URL="https://sonarqube.company.com" \
+  -e SONARQUBE_TOKEN="your-token" \
+  -e SONARQUBE_PROJECT_KEY="your-project" \
+  -v $(pwd)/reports:/app/reports \
+  sonarqube-issues-exporter
+
+# Using configuration file
+docker run --rm \
+  -v $(pwd)/.sonarqube-exporter.json:/app/.sonarqube-exporter.json \
+  -v $(pwd)/reports:/app/reports \
+  sonarqube-issues-exporter
+```
+
+## 🛠️ CLI Commands
+
+### Available Commands
+
+#### `export` - Export SonarQube Issues
+
+```bash
+sonarqube-exporter export [options]
+
+Options:
+  -c, --config <path>              Path to configuration file
+  --url <url>                      SonarQube server URL
+  --token <token>                  SonarQube authentication token
+  --project <key>                  SonarQube project key
+  --organization <org>             SonarQube organization (for SonarCloud)
+  -o, --output <path>              Output directory path
+  -f, --filename <name>            Output filename
+  --template <name>                Template name to use (default: 'default')
+  --max-issues <number>            Maximum number of issues to fetch (default: '10000')
+  --include-resolved               Include resolved issues in the report
+  --exclude-statuses <statuses>    Comma-separated list of statuses to exclude (default: 'CLOSED')
+  -v, --verbose                    Enable verbose logging
+  -h, --help                       Display help for command
+```
+
+#### `validate` - Validate Configuration
+
+```bash
+sonarqube-exporter validate [options]
+
+Options:
+  -c, --config <path>              Path to configuration file
+  --url <url>                      SonarQube server URL
+  --token <token>                  SonarQube authentication token
+  --project <key>                  SonarQube project key
+  --organization <org>             SonarQube organization (for SonarCloud)
+  -h, --help                       Display help for command
+```
+
+#### `setup` - Interactive Configuration Setup
+
+```bash
+sonarqube-exporter setup [options]
+
+Options:
+  --global                         Create global configuration file
+  -h, --help                       Display help for command
+```
+
+### NPX Usage (Local Installation)
 
 ```bash
 # Export issues using npx
-npx sonarqube-exporter --help
+npx sonarqube-exporter export --help
 
 # Export with configuration
-npx sonarqube-exporter --config ./config.json
+npx sonarqube-exporter export --config ./config.json
 ```
 
-#### Development Usage
+### Development Usage
 
 ```bash
 # Export issues using npm scripts (for development)
@@ -125,23 +318,6 @@ npm run export -- --config ./config.json
 # Export with CLI options
 npm run export -- --output ./my-reports --filename my-report.html --verbose
 ```
-
-## 📖 Configuration
-
-### Environment Variables
-
-| Variable                  | Description                         | Default                        |
-| ------------------------- | ----------------------------------- | ------------------------------ |
-| `SONARQUBE_URL`           | SonarQube server URL                | `http://localhost:9000`        |
-| `SONARQUBE_TOKEN`         | User token for authentication       | Required                       |
-| `SONARQUBE_PROJECT_KEY`   | Project key to export               | Required                       |
-| `SONARQUBE_ORGANIZATION`  | Organization key (SonarCloud)       | Optional                       |
-| `EXPORT_OUTPUT_PATH`      | Output directory for reports        | `./reports`                    |
-| `EXPORT_FILENAME`         | Output filename                     | `sonarqube-issues-report.html` |
-| `EXPORT_EXCLUDE_STATUSES` | Comma-separated statuses to exclude | `CLOSED`                       |
-| `EXPORT_INCLUDE_RESOLVED` | Include resolved issues             | `false`                        |
-| `EXPORT_MAX_ISSUES`       | Maximum issues to fetch             | `10000`                        |
-| `LOG_LEVEL`               | Logging level                       | `info`                         |
 
 ## 🛠️ Development
 

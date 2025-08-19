@@ -77,7 +77,35 @@ function validateConfig(config: AppConfig): void {
   }
 
   if (errors.length > 0) {
-    throw new Error(`Configuration validation failed:\\n${errors.join('\\n')}`);
+    const configHelp = `
+Configuration validation failed:
+${errors.join('\n')}
+
+💡 To fix this, you can:
+
+1. Set environment variables:
+   export SONARQUBE_URL="https://your-sonarqube-instance.com"
+   export SONARQUBE_TOKEN="your-sonarqube-token"
+   export SONARQUBE_PROJECT_KEY="your-project-key"
+
+2. Create a .sonarqube-exporter.json file in your current directory:
+   {
+     "sonarqube": {
+       "url": "https://your-sonarqube-instance.com",
+       "token": "your-sonarqube-token",
+       "projectKey": "your-project-key"
+     }
+   }
+
+3. Use CLI options:
+   sonarqube-exporter --url "https://your-sonarqube-instance.com" --token "your-token" --project "your-project"
+
+4. Run the setup command for guided configuration:
+   sonarqube-exporter setup
+
+For more help, visit: https://github.com/The-Lone-Druid/sonarqube-issues-exporter#readme
+`;
+    throw new Error(configHelp);
   }
 }
 
@@ -105,16 +133,29 @@ function loadConfigFile(configPath: string): Partial<AppConfig> {
 export function loadConfig(options: ConfigLoadOptions = {}): AppConfig {
   let config = { ...getDefaultConfig() };
 
-  // Load from config file if provided
-  if (options.configPath) {
-    const fileConfig = loadConfigFile(options.configPath);
-    config = {
-      ...config,
-      ...fileConfig,
-      sonarqube: { ...config.sonarqube, ...fileConfig.sonarqube },
-      export: { ...config.export, ...fileConfig.export },
-      logging: { ...config.logging, ...fileConfig.logging },
-    };
+  // Look for config files in multiple locations
+  const configPaths = [
+    options.configPath,
+    '.sonarqube-exporter.json',
+    '.sonarqube-exporter.js',
+    'sonarqube-exporter.config.json',
+    process.env.HOME ? `${process.env.HOME}/.sonarqube-exporter.json` : null,
+    process.env.USERPROFILE ? `${process.env.USERPROFILE}/.sonarqube-exporter.json` : null,
+  ].filter(Boolean) as string[];
+
+  // Load from the first available config file
+  for (const configPath of configPaths) {
+    if (existsSync(configPath)) {
+      const fileConfig = loadConfigFile(configPath);
+      config = {
+        ...config,
+        ...fileConfig,
+        sonarqube: { ...config.sonarqube, ...fileConfig.sonarqube },
+        export: { ...config.export, ...fileConfig.export },
+        logging: { ...config.logging, ...fileConfig.logging },
+      };
+      break;
+    }
   }
 
   // Apply overrides
@@ -132,5 +173,20 @@ export function loadConfig(options: ConfigLoadOptions = {}): AppConfig {
   return config;
 }
 
-// Default config instance
-export const appConfig = loadConfig();
+/**
+ * Load configuration without validation (for CLI help and setup commands)
+ */
+export function loadConfigSafe(options: ConfigLoadOptions = {}): AppConfig {
+  try {
+    return loadConfig(options);
+  } catch (error) {
+    // Return default config without validation for CLI help
+    // This allows the CLI to show help and setup commands even with invalid config
+    console.debug('Configuration validation failed, using defaults for CLI help:', error);
+    return { ...getDefaultConfig() };
+  }
+}
+
+// Remove the automatic config loading at module level
+// This was causing issues when the tool is used globally
+// export const appConfig = loadConfig();

@@ -18,6 +18,18 @@ export interface ExportCommandOptions {
   /** Path to the configuration file */
   config?: string;
 
+  /** SonarQube server URL */
+  url?: string;
+
+  /** SonarQube authentication token */
+  token?: string;
+
+  /** SonarQube project key */
+  project?: string;
+
+  /** SonarQube organization (for SonarCloud) */
+  organization?: string;
+
   /** Output directory path for the generated report */
   output?: string;
 
@@ -49,6 +61,29 @@ export interface ExportCommandOptions {
 export interface ValidateCommandOptions {
   /** Path to the configuration file to validate */
   config?: string;
+
+  /** SonarQube server URL */
+  url?: string;
+
+  /** SonarQube authentication token */
+  token?: string;
+
+  /** SonarQube project key */
+  project?: string;
+
+  /** SonarQube organization (for SonarCloud) */
+  organization?: string;
+}
+
+/**
+ * Options for the setup command in the CLI
+ *
+ * @interface SetupCommandOptions
+ * @description Configuration options available for the setup command
+ */
+export interface SetupCommandOptions {
+  /** Create global configuration file instead of local */
+  global?: boolean;
 }
 
 /**
@@ -68,7 +103,7 @@ export interface BaseCommandOptions {
  * @type CLICommandOptions
  * @description Represents any valid CLI command options
  */
-export type CLICommandOptions = ExportCommandOptions | ValidateCommandOptions;
+export type CLICommandOptions = ExportCommandOptions | ValidateCommandOptions | SetupCommandOptions;
 
 /**
  * CLI command names enum
@@ -82,6 +117,9 @@ export enum CLICommands {
 
   /** Validate SonarQube connection and configuration */
   VALIDATE = 'validate',
+
+  /** Setup configuration interactively */
+  SETUP = 'setup',
 
   /** Display help information */
   HELP = 'help',
