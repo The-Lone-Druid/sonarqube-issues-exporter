@@ -87,6 +87,29 @@ function generateHtml(issues) {
     type: issue.type,
   }));
 
+  // Calculate metrics
+  const metrics = {
+    total: issues.length,
+    severities: {
+      BLOCKER: issues.filter(i => i.severity === 'BLOCKER').length,
+      CRITICAL: issues.filter(i => i.severity === 'CRITICAL').length,
+      MAJOR: issues.filter(i => i.severity === 'MAJOR').length,
+      MINOR: issues.filter(i => i.severity === 'MINOR').length,
+      INFO: issues.filter(i => i.severity === 'INFO').length,
+    },
+    types: {
+      BUG: issues.filter(i => i.type === 'BUG').length,
+      VULNERABILITY: issues.filter(i => i.type === 'VULNERABILITY').length,
+      CODE_SMELL: issues.filter(i => i.type === 'CODE_SMELL').length,
+    },
+    statuses: {
+      OPEN: issues.filter(i => i.status === 'OPEN').length,
+      CONFIRMED: issues.filter(i => i.status === 'CONFIRMED').length,
+      RESOLVED: issues.filter(i => i.status === 'RESOLVED').length,
+      REOPENED: issues.filter(i => i.status === 'REOPENED').length,
+    }
+  };
+
   return `
     <!DOCTYPE html>
     <html lang="en">
@@ -97,6 +120,7 @@ function generateHtml(issues) {
       <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
       <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
       <link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" rel="stylesheet">
+      <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
       <style>
         body {
           padding: 0;
@@ -111,6 +135,39 @@ function generateHtml(issues) {
         }
         .table-container {
           margin-top: 1rem;
+        }
+        .border-left-primary {
+          border-left: 0.25rem solid #4e73df !important;
+        }
+        .border-left-danger {
+          border-left: 0.25rem solid #e74a3b !important;
+        }
+        .border-left-warning {
+          border-left: 0.25rem solid #f6c23e !important;
+        }
+        .border-left-info {
+          border-left: 0.25rem solid #36b9cc !important;
+        }
+        .text-gray-800 {
+          color: #5a5c69 !important;
+        }
+        .text-gray-300 {
+          color: #dddfeb !important;
+        }
+        .shadow {
+          box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+        }
+        .btn-link:hover {
+          text-decoration: none !important;
+        }
+        .btn-link .fas.fa-chevron-down {
+          transition: transform 0.3s ease-in-out;
+        }
+        .btn-link[aria-expanded="true"] .fas.fa-chevron-down {
+          transform: rotate(180deg);
+        }
+        .btn-link:focus {
+          box-shadow: none;
         }
         .severity-badge {
           padding: 0.25rem 0.5rem;
@@ -159,7 +216,177 @@ function generateHtml(issues) {
     <body class="bg-light">
       <div class="content-wrapper">
         <div class="container-fluid">
-          <h1 class="h3 mb-3">SonarQube Issues Report</h1>
+          <h1 class="h3 mb-4">SonarQube Issues Report</h1>
+          
+          <!-- Collapsible Metrics Overview -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <button class="btn btn-link text-decoration-none p-0 w-100 text-start" type="button" data-bs-toggle="collapse" data-bs-target="#metricsCollapse" aria-expanded="false" aria-controls="metricsCollapse">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h5 class="mb-0 text-primary">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Issues Metrics Overview
+                  </h5>
+                  <i class="fas fa-chevron-down"></i>
+                </div>
+              </button>
+            </div>
+            <div class="collapse" id="metricsCollapse">
+              <div class="card-body">
+                <!-- Metrics Overview -->
+                <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-3">
+              <div class="card border-left-primary shadow h-100">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Issues</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">${metrics.total}</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-bug fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 mb-3">
+              <div class="card border-left-danger shadow h-100">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Critical Issues</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">${metrics.severities.BLOCKER + metrics.severities.CRITICAL}</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 mb-3">
+              <div class="card border-left-warning shadow h-100">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Bugs</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">${metrics.types.BUG}</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-times-circle fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 mb-3">
+              <div class="card border-left-info shadow h-100">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Vulnerabilities</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">${metrics.types.VULNERABILITY}</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-shield-alt fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Detailed Metrics -->
+          <div class="row mb-4">
+            <div class="col-lg-6 mb-3">
+              <div class="card shadow">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Issues by Severity</h6>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-sm-6">
+                      <div class="mb-2">
+                        <span class="severity-badge severity-BLOCKER">BLOCKER</span>
+                        <span class="float-end fw-bold">${metrics.severities.BLOCKER}</span>
+                      </div>
+                      <div class="mb-2">
+                        <span class="severity-badge severity-CRITICAL">CRITICAL</span>
+                        <span class="float-end fw-bold">${metrics.severities.CRITICAL}</span>
+                      </div>
+                      <div class="mb-2">
+                        <span class="severity-badge severity-MAJOR">MAJOR</span>
+                        <span class="float-end fw-bold">${metrics.severities.MAJOR}</span>
+                      </div>
+                    </div>
+                    <div class="col-sm-6">
+                      <div class="mb-2">
+                        <span class="severity-badge severity-MINOR">MINOR</span>
+                        <span class="float-end fw-bold">${metrics.severities.MINOR}</span>
+                      </div>
+                      <div class="mb-2">
+                        <span class="severity-badge severity-INFO">INFO</span>
+                        <span class="float-end fw-bold">${metrics.severities.INFO}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-lg-6 mb-3">
+              <div class="card shadow">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Issues by Type & Status</h6>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-sm-6">
+                      <h6 class="text-secondary">By Type</h6>
+                      <div class="mb-2">
+                        <span class="type-badge type-BUG">BUG</span>
+                        <span class="float-end fw-bold">${metrics.types.BUG}</span>
+                      </div>
+                      <div class="mb-2">
+                        <span class="type-badge type-VULNERABILITY">VULNERABILITY</span>
+                        <span class="float-end fw-bold">${metrics.types.VULNERABILITY}</span>
+                      </div>
+                      <div class="mb-2">
+                        <span class="type-badge type-CODE_SMELL">CODE_SMELL</span>
+                        <span class="float-end fw-bold">${metrics.types.CODE_SMELL}</span>
+                      </div>
+                    </div>
+                    <div class="col-sm-6">
+                      <h6 class="text-secondary">By Status</h6>
+                      <div class="mb-2">
+                        <span class="badge bg-danger">OPEN</span>
+                        <span class="float-end fw-bold">${metrics.statuses.OPEN}</span>
+                      </div>
+                      <div class="mb-2">
+                        <span class="badge bg-warning">CONFIRMED</span>
+                        <span class="float-end fw-bold">${metrics.statuses.CONFIRMED}</span>
+                      </div>
+                      <div class="mb-2">
+                        <span class="badge bg-success">RESOLVED</span>
+                        <span class="float-end fw-bold">${metrics.statuses.RESOLVED}</span>
+                      </div>
+                      <div class="mb-2">
+                        <span class="badge bg-info">REOPENED</span>
+                        <span class="float-end fw-bold">${metrics.statuses.REOPENED}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+                </div>
+              </div>
+            </div>
+          </div>
           
           <div class="card">
             <div class="card-header">
