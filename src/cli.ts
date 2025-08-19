@@ -6,6 +6,7 @@ import { initLogger, getLogger } from './utils';
 import { SonarQubeService } from './services';
 import { HtmlExporter } from './exporters';
 import type { ExportCommandOptions, ValidateCommandOptions } from './types';
+import * as packageJson from '../package.json';
 
 // Helper function to build configuration overrides
 function buildConfigOverrides(options: ExportCommandOptions): any {
@@ -61,7 +62,7 @@ const program = new Command();
 program
   .name('sonarqube-exporter')
   .description('Export SonarQube issues to HTML reports')
-  .version('2.0.0');
+  .version(packageJson.version);
 
 program
   .command('export')
