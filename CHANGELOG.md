@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 3.0.0 (2025-08-19)
+
+### ⚠ BREAKING CHANGES
+
+- Complete project restructure - use npm installation instead of direct script
+
+### 🚀 Features
+
+- added dark theme ([e09812f](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/e09812f8cf729fe84b640dae5291932ce52beed1))
+- added metrics for sonarqube issues ([337ef57](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/337ef57f10697d466f112a6e810a90925a3353ff))
+- github repository configuration files ([c54e515](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/c54e5156519b64a9914dd40b60a604de7a96b1cc))
+- implemented and tested sonarqube issues exporter ([819970b](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/819970bb19f24451d29a330a6b827aceb4ccd045))
+- transform to enterprise npm package with automated workflows ([2b5f13c](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/2b5f13ce1313171466c4e7fbe6f46d94106696f7))
+- updated docs ([95b948c](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/95b948cf125e33f1e58cb5989b5d6e19ef55c416))
+
+### 🐛 Bug Fixes
+
+- configure line endings and resolve crlf issues ([5528ebc](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/5528ebca7a1e69c18ba6d144861d5f884fe2c8b1))
+- filtering out closed issues, removing unwanted code ([65d8015](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/65d80154a324c9446902afe6b078609a25e25c71))
+- git ignored generated .html report ([99cb72f](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/99cb72f2450191b8316b9371f29687b5b41e128d))
+- removed html report ifle ([fbac673](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/fbac6730a1c43a02c566685c8f2aed0b6d2082d2))
+- removed workflow files ([e345ffe](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/e345ffe457d328ed821834cc5c54ca3dfe87603b))
+
+### 📚 Documentation
+
+- add comprehensive versioning automation guide ([1f112ea](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/1f112ea86795a468b10a626edbe6f258cd28ddfe))
+- added setup documentation and contribution help ([6a46e8c](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/6a46e8cb53e0593303ce2ed48b1e30eef1c40a03))
+
 ## [2.0.0](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/releases/tag/v2.0.0) (2025-08-19)
 
 ### 🚀 Features
