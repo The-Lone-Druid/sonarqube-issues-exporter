@@ -6,7 +6,12 @@ import { initLogger, getLogger } from './utils';
 import { SonarQubeService } from './services';
 import { HtmlExporter } from './exporters';
 import type { ExportCommandOptions, ValidateCommandOptions } from './types';
-import * as packageJson from '../package.json';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
+// Read package version
+const packageJsonPath = join(__dirname, '../package.json');
+const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
 
 // Helper function to build configuration overrides
 function buildConfigOverrides(options: ExportCommandOptions): any {

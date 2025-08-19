@@ -2,6 +2,20 @@ import { loadConfig } from '../config';
 import { escapeHtml, extractFilename, calculateMetrics } from '../utils/helpers';
 
 describe('Configuration Management', () => {
+  beforeEach(() => {
+    // Mock required environment variables
+    process.env.SONARQUBE_URL = 'http://localhost:9000';
+    process.env.SONARQUBE_TOKEN = 'test-token';
+    process.env.SONARQUBE_PROJECT_KEY = 'test-project';
+  });
+
+  afterEach(() => {
+    // Clean up environment variables
+    delete process.env.SONARQUBE_URL;
+    delete process.env.SONARQUBE_TOKEN;
+    delete process.env.SONARQUBE_PROJECT_KEY;
+  });
+
   it('should load default configuration', () => {
     // This will use environment variables or defaults
     const config = loadConfig();
