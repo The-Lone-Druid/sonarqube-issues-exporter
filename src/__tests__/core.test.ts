@@ -1,9 +1,14 @@
+// Set up environment variables before any imports
+process.env.SONARQUBE_URL = 'http://localhost:9000';
+process.env.SONARQUBE_TOKEN = 'test-token';
+process.env.SONARQUBE_PROJECT_KEY = 'test-project';
+
 import { loadConfig } from '../config';
 import { escapeHtml, extractFilename, calculateMetrics } from '../utils/helpers';
 
 describe('Configuration Management', () => {
   beforeEach(() => {
-    // Mock required environment variables
+    // Ensure environment variables are set for each test
     process.env.SONARQUBE_URL = 'http://localhost:9000';
     process.env.SONARQUBE_TOKEN = 'test-token';
     process.env.SONARQUBE_PROJECT_KEY = 'test-project';

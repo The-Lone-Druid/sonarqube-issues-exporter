@@ -5,12 +5,17 @@
  * of the enterprise-level SonarQube Issues Exporter.
  */
 
+// Set up environment variables before any imports
+process.env.SONARQUBE_URL = 'http://localhost:9000';
+process.env.SONARQUBE_TOKEN = 'test-token';
+process.env.SONARQUBE_PROJECT_KEY = 'test-project';
+
 import { loadConfig } from '../config';
 import { escapeHtml, extractFilename } from '../utils/helpers';
 
 describe('🚀 SonarQube Issues Exporter - How It Works', () => {
   beforeEach(() => {
-    // Set up default environment variables for tests
+    // Ensure environment variables are set for each test
     process.env.SONARQUBE_URL = 'http://localhost:9000';
     process.env.SONARQUBE_TOKEN = 'test-token';
     process.env.SONARQUBE_PROJECT_KEY = 'test-project';
