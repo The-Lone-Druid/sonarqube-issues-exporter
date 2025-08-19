@@ -5,7 +5,7 @@ describe('Configuration Management', () => {
   it('should load default configuration', () => {
     // This will use environment variables or defaults
     const config = loadConfig();
-    
+
     expect(config).toBeDefined();
     expect(config.sonarqube).toBeDefined();
     expect(config.export).toBeDefined();

@@ -10,7 +10,7 @@ jobs:
   lint-and-test:
     name: 🧪 Lint & Test
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
         node-version: [18, 20]
@@ -49,7 +49,7 @@ jobs:
     name: 📝 Commit Lint
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-    
+
     steps:
       - name: 🛎️ Checkout code
         uses: actions/checkout@v4
@@ -71,7 +71,7 @@ jobs:
   security:
     name: 🔒 Security Audit
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: 🛎️ Checkout code
         uses: actions/checkout@v4

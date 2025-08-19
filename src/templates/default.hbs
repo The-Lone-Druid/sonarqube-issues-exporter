@@ -1,593 +1,649 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SonarQube Issues Report - {{metadata.projectKey}}</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-  <link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-  <style>
-    :root {
-      --bs-body-bg: #ffffff;
-      --bs-body-color: #212529;
-      --bs-card-bg: #ffffff;
-      --bs-card-border-color: rgba(0,0,0,.125);
-      --bs-border-color: #dee2e6;
-      --bs-secondary-bg: #f8f9fa;
-      --shadow-color: rgba(58, 59, 69, 0.15);
-    }
-    
-    [data-bs-theme="dark"] {
-      --bs-body-bg: #212529;
-      --bs-body-color: #ffffff;
-      --bs-card-bg: #343a40;
-      --bs-card-border-color: rgba(255,255,255,.125);
-      --bs-border-color: #495057;
-      --bs-secondary-bg: #6c757d;
-      --shadow-color: rgba(0, 0, 0, 0.25);
-    }
-    
-    body {
-      background-color: var(--bs-body-bg) !important;
-      color: var(--bs-body-color) !important;
-      transition: background-color 0.3s ease, color 0.3s ease;
-      padding: 0;
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .content-wrapper {
-      flex: 1;
-      padding: 1rem;
-    }
-    
-    .card {
-      background-color: var(--bs-card-bg) !important;
-      border-color: var(--bs-card-border-color) !important;
-    }
-    
-    .table {
-      --bs-table-bg: var(--bs-card-bg);
-      --bs-table-border-color: var(--bs-border-color);
-    }
-    
-    .form-select, .form-control {
-      background-color: var(--bs-card-bg) !important;
-      border-color: var(--bs-border-color) !important;
-      color: var(--bs-body-color) !important;
-    }
-    
-    .border-left-primary { border-left: 0.25rem solid #4e73df !important; }
-    .border-left-danger { border-left: 0.25rem solid #e74a3b !important; }
-    .border-left-warning { border-left: 0.25rem solid #f6c23e !important; }
-    .border-left-info { border-left: 0.25rem solid #36b9cc !important; }
-    
-    .text-gray-800 { color: #5a5c69 !important; }
-    .text-gray-300 { color: #dddfeb !important; }
-    
-    .shadow {
-      box-shadow: 0 0.15rem 1.75rem 0 var(--shadow-color) !important;
-    }
-    
-    .severity-badge {
-      padding: 0.25rem 0.5rem;
-      border-radius: 0.25rem;
-      font-weight: 500;
-    }
-    
-    .severity-BLOCKER { background-color: #dc3545; color: white; }
-    .severity-CRITICAL { background-color: #fd7e14; color: white; }
-    .severity-MAJOR { background-color: #ffc107; color: black; }
-    .severity-MINOR { background-color: #0dcaf0; color: black; }
-    .severity-INFO { background-color: #6c757d; color: white; }
-    
-    .type-badge {
-      padding: 0.25rem 0.5rem;
-      border-radius: 0.25rem;
-      font-weight: 500;
-    }
-    
-    .type-BUG { background-color: #dc3545; color: white; }
-    .type-VULNERABILITY { background-color: #fd7e14; color: white; }
-    .type-CODE_SMELL { background-color: #0dcaf0; color: black; }
-    .type-SECURITY_HOTSPOT { background-color: #ffc107; color: black; }
-    
-    /* Dark theme adjustments */
-    [data-bs-theme="dark"] {
-      --shadow-color: rgba(255, 255, 255, 0.15);
-    }
-    
-    [data-bs-theme="dark"] body {
-      background-color: #1a1a1a !important;
-    }
-    
-    [data-bs-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > td {
-      background-color: rgba(255, 255, 255, 0.05);
-    }
-    
-    [data-bs-theme="dark"] .table-hover > tbody > tr:hover > td {
-      background-color: rgba(255, 255, 255, 0.075);
-    }
-    
-    .btn-link:hover { text-decoration: none !important; }
-    .btn-link .fas.fa-chevron-down { transition: transform 0.3s ease-in-out; }
-    .btn-link[aria-expanded="true"] .fas.fa-chevron-down { transform: rotate(180deg); }
-    .btn-link:focus { box-shadow: none; }
-    
-    .report-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 2rem 0;
-      margin-bottom: 2rem;
-    }
-    
-    .report-title {
-      font-size: 2.5rem;
-      font-weight: bold;
-      margin-bottom: 0.5rem;
-    }
-    
-    .report-subtitle {
-      font-size: 1.1rem;
-      opacity: 0.9;
-    }
-    
-    /* GitHub link styles */
-    .github-link {
-      transition: all 0.3s ease;
-      text-decoration: none !important;
-    }
-    
-    .github-link:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-    
-    [data-bs-theme="dark"] .github-link:hover {
-      box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
-    }
-    
-    .header-actions {
-      gap: 0.5rem;
-    }
-    
-    /* Footer styles */
-    .report-footer {
-      background-color: var(--bs-secondary-bg);
-      border-color: var(--bs-border-color) !important;
-      color: var(--bs-body-color) !important;
-    }
-    
-    .report-footer .btn {
-      border: 1px solid var(--bs-border-color);
-      background-color: var(--bs-body-bg);
-      color: var(--bs-body-color);
-      transition: all 0.2s ease;
-    }
-    
-    .report-footer .btn:hover {
-      transform: translateY(-1px);
-      background-color: var(--bs-primary);
-      border-color: var(--bs-primary);
-      color: white;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    [data-bs-theme="dark"] .report-footer {
-      background-color: #2d2d2d;
-      color: #e9ecef;
-    }
-    
-    [data-bs-theme="dark"] .report-footer .btn {
-      background-color: #3d3d3d;
-      border-color: #495057;
-      color: #e9ecef;
-    }
-    
-    [data-bs-theme="dark"] .report-footer .btn:hover {
-      background-color: #0d6efd;
-      border-color: #0d6efd;
-      color: white;
-      box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
-    }
-  </style>
-</head>
-<body>
-  <div class="report-header">
-    <div class="container-fluid">
-      <div class="d-flex justify-content-between align-items-center">
-        <div>
-          <h1 class="report-title">SonarQube Issues Report</h1>
-          <p class="report-subtitle mb-0">
-            Project: <strong>{{metadata.projectKey}}</strong> | 
-            Generated: {{metadata.generatedAt}} |
-            Total Issues: <strong>{{metadata.totalIssues}}</strong>
-          </p>
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>SonarQube Issues Report - {{metadata.projectKey}}</title>
+    <link
+      href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css'
+      rel='stylesheet'
+    />
+    <link
+      href='https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css'
+      rel='stylesheet'
+    />
+    <link
+      href='https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css'
+      rel='stylesheet'
+    />
+    <link
+      href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
+      rel='stylesheet'
+    />
+    <style>
+      :root {
+        --bs-body-bg: #ffffff;
+        --bs-body-color: #212529;
+        --bs-card-bg: #ffffff;
+        --bs-card-border-color: rgba(0, 0, 0, 0.125);
+        --bs-border-color: #dee2e6;
+        --bs-secondary-bg: #f8f9fa;
+        --shadow-color: rgba(58, 59, 69, 0.15);
+      }
+
+      [data-bs-theme='dark'] {
+        --bs-body-bg: #212529;
+        --bs-body-color: #ffffff;
+        --bs-card-bg: #343a40;
+        --bs-card-border-color: rgba(255, 255, 255, 0.125);
+        --bs-border-color: #495057;
+        --bs-secondary-bg: #6c757d;
+        --shadow-color: rgba(0, 0, 0, 0.25);
+      }
+
+      body {
+        background-color: var(--bs-body-bg) !important;
+        color: var(--bs-body-color) !important;
+        transition:
+          background-color 0.3s ease,
+          color 0.3s ease;
+        padding: 0;
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .content-wrapper {
+        flex: 1;
+        padding: 1rem;
+      }
+
+      .card {
+        background-color: var(--bs-card-bg) !important;
+        border-color: var(--bs-card-border-color) !important;
+      }
+
+      .table {
+        --bs-table-bg: var(--bs-card-bg);
+        --bs-table-border-color: var(--bs-border-color);
+      }
+
+      .form-select,
+      .form-control {
+        background-color: var(--bs-card-bg) !important;
+        border-color: var(--bs-border-color) !important;
+        color: var(--bs-body-color) !important;
+      }
+
+      .border-left-primary {
+        border-left: 0.25rem solid #4e73df !important;
+      }
+      .border-left-danger {
+        border-left: 0.25rem solid #e74a3b !important;
+      }
+      .border-left-warning {
+        border-left: 0.25rem solid #f6c23e !important;
+      }
+      .border-left-info {
+        border-left: 0.25rem solid #36b9cc !important;
+      }
+
+      .text-gray-800 {
+        color: #5a5c69 !important;
+      }
+      .text-gray-300 {
+        color: #dddfeb !important;
+      }
+
+      .shadow {
+        box-shadow: 0 0.15rem 1.75rem 0 var(--shadow-color) !important;
+      }
+
+      .severity-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-weight: 500;
+      }
+
+      .severity-BLOCKER {
+        background-color: #dc3545;
+        color: white;
+      }
+      .severity-CRITICAL {
+        background-color: #fd7e14;
+        color: white;
+      }
+      .severity-MAJOR {
+        background-color: #ffc107;
+        color: black;
+      }
+      .severity-MINOR {
+        background-color: #0dcaf0;
+        color: black;
+      }
+      .severity-INFO {
+        background-color: #6c757d;
+        color: white;
+      }
+
+      .type-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-weight: 500;
+      }
+
+      .type-BUG {
+        background-color: #dc3545;
+        color: white;
+      }
+      .type-VULNERABILITY {
+        background-color: #fd7e14;
+        color: white;
+      }
+      .type-CODE_SMELL {
+        background-color: #0dcaf0;
+        color: black;
+      }
+      .type-SECURITY_HOTSPOT {
+        background-color: #ffc107;
+        color: black;
+      }
+
+      /* Dark theme adjustments */
+      [data-bs-theme='dark'] {
+        --shadow-color: rgba(255, 255, 255, 0.15);
+      }
+
+      [data-bs-theme='dark'] body {
+        background-color: #1a1a1a !important;
+      }
+
+      [data-bs-theme='dark'] .table-striped > tbody > tr:nth-of-type(odd) > td {
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+
+      [data-bs-theme='dark'] .table-hover > tbody > tr:hover > td {
+        background-color: rgba(255, 255, 255, 0.075);
+      }
+
+      .btn-link:hover {
+        text-decoration: none !important;
+      }
+      .btn-link .fas.fa-chevron-down {
+        transition: transform 0.3s ease-in-out;
+      }
+      .btn-link[aria-expanded='true'] .fas.fa-chevron-down {
+        transform: rotate(180deg);
+      }
+      .btn-link:focus {
+        box-shadow: none;
+      }
+
+      .report-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+      }
+
+      .report-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+      }
+
+      .report-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+
+      /* GitHub link styles */
+      .github-link {
+        transition: all 0.3s ease;
+        text-decoration: none !important;
+      }
+
+      .github-link:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      [data-bs-theme='dark'] .github-link:hover {
+        box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
+      }
+
+      .header-actions {
+        gap: 0.5rem;
+      }
+
+      /* Footer styles */
+      .report-footer {
+        background-color: var(--bs-secondary-bg);
+        border-color: var(--bs-border-color) !important;
+        color: var(--bs-body-color) !important;
+      }
+
+      .report-footer .btn {
+        border: 1px solid var(--bs-border-color);
+        background-color: var(--bs-body-bg);
+        color: var(--bs-body-color);
+        transition: all 0.2s ease;
+      }
+
+      .report-footer .btn:hover {
+        transform: translateY(-1px);
+        background-color: var(--bs-primary);
+        border-color: var(--bs-primary);
+        color: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      [data-bs-theme='dark'] .report-footer {
+        background-color: #2d2d2d;
+        color: #e9ecef;
+      }
+
+      [data-bs-theme='dark'] .report-footer .btn {
+        background-color: #3d3d3d;
+        border-color: #495057;
+        color: #e9ecef;
+      }
+
+      [data-bs-theme='dark'] .report-footer .btn:hover {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: white;
+        box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
+      }
+    </style>
+  </head>
+  <body>
+    <div class='report-header'>
+      <div class='container-fluid'>
+        <div class='d-flex justify-content-between align-items-center'>
+          <div>
+            <h1 class='report-title'>SonarQube Issues Report</h1>
+            <p class='report-subtitle mb-0'>
+              Project:
+              <strong>{{metadata.projectKey}}</strong>
+              | Generated:
+              {{metadata.generatedAt}}
+              | Total Issues:
+              <strong>{{metadata.totalIssues}}</strong>
+            </p>
+          </div>
+          <div class='d-flex align-items-center header-actions'>
+            <a
+              href='https://github.com/The-Lone-Druid/sonarqube-issues-exporter'
+              target='_blank'
+              rel='noopener noreferrer'
+              class='btn btn-outline-light btn-sm github-link'
+              title='View source code on GitHub'
+            >
+              <i class='fab fa-github'></i>
+              <span class='d-none d-md-inline ms-1'>Source</span>
+            </a>
+            <div class='theme-toggle'>
+              <button id='theme-toggle' class='btn btn-outline-light btn-sm' title='Toggle theme'>
+                <i class='fas fa-moon' id='theme-icon'></i>
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="d-flex align-items-center header-actions">
-          <a href="https://github.com/The-Lone-Druid/sonarqube-issues-exporter" 
-             target="_blank" 
-             rel="noopener noreferrer"
-             class="btn btn-outline-light btn-sm github-link" 
-             title="View source code on GitHub">
-            <i class="fab fa-github"></i>
-            <span class="d-none d-md-inline ms-1">Source</span>
-          </a>
-          <div class="theme-toggle">
-            <button id="theme-toggle" class="btn btn-outline-light btn-sm" title="Toggle theme">
-              <i class="fas fa-moon" id="theme-icon"></i>
+      </div>
+    </div>
+
+    <div class='content-wrapper'>
+      <div class='container-fluid'>
+        <!-- Collapsible Metrics Overview -->
+        <div class='card mb-4'>
+          <div class='card-header'>
+            <button
+              class='btn btn-link text-decoration-none p-0 w-100 text-start'
+              type='button'
+              data-bs-toggle='collapse'
+              data-bs-target='#metricsCollapse'
+              aria-expanded='false'
+              aria-controls='metricsCollapse'
+            >
+              <div class='d-flex justify-content-between align-items-center'>
+                <h5 class='mb-0 text-primary'>
+                  <i class='fas fa-chart-bar me-2'></i>
+                  Issues Metrics Overview
+                </h5>
+                <i class='fas fa-chevron-down'></i>
+              </div>
             </button>
           </div>
+          <div class='collapse' id='metricsCollapse'>
+            <div class='card-body'>
+              <!-- Summary Cards -->
+              <div class='row mb-4'>
+                <div class='col-xl-3 col-md-6 mb-3'>
+                  <div class='card border-left-primary shadow h-100'>
+                    <div class='card-body'>
+                      <div class='row no-gutters align-items-center'>
+                        <div class='col mr-2'>
+                          <div
+                            class='text-xs font-weight-bold text-primary text-uppercase mb-1'
+                          >Total Issues</div>
+                          <div
+                            class='h5 mb-0 font-weight-bold text-gray-800'
+                          >{{metrics.total}}</div>
+                        </div>
+                        <div class='col-auto'>
+                          <i class='fas fa-bug fa-2x text-gray-300'></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class='col-xl-3 col-md-6 mb-3'>
+                  <div class='card border-left-danger shadow h-100'>
+                    <div class='card-body'>
+                      <div class='row no-gutters align-items-center'>
+                        <div class='col mr-2'>
+                          <div
+                            class='text-xs font-weight-bold text-danger text-uppercase mb-1'
+                          >Critical Issues</div>
+                          <div class='h5 mb-0 font-weight-bold text-gray-800'>{{add
+                              metrics.severities.BLOCKER
+                              metrics.severities.CRITICAL
+                            }}</div>
+                        </div>
+                        <div class='col-auto'>
+                          <i class='fas fa-exclamation-triangle fa-2x text-gray-300'></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class='col-xl-3 col-md-6 mb-3'>
+                  <div class='card border-left-warning shadow h-100'>
+                    <div class='card-body'>
+                      <div class='row no-gutters align-items-center'>
+                        <div class='col mr-2'>
+                          <div
+                            class='text-xs font-weight-bold text-warning text-uppercase mb-1'
+                          >Bugs</div>
+                          <div
+                            class='h5 mb-0 font-weight-bold text-gray-800'
+                          >{{metrics.types.BUG}}</div>
+                        </div>
+                        <div class='col-auto'>
+                          <i class='fas fa-times-circle fa-2x text-gray-300'></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class='col-xl-3 col-md-6 mb-3'>
+                  <div class='card border-left-info shadow h-100'>
+                    <div class='card-body'>
+                      <div class='row no-gutters align-items-center'>
+                        <div class='col mr-2'>
+                          <div
+                            class='text-xs font-weight-bold text-info text-uppercase mb-1'
+                          >Vulnerabilities</div>
+                          <div
+                            class='h5 mb-0 font-weight-bold text-gray-800'
+                          >{{metrics.types.VULNERABILITY}}</div>
+                        </div>
+                        <div class='col-auto'>
+                          <i class='fas fa-shield-alt fa-2x text-gray-300'></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Detailed Metrics -->
+              <div class='row mb-4'>
+                <div class='col-lg-6 mb-3'>
+                  <div class='card shadow'>
+                    <div class='card-header py-3'>
+                      <h6 class='m-0 font-weight-bold text-primary'>Issues by Severity</h6>
+                    </div>
+                    <div class='card-body'>
+                      <div class='row'>
+                        <div class='col-sm-6'>
+                          {{#each metrics.severities}}
+                            <div class='mb-2'>
+                              <span class='severity-badge severity-{{@key}}'>{{@key}}</span>
+                              <span class='float-end fw-bold'>{{this}}</span>
+                            </div>
+                          {{/each}}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class='col-lg-6 mb-3'>
+                  <div class='card shadow'>
+                    <div class='card-header py-3'>
+                      <h6 class='m-0 font-weight-bold text-primary'>Issues by Type & Status</h6>
+                    </div>
+                    <div class='card-body'>
+                      <div class='row'>
+                        <div class='col-sm-6'>
+                          <h6 class='text-secondary'>By Type</h6>
+                          {{#each metrics.types}}
+                            <div class='mb-2'>
+                              <span class='type-badge type-{{@key}}'>{{@key}}</span>
+                              <span class='float-end fw-bold'>{{this}}</span>
+                            </div>
+                          {{/each}}
+                        </div>
+                        <div class='col-sm-6'>
+                          <h6 class='text-secondary'>By Status</h6>
+                          {{#each metrics.statuses}}
+                            <div class='mb-2'>
+                              <span class='badge bg-secondary'>{{@key}}</span>
+                              <span class='float-end fw-bold'>{{this}}</span>
+                            </div>
+                          {{/each}}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Issues Table -->
+        <div class='card'>
+          <div class='card-header'>
+            <div class='row align-items-center'>
+              <div class='col-md-8'>
+                <div class='row g-3'>
+                  <div class='col-md-3'>
+                    <select id='severity-filter' class='form-select'>
+                      <option value=''>All Severities</option>
+                      <option value='BLOCKER'>Blocker</option>
+                      <option value='CRITICAL'>Critical</option>
+                      <option value='MAJOR'>Major</option>
+                      <option value='MINOR'>Minor</option>
+                      <option value='INFO'>Info</option>
+                    </select>
+                  </div>
+                  <div class='col-md-3'>
+                    <select id='type-filter' class='form-select'>
+                      <option value=''>All Types</option>
+                      <option value='BUG'>Bug</option>
+                      <option value='VULNERABILITY'>Vulnerability</option>
+                      <option value='CODE_SMELL'>Code Smell</option>
+                      <option value='SECURITY_HOTSPOT'>Security Hotspot</option>
+                    </select>
+                  </div>
+                  <div class='col-md-3'>
+                    <select id='status-filter' class='form-select'>
+                      <option value=''>All Statuses</option>
+                      <option value='OPEN'>Open</option>
+                      <option value='CONFIRMED'>Confirmed</option>
+                      <option value='REOPENED'>Reopened</option>
+                      <option value='RESOLVED'>Resolved</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class='card-body'>
+            <div class='table-responsive'>
+              <table
+                id='issues-table'
+                class='table table-striped table-hover dt-responsive nowrap'
+                style='width:100%'
+              >
+                <thead>
+                  <tr>
+                    <th>Severity</th>
+                    <th>Status</th>
+                    <th>Type</th>
+                    <th>Message</th>
+                    <th>File</th>
+                    <th>Line</th>
+                    <th>Rule</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {{#each issues}}
+                    <tr>
+                      <td><span
+                          class='severity-badge severity-{{severity}}'
+                        >{{severity}}</span></td>
+                      <td>{{status}}</td>
+                      <td><span class='type-badge type-{{type}}'>{{type}}</span></td>
+                      <td>{{message}}</td>
+                      <td>{{file}}</td>
+                      <td>{{line}}</td>
+                      <td>{{rule}}</td>
+                      <td>{{creationDate}}</td>
+                      <td>
+                        <button
+                          class='btn btn-sm btn-outline-primary'
+                          onclick="navigator.clipboard.writeText('{{file}}')"
+                          title='Copy file path'
+                        >
+                          <i class='fas fa-copy'></i>
+                        </button>
+                        <button
+                          class='btn btn-sm btn-outline-info'
+                          onclick="navigator.clipboard.writeText('{{key}}')"
+                          title='Copy issue key'
+                        >
+                          <i class='fas fa-key'></i>
+                        </button>
+                      </td>
+                    </tr>
+                  {{/each}}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
+
+      <!-- Footer -->
+      <footer class='report-footer mt-5 py-4 border-top'>
+        <div class='container-fluid'>
+          <div class='row align-items-center'>
+            <div class='col-md-6'>
+              <p class='mb-0 text-muted'>
+                Generated by
+                <strong>SonarQube Issues Exporter</strong>
+                v2.0.0
+              </p>
+              <small class='text-muted'>
+                Open source tool for creating beautiful SonarQube reports
+              </small>
+            </div>
+            <div class='col-md-6 text-md-end'>
+              <a
+                href='https://github.com/The-Lone-Druid/sonarqube-issues-exporter'
+                target='_blank'
+                rel='noopener noreferrer'
+                class='btn btn-outline-secondary btn-sm me-2'
+              >
+                <i class='fab fa-github me-1'></i>
+                View on GitHub
+              </a>
+              <a
+                href='https://github.com/The-Lone-Druid/sonarqube-issues-exporter/issues'
+                target='_blank'
+                rel='noopener noreferrer'
+                class='btn btn-outline-secondary btn-sm me-2'
+              >
+                <i class='fas fa-bug me-1'></i>
+                Report Issue
+              </a>
+              <a
+                href='https://github.com/The-Lone-Druid/sonarqube-issues-exporter/stargazers'
+                target='_blank'
+                rel='noopener noreferrer'
+                class='btn btn-outline-warning btn-sm'
+              >
+                <i class='fas fa-star me-1'></i>
+                Star
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
-  </div>
 
-  <div class="content-wrapper">
-    <div class="container-fluid">
-      <!-- Collapsible Metrics Overview -->
-      <div class="card mb-4">
-        <div class="card-header">
-          <button class="btn btn-link text-decoration-none p-0 w-100 text-start" type="button" data-bs-toggle="collapse" data-bs-target="#metricsCollapse" aria-expanded="false" aria-controls="metricsCollapse">
-            <div class="d-flex justify-content-between align-items-center">
-              <h5 class="mb-0 text-primary">
-                <i class="fas fa-chart-bar me-2"></i>
-                Issues Metrics Overview
-              </h5>
-              <i class="fas fa-chevron-down"></i>
-            </div>
-          </button>
-        </div>
-        <div class="collapse" id="metricsCollapse">
-          <div class="card-body">
-            <!-- Summary Cards -->
-            <div class="row mb-4">
-              <div class="col-xl-3 col-md-6 mb-3">
-                <div class="card border-left-primary shadow h-100">
-                  <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                      <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Issues</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{metrics.total}}</div>
-                      </div>
-                      <div class="col-auto">
-                        <i class="fas fa-bug fa-2x text-gray-300"></i>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="col-xl-3 col-md-6 mb-3">
-                <div class="card border-left-danger shadow h-100">
-                  <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                      <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Critical Issues</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{add metrics.severities.BLOCKER metrics.severities.CRITICAL}}</div>
-                      </div>
-                      <div class="col-auto">
-                        <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="col-xl-3 col-md-6 mb-3">
-                <div class="card border-left-warning shadow h-100">
-                  <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                      <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Bugs</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{metrics.types.BUG}}</div>
-                      </div>
-                      <div class="col-auto">
-                        <i class="fas fa-times-circle fa-2x text-gray-300"></i>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="col-xl-3 col-md-6 mb-3">
-                <div class="card border-left-info shadow h-100">
-                  <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                      <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Vulnerabilities</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{metrics.types.VULNERABILITY}}</div>
-                      </div>
-                      <div class="col-auto">
-                        <i class="fas fa-shield-alt fa-2x text-gray-300"></i>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Detailed Metrics -->
-            <div class="row mb-4">
-              <div class="col-lg-6 mb-3">
-                <div class="card shadow">
-                  <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Issues by Severity</h6>
-                  </div>
-                  <div class="card-body">
-                    <div class="row">
-                      <div class="col-sm-6">
-                        {{#each metrics.severities}}
-                        <div class="mb-2">
-                          <span class="severity-badge severity-{{@key}}">{{@key}}</span>
-                          <span class="float-end fw-bold">{{this}}</span>
-                        </div>
-                        {{/each}}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="col-lg-6 mb-3">
-                <div class="card shadow">
-                  <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Issues by Type & Status</h6>
-                  </div>
-                  <div class="card-body">
-                    <div class="row">
-                      <div class="col-sm-6">
-                        <h6 class="text-secondary">By Type</h6>
-                        {{#each metrics.types}}
-                        <div class="mb-2">
-                          <span class="type-badge type-{{@key}}">{{@key}}</span>
-                          <span class="float-end fw-bold">{{this}}</span>
-                        </div>
-                        {{/each}}
-                      </div>
-                      <div class="col-sm-6">
-                        <h6 class="text-secondary">By Status</h6>
-                        {{#each metrics.statuses}}
-                        <div class="mb-2">
-                          <span class="badge bg-secondary">{{@key}}</span>
-                          <span class="float-end fw-bold">{{this}}</span>
-                        </div>
-                        {{/each}}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Issues Table -->
-      <div class="card">
-        <div class="card-header">
-          <div class="row align-items-center">
-            <div class="col-md-8">
-              <div class="row g-3">
-                <div class="col-md-3">
-                  <select id="severity-filter" class="form-select">
-                    <option value="">All Severities</option>
-                    <option value="BLOCKER">Blocker</option>
-                    <option value="CRITICAL">Critical</option>
-                    <option value="MAJOR">Major</option>
-                    <option value="MINOR">Minor</option>
-                    <option value="INFO">Info</option>
-                  </select>
-                </div>
-                <div class="col-md-3">
-                  <select id="type-filter" class="form-select">
-                    <option value="">All Types</option>
-                    <option value="BUG">Bug</option>
-                    <option value="VULNERABILITY">Vulnerability</option>
-                    <option value="CODE_SMELL">Code Smell</option>
-                    <option value="SECURITY_HOTSPOT">Security Hotspot</option>
-                  </select>
-                </div>
-                <div class="col-md-3">
-                  <select id="status-filter" class="form-select">
-                    <option value="">All Statuses</option>
-                    <option value="OPEN">Open</option>
-                    <option value="CONFIRMED">Confirmed</option>
-                    <option value="REOPENED">Reopened</option>
-                    <option value="RESOLVED">Resolved</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="table-responsive">
-            <table id="issues-table" class="table table-striped table-hover dt-responsive nowrap" style="width:100%">
-              <thead>
-                <tr>
-                  <th>Severity</th>
-                  <th>Status</th>
-                  <th>Type</th>
-                  <th>Message</th>
-                  <th>File</th>
-                  <th>Line</th>
-                  <th>Rule</th>
-                  <th>Created</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {{#each issues}}
-                <tr>
-                  <td><span class="severity-badge severity-{{severity}}">{{severity}}</span></td>
-                  <td>{{status}}</td>
-                  <td><span class="type-badge type-{{type}}">{{type}}</span></td>
-                  <td>{{message}}</td>
-                  <td>{{file}}</td>
-                  <td>{{line}}</td>
-                  <td>{{rule}}</td>
-                  <td>{{creationDate}}</td>
-                  <td>
-                    <button class="btn btn-sm btn-outline-primary" onclick="navigator.clipboard.writeText('{{file}}')" title="Copy file path">
-                      <i class="fas fa-copy"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-info" onclick="navigator.clipboard.writeText('{{key}}')" title="Copy issue key">
-                      <i class="fas fa-key"></i>
-                    </button>
-                  </td>
-                </tr>
-                {{/each}}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Footer -->
-    <footer class="report-footer mt-5 py-4 border-top">
-      <div class="container-fluid">
-        <div class="row align-items-center">
-          <div class="col-md-6">
-            <p class="mb-0 text-muted">
-              Generated by <strong>SonarQube Issues Exporter</strong> v2.0.0
-            </p>
-            <small class="text-muted">
-              Open source tool for creating beautiful SonarQube reports
-            </small>
-          </div>
-          <div class="col-md-6 text-md-end">
-            <a href="https://github.com/The-Lone-Druid/sonarqube-issues-exporter" 
-               target="_blank" 
-               rel="noopener noreferrer"
-               class="btn btn-outline-secondary btn-sm me-2">
-              <i class="fab fa-github me-1"></i>
-              View on GitHub
-            </a>
-            <a href="https://github.com/The-Lone-Druid/sonarqube-issues-exporter/issues" 
-               target="_blank" 
-               rel="noopener noreferrer"
-               class="btn btn-outline-secondary btn-sm me-2">
-              <i class="fas fa-bug me-1"></i>
-              Report Issue
-            </a>
-            <a href="https://github.com/The-Lone-Druid/sonarqube-issues-exporter/stargazers" 
-               target="_blank" 
-               rel="noopener noreferrer"
-               class="btn btn-outline-warning btn-sm">
-              <i class="fas fa-star me-1"></i>
-              Star
-            </a>
-          </div>
-        </div>
-      </div>
-    </footer>
-  </div>
-
-  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-  <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-  <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
-  <script>
-    // Theme management
-    function getStoredTheme() {
-      return localStorage.getItem('theme');
-    }
-
-    function setStoredTheme(theme) {
-      localStorage.setItem('theme', theme);
-    }
-
-    function getPreferredTheme() {
-      const storedTheme = getStoredTheme();
-      if (storedTheme) {
-        return storedTheme;
-      }
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-
-    function setTheme(theme) {
-      const body = document.body;
-      
-      if (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.setAttribute('data-bs-theme', 'dark');
-        body.className = 'bg-dark';
-      } else if (theme === 'dark') {
-        document.documentElement.setAttribute('data-bs-theme', 'dark');
-        body.className = 'bg-dark';
-      } else {
-        document.documentElement.setAttribute('data-bs-theme', 'light');
-        body.className = 'bg-light';
-      }
-      
-      // Update icon
-      const themeIcon = document.getElementById('theme-icon');
-      const currentTheme = document.documentElement.getAttribute('data-bs-theme');
-      if (currentTheme === 'dark') {
-        themeIcon.className = 'fas fa-sun';
-      } else {
-        themeIcon.className = 'fas fa-moon';
-      }
-    }
-
-    // Initialize theme on page load
-    (() => {
-      const theme = getPreferredTheme();
-      setTheme(theme);
-    })();
-
-    $(document).ready(function() {
-      // Theme toggle functionality
-      $('#theme-toggle').on('click', function() {
-        const currentTheme = document.documentElement.getAttribute('data-bs-theme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        setStoredTheme(newTheme);
-        setTheme(newTheme);
-      });
-
-      // Initialize DataTable
-      const table = $('#issues-table').DataTable({
-        responsive: true,
-        pageLength: 25,
-        order: [[0, 'desc']], // Sort by severity by default
-        dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
-             "<'row'<'col-sm-12'tr>>" +
-             "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
-        language: {
-          search: "Search issues:"
-        }
-      });
-
-      // Custom filtering function
-      $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-        const severityFilter = $('#severity-filter').val();
-        const typeFilter = $('#type-filter').val();
-        const statusFilter = $('#status-filter').val();
-        
-        const severity = data[0]; // Severity column
-        const status = data[1]; // Status column  
-        const type = data[2]; // Type column
-
-        if ((severityFilter === '' || severity.includes(severityFilter)) &&
-            (typeFilter === '' || type.includes(typeFilter)) &&
-            (statusFilter === '' || status.includes(statusFilter))) {
-          return true;
-        }
-        return false;
-      });
-
-      // Apply filters when changed
-      $('#severity-filter, #type-filter, #status-filter').on('change', function() {
-        table.draw();
-      });
-    });
-  </script>
-</body>
+    <script src='https://code.jquery.com/jquery-3.7.0.min.js'></script>
+    <script
+      src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js'
+    ></script>
+    <script src='https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js'></script>
+    <script src='https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js'></script>
+    <script
+      src='https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js'
+    ></script>
+    <script
+      src='https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js'
+    ></script>
+    <script>
+      // Theme management function getStoredTheme() { return localStorage.getItem('theme'); }
+      function setStoredTheme(theme) { localStorage.setItem('theme', theme); } function
+      getPreferredTheme() { const storedTheme = getStoredTheme(); if (storedTheme) { return
+      storedTheme; } return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' :
+      'light'; } function setTheme(theme) { const body = document.body; if (theme === 'auto' &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.setAttribute('data-bs-theme', 'dark'); body.className = 'bg-dark'; }
+      else if (theme === 'dark') { document.documentElement.setAttribute('data-bs-theme', 'dark');
+      body.className = 'bg-dark'; } else { document.documentElement.setAttribute('data-bs-theme',
+      'light'); body.className = 'bg-light'; } // Update icon const themeIcon =
+      document.getElementById('theme-icon'); const currentTheme =
+      document.documentElement.getAttribute('data-bs-theme'); if (currentTheme === 'dark') {
+      themeIcon.className = 'fas fa-sun'; } else { themeIcon.className = 'fas fa-moon'; } } //
+      Initialize theme on page load (() => { const theme = getPreferredTheme(); setTheme(theme);
+      })(); $(document).ready(function() { // Theme toggle functionality
+      $('#theme-toggle').on('click', function() { const currentTheme =
+      document.documentElement.getAttribute('data-bs-theme'); const newTheme = currentTheme ===
+      'dark' ? 'light' : 'dark'; setStoredTheme(newTheme); setTheme(newTheme); }); // Initialize
+      DataTable const table = $('#issues-table').DataTable({ responsive: true, pageLength: 25,
+      order: [[0, 'desc']], // Sort by severity by default dom: "<'row'<'col-sm-12
+      col-md-6'l><'col-sm-12 col-md-6'f>>" + "<'row'<'col-sm-12'tr>>" + "<'row'<'col-sm-12
+      col-md-5'i><'col-sm-12 col-md-7'p>>", language: { search: "Search issues:" } }); // Custom
+      filtering function $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) { const
+      severityFilter = $('#severity-filter').val(); const typeFilter = $('#type-filter').val();
+      const statusFilter = $('#status-filter').val(); const severity = data[0]; // Severity column
+      const status = data[1]; // Status column const type = data[2]; // Type column if
+      ((severityFilter === '' || severity.includes(severityFilter)) && (typeFilter === '' ||
+      type.includes(typeFilter)) && (statusFilter === '' || status.includes(statusFilter))) { return
+      true; } return false; }); // Apply filters when changed $('#severity-filter, #type-filter,
+      #status-filter').on('change', function() { table.draw(); }); });
+    </script>
+  </body>
 </html>

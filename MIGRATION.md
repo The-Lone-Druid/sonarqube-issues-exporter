@@ -5,10 +5,12 @@ This guide helps you migrate from the JavaScript-based v1.x to the new TypeScrip
 ## Breaking Changes
 
 ### 1. Node.js Version Requirement
+
 - **Old**: Node.js v12+
 - **New**: Node.js v18+
 
 ### 2. Command Changes
+
 ```bash
 # v1.x
 node export_issues.js
@@ -20,9 +22,11 @@ npm run build && npm run export:prod
 ```
 
 ### 3. Configuration
+
 The configuration is now more structured and type-safe:
 
 #### Environment Variables (Enhanced)
+
 ```bash
 # v1.x (basic)
 SONARQUBE_URL=http://localhost:9000
@@ -42,6 +46,7 @@ LOG_LEVEL=info                   # New: logging control
 ```
 
 #### Configuration Files (New)
+
 You can now use JSON configuration files:
 
 ```json
@@ -68,6 +73,7 @@ You can now use JSON configuration files:
 ```
 
 ### 4. CLI Interface (New)
+
 v2.x introduces a proper CLI with commands and options:
 
 ```bash
@@ -82,6 +88,7 @@ npm run export -- --config ./config.json
 ```
 
 ### 5. Output Changes
+
 - **Old**: Always creates `sonarqube_issues.html` in current directory
 - **New**: Configurable output path and filename
 - **Default**: `./reports/sonarqube-issues-report.html`
@@ -89,12 +96,15 @@ npm run export -- --config ./config.json
 ## Migration Steps
 
 ### Step 1: Update Node.js
+
 Ensure you have Node.js 18+ installed:
+
 ```bash
 node --version  # Should be 18.0.0 or higher
 ```
 
 ### Step 2: Install New Dependencies
+
 ```bash
 # Remove old dependencies and install new ones
 rm -rf node_modules package-lock.json
@@ -102,11 +112,13 @@ npm install
 ```
 
 ### Step 3: Build the Project
+
 ```bash
 npm run build
 ```
 
 ### Step 4: Update Scripts
+
 If you have automation scripts, update them:
 
 ```bash
@@ -120,6 +132,7 @@ npm run build && npm run export:prod
 ```
 
 ### Step 5: Configure (Optional)
+
 Create a configuration file for easier management:
 
 ```bash
@@ -128,12 +141,15 @@ cp config.example.json config.json
 ```
 
 ### Step 6: Test
+
 Validate your configuration:
+
 ```bash
 npm run export -- validate
 ```
 
 Export a test report:
+
 ```bash
 npm run export -- --output ./test-reports --verbose
 ```
@@ -141,22 +157,27 @@ npm run export -- --output ./test-reports --verbose
 ## New Features Available
 
 ### 1. Progress Tracking
+
 v2.x shows real-time progress when fetching large numbers of issues.
 
 ### 2. Better Error Handling
+
 More descriptive error messages and validation.
 
 ### 3. Flexible Filtering
+
 - Exclude specific statuses
 - Control maximum number of issues
 - Include/exclude resolved issues
 
 ### 4. Enhanced Reports
+
 - Improved responsive design
 - Better metrics dashboard
 - Enhanced theme support
 
 ### 5. Development Tools
+
 - TypeScript support
 - ESLint and Prettier
 - Comprehensive testing
@@ -165,15 +186,19 @@ More descriptive error messages and validation.
 ## Troubleshooting
 
 ### Issue: "Cannot find module" errors
+
 **Solution**: Run `npm install` to install TypeScript dependencies.
 
 ### Issue: Build fails
+
 **Solution**: Ensure Node.js 18+ is installed and run `npm run build`.
 
 ### Issue: Old output file location
+
 **Solution**: Update your file paths to use the new default `./reports/` directory.
 
 ### Issue: Environment variables not working
+
 **Solution**: Check the new variable names in the updated `.env.example`.
 
 ## Rollback Plan

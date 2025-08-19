@@ -2,7 +2,7 @@ import { createLogger, format, transports, Logger } from 'winston';
 import { AppConfig } from '../types/config';
 
 export class AppLogger {
-  private logger: Logger;
+  private readonly logger: Logger;
 
   constructor(config: AppConfig['logging']) {
     const logFormat = format.combine(

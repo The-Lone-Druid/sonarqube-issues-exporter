@@ -45,6 +45,7 @@ npm run build
 ### Configuration
 
 1. **Environment Variables** (Quick Setup):
+
    ```bash
    cp .env.example .env
    # Edit .env with your SonarQube configuration
@@ -73,18 +74,18 @@ npm run export -- --output ./my-reports --filename my-report.html --verbose
 
 ### Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `SONARQUBE_URL` | SonarQube server URL | `http://localhost:9000` |
-| `SONARQUBE_TOKEN` | User token for authentication | Required |
-| `SONARQUBE_PROJECT_KEY` | Project key to export | Required |
-| `SONARQUBE_ORGANIZATION` | Organization key (SonarCloud) | Optional |
-| `EXPORT_OUTPUT_PATH` | Output directory for reports | `./reports` |
-| `EXPORT_FILENAME` | Output filename | `sonarqube-issues-report.html` |
-| `EXPORT_EXCLUDE_STATUSES` | Comma-separated statuses to exclude | `CLOSED` |
-| `EXPORT_INCLUDE_RESOLVED` | Include resolved issues | `false` |
-| `EXPORT_MAX_ISSUES` | Maximum issues to fetch | `10000` |
-| `LOG_LEVEL` | Logging level | `info` |
+| Variable                  | Description                         | Default                        |
+| ------------------------- | ----------------------------------- | ------------------------------ |
+| `SONARQUBE_URL`           | SonarQube server URL                | `http://localhost:9000`        |
+| `SONARQUBE_TOKEN`         | User token for authentication       | Required                       |
+| `SONARQUBE_PROJECT_KEY`   | Project key to export               | Required                       |
+| `SONARQUBE_ORGANIZATION`  | Organization key (SonarCloud)       | Optional                       |
+| `EXPORT_OUTPUT_PATH`      | Output directory for reports        | `./reports`                    |
+| `EXPORT_FILENAME`         | Output filename                     | `sonarqube-issues-report.html` |
+| `EXPORT_EXCLUDE_STATUSES` | Comma-separated statuses to exclude | `CLOSED`                       |
+| `EXPORT_INCLUDE_RESOLVED` | Include resolved issues             | `false`                        |
+| `EXPORT_MAX_ISSUES`       | Maximum issues to fetch             | `10000`                        |
+| `LOG_LEVEL`               | Logging level                       | `info`                         |
 
 ## 🛠️ Development
 

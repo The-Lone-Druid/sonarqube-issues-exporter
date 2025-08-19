@@ -15,8 +15,8 @@ import { AppConfig } from '../types/config';
 import { getLogger, escapeHtml, extractFilename, formatDate, calculateMetrics } from '../utils';
 
 export class HtmlExporter {
-  private logger = getLogger();
-  private config: AppConfig;
+  private readonly logger = getLogger();
+  private readonly config: AppConfig;
 
   constructor(config: AppConfig) {
     this.config = config;

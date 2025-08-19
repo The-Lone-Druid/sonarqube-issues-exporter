@@ -40,15 +40,19 @@ Your SonarQube Issues Exporter is now fully configured as an NPM package and rea
 ## 📦 Publishing Steps
 
 ### Step 1: Verify Your NPM Account
+
 ```bash
 npm whoami
 ```
+
 If not logged in:
+
 ```bash
 npm login
 ```
 
 ### Step 2: Final Pre-publish Checks
+
 ```bash
 # Check what will be published
 npm pack --dry-run
@@ -61,6 +65,7 @@ npm install -g ./sonarqube-issues-exporter-2.0.0.tgz
 ```
 
 ### Step 3: Publish to NPM
+
 ```bash
 # For first-time publishing
 npm publish
@@ -70,6 +75,7 @@ npm publish --access public
 ```
 
 ### Step 4: Verify Publication
+
 ```bash
 # Check if package is available
 npm view sonarqube-issues-exporter
@@ -93,9 +99,11 @@ npm install -g sonarqube-issues-exporter
 ## 🔄 Version Management
 
 ### Current Version: 2.0.0
+
 This is appropriate for a major release with the new type system and npm package structure.
 
 ### Future Updates
+
 ```bash
 # Patch version (bug fixes)
 npm version patch
@@ -121,12 +129,14 @@ npm publish
 ## 🌟 Post-Publication
 
 ### Promote Your Package
+
 1. **NPM Package Page**: https://www.npmjs.com/package/sonarqube-issues-exporter
 2. **GitHub Releases**: Create a release tag
 3. **Documentation**: Update README with installation instructions
 4. **Community**: Share on relevant forums/communities
 
 ### Monitor Usage
+
 ```bash
 # Check download stats
 npm view sonarqube-issues-exporter
@@ -136,6 +146,7 @@ npm view sonarqube-issues-exporter versions --json
 ```
 
 ### Users Can Install With
+
 ```bash
 # Global installation (recommended)
 npm install -g sonarqube-issues-exporter

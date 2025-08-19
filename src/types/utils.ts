@@ -284,7 +284,7 @@ export type RequiredFields<T, K extends keyof T> = Required<Pick<T, K>> & Omit<T
  * @type StringUnion
  * @description Helper type for creating string literal unions
  */
-export type StringUnion<T extends string> = T | (string & {});
+export type StringUnion<T extends string> = T | (string & Record<never, never>);
 
 /**
  * Utility type for extracting array element type

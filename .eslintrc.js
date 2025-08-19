@@ -3,7 +3,7 @@ module.exports = {
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
-    'prettier',
+    'prettier', // This must be last to override other configs
   ],
   plugins: ['@typescript-eslint', 'prettier'],
   parserOptions: {
@@ -18,9 +18,24 @@ module.exports = {
         project: './tsconfig.json',
       },
     },
+    {
+      files: ['**/*.test.ts', '**/*.spec.ts'],
+      rules: {
+        '@typescript-eslint/no-explicit-any': 'off',
+        '@typescript-eslint/ban-ts-comment': 'off',
+      },
+    },
   ],
   rules: {
-    'prettier/prettier': 'error',
+    // Prettier integration
+    'prettier/prettier': [
+      'error',
+      {
+        endOfLine: 'lf',
+      },
+    ],
+
+    // TypeScript rules
     '@typescript-eslint/no-unused-vars': 'error',
     '@typescript-eslint/no-explicit-any': 'warn',
     '@typescript-eslint/explicit-function-return-type': 'off',

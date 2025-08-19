@@ -8,21 +8,21 @@ First off, thank you for considering contributing to SonarQube Issues Exporter! 
 
 Before creating bug reports, please check the existing issues to avoid duplicates. When you create a bug report, include as many details as possible:
 
-* Use a clear and descriptive title
-* Describe the exact steps to reproduce the problem
-* Provide specific examples to demonstrate the steps
-* Describe the behavior you observed after following the steps
-* Explain which behavior you expected to see instead and why
-* Include screenshots if possible
+- Use a clear and descriptive title
+- Describe the exact steps to reproduce the problem
+- Provide specific examples to demonstrate the steps
+- Describe the behavior you observed after following the steps
+- Explain which behavior you expected to see instead and why
+- Include screenshots if possible
 
 ### Suggesting Enhancements
 
 Enhancement suggestions are tracked as GitHub issues. When creating an enhancement suggestion, please include:
 
-* A clear and descriptive title
-* A detailed description of the proposed functionality
-* An explanation of why this enhancement would be useful
-* Possible implementation details if you have them
+- A clear and descriptive title
+- A detailed description of the proposed functionality
+- An explanation of why this enhancement would be useful
+- Possible implementation details if you have them
 
 ### Pull Requests
 
@@ -42,10 +42,10 @@ Enhancement suggestions are tracked as GitHub issues. When creating an enhanceme
 
 ### Style Guidelines
 
-* Use 2 spaces for indentation
-* Use meaningful variable and function names
-* Comment your code when necessary
-* Follow the existing code style
+- Use 2 spaces for indentation
+- Use meaningful variable and function names
+- Comment your code when necessary
+- Follow the existing code style
 
 ## Setting Up Your Development Environment
 
@@ -58,8 +58,9 @@ Enhancement suggestions are tracked as GitHub issues. When creating an enhanceme
 ## Getting Help
 
 If you need help, you can:
-* Check the documentation
-* Open an issue with your question
-* Contact the maintainers
+
+- Check the documentation
+- Open an issue with your question
+- Contact the maintainers
 
 Thank you for contributing!

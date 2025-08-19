@@ -1,6 +1,6 @@
 /**
  * Demo Test: How to Use the SonarQube Issues Exporter
- * 
+ *
  * This test file demonstrates the main workflows and features
  * of the enterprise-level SonarQube Issues Exporter.
  */
@@ -9,20 +9,19 @@ import { loadConfig } from '../config';
 import { escapeHtml, extractFilename } from '../utils/helpers';
 
 describe('🚀 SonarQube Issues Exporter - How It Works', () => {
-  
   describe('📋 1. Configuration System', () => {
     it('supports multiple configuration methods', () => {
       // Save current env vars
       const originalUrl = process.env.SONARQUBE_URL;
       const originalToken = process.env.SONARQUBE_TOKEN;
       const originalProjectKey = process.env.SONARQUBE_PROJECT_KEY;
-      
+
       try {
         // Method 1: Environment variables (most common)
         process.env.SONARQUBE_URL = 'https://sonarcloud.io';
         process.env.SONARQUBE_TOKEN = 'demo-token';
         process.env.SONARQUBE_PROJECT_KEY = 'my-project';
-        
+
         const config = loadConfig();
         expect(config.sonarqube.url).toBe('https://sonarcloud.io');
         expect(config.sonarqube.token).toBe('demo-token');
@@ -70,14 +69,18 @@ describe('🚀 SonarQube Issues Exporter - How It Works', () => {
       // The exporter safely handles potentially dangerous content
       const dangerousMessage = '<script>alert("XSS")</script>Resource leak detected';
       const safeMessage = escapeHtml(dangerousMessage);
-      
-      expect(safeMessage).toBe('&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt;Resource leak detected');
+
+      expect(safeMessage).toBe(
+        '&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt;Resource leak detected'
+      );
       expect(safeMessage).not.toContain('<script>');
     });
 
     it('extracts clean filenames from SonarQube components', () => {
       // SonarQube returns full component paths, we extract just the filename
-      expect(extractFilename('my-project:src/main/java/com/example/Service.java')).toBe('Service.java');
+      expect(extractFilename('my-project:src/main/java/com/example/Service.java')).toBe(
+        'Service.java'
+      );
       expect(extractFilename('frontend:src/components/Button.tsx')).toBe('Button.tsx');
       expect(extractFilename('simple-file.js')).toBe('simple-file.js');
     });
@@ -98,7 +101,17 @@ describe('🚀 SonarQube Issues Exporter - How It Works', () => {
           collapsible: 'Can be hidden to focus on issues table',
         },
         issuesTable: {
-          columns: ['Severity', 'Status', 'Type', 'Message', 'File', 'Line', 'Rule', 'Created', 'Actions'],
+          columns: [
+            'Severity',
+            'Status',
+            'Type',
+            'Message',
+            'File',
+            'Line',
+            'Rule',
+            'Created',
+            'Actions',
+          ],
           features: ['Sorting', 'Filtering', 'Searching', 'Pagination'],
           interactions: ['Copy file paths', 'Copy issue keys'],
         },
@@ -178,7 +191,7 @@ describe('🚀 SonarQube Issues Exporter - How It Works', () => {
   describe('🔄 6. Workflow Example', () => {
     it('demonstrates a complete workflow', async () => {
       // This is how the application works internally:
-      
+
       // Step 1: Load configuration
       const config = loadConfig({
         overrides: {

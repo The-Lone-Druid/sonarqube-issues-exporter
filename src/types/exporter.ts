@@ -120,7 +120,7 @@ export interface TemplateConfig {
   partials?: Record<string, string>;
 
   /** Template helpers */
-  helpers?: Record<string, Function>;
+  helpers?: Record<string, (...args: any[]) => any>;
 }
 
 /**

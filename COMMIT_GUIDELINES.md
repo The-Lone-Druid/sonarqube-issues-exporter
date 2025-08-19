@@ -5,7 +5,9 @@ This project follows the [Conventional Commits](https://www.conventionalcommits.
 ## 🚀 Quick Start
 
 ### Interactive Commit Tool
+
 Use the interactive commit tool for guided commit message creation:
+
 ```bash
 npm run commit
 ```
@@ -13,6 +15,7 @@ npm run commit
 This will prompt you through creating a properly formatted commit message.
 
 ### Manual Commit Format
+
 ```
 <type>[optional scope]: <description>
 
@@ -23,19 +26,19 @@ This will prompt you through creating a properly formatted commit message.
 
 ## 📋 Commit Types
 
-| Type | Description | Example |
-|------|-------------|---------|
-| `feat` | A new feature | `feat(cli): add export validation command` |
-| `fix` | A bug fix | `fix(config): resolve environment variable loading` |
-| `docs` | Documentation changes | `docs(readme): update installation instructions` |
-| `style` | Code style changes (formatting, missing semi-colons, etc.) | `style(types): format type definitions` |
-| `refactor` | Code refactoring without adding features or fixing bugs | `refactor(services): extract common validation logic` |
-| `perf` | Performance improvements | `perf(exporter): optimize large report generation` |
-| `test` | Adding or updating tests | `test(config): add environment variable tests` |
-| `build` | Build system or external dependency changes | `build(deps): update typescript to 5.2.2` |
-| `ci` | CI/CD configuration changes | `ci(github): add automated release workflow` |
-| `chore` | Maintenance tasks | `chore(deps): update dependencies` |
-| `revert` | Reverting a previous commit | `revert: feat(cli): add export validation` |
+| Type       | Description                                                | Example                                               |
+| ---------- | ---------------------------------------------------------- | ----------------------------------------------------- |
+| `feat`     | A new feature                                              | `feat(cli): add export validation command`            |
+| `fix`      | A bug fix                                                  | `fix(config): resolve environment variable loading`   |
+| `docs`     | Documentation changes                                      | `docs(readme): update installation instructions`      |
+| `style`    | Code style changes (formatting, missing semi-colons, etc.) | `style(types): format type definitions`               |
+| `refactor` | Code refactoring without adding features or fixing bugs    | `refactor(services): extract common validation logic` |
+| `perf`     | Performance improvements                                   | `perf(exporter): optimize large report generation`    |
+| `test`     | Adding or updating tests                                   | `test(config): add environment variable tests`        |
+| `build`    | Build system or external dependency changes                | `build(deps): update typescript to 5.2.2`             |
+| `ci`       | CI/CD configuration changes                                | `ci(github): add automated release workflow`          |
+| `chore`    | Maintenance tasks                                          | `chore(deps): update dependencies`                    |
+| `revert`   | Reverting a previous commit                                | `revert: feat(cli): add export validation`            |
 
 ## 🎯 Scopes
 
@@ -56,6 +59,7 @@ Use scopes to specify which part of the codebase is affected:
 ## ✅ Good Examples
 
 ### Feature Addition
+
 ```bash
 feat(cli): add support for custom output formats
 
@@ -67,6 +71,7 @@ Closes #123
 ```
 
 ### Bug Fix
+
 ```bash
 fix(config): resolve environment variable precedence
 
@@ -78,6 +83,7 @@ Fixes #456
 ```
 
 ### Documentation
+
 ```bash
 docs(api): add JSDoc comments to service methods
 
@@ -87,6 +93,7 @@ docs(api): add JSDoc comments to service methods
 ```
 
 ### Refactoring
+
 ```bash
 refactor(types): consolidate type definitions
 
@@ -100,6 +107,7 @@ BREAKING CHANGE: Type imports now use new module structure
 ## ❌ What to Avoid
 
 ### Too Vague
+
 ```bash
 # ❌ Bad
 fix: bug fix
@@ -108,12 +116,14 @@ feat: new stuff
 ```
 
 ### Too Long/Unfocused
+
 ```bash
 # ❌ Bad
 feat: add new CLI command and fix config loading and update docs and refactor types
 ```
 
 ### Wrong Type
+
 ```bash
 # ❌ Bad - Should be 'docs'
 feat: update README
@@ -125,6 +135,7 @@ chore: resolve template loading issue
 ## 🏷️ Special Cases
 
 ### Breaking Changes
+
 ```bash
 feat(api)!: change SonarQubeService constructor signature
 
@@ -140,6 +151,7 @@ new SonarQubeService(config)
 ```
 
 ### Issue References
+
 ```bash
 fix(auth): handle expired tokens gracefully
 
@@ -153,6 +165,7 @@ Related to #791
 ```
 
 ### Co-authored Commits
+
 ```bash
 feat(export): add progress indicators for large exports
 
@@ -172,6 +185,7 @@ This project uses automated commit message validation:
 - **standard-version** generates changelogs from commits
 
 ### Bypass Validation (Emergency Only)
+
 ```bash
 git commit --no-verify -m "emergency: critical hotfix"
 ```
@@ -179,6 +193,7 @@ git commit --no-verify -m "emergency: critical hotfix"
 ## 📊 Release Workflow
 
 ### Automatic Versioning
+
 ```bash
 # Let standard-version determine version bump
 npm run release
@@ -193,6 +208,7 @@ npm run release:dry
 ```
 
 ### Version Bump Rules
+
 - `feat` → **minor** version bump
 - `fix` → **patch** version bump
 - `BREAKING CHANGE` → **major** version bump

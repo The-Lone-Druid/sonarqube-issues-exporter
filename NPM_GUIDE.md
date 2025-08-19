@@ -3,11 +3,13 @@
 ## 📦 Installation
 
 ### Global Installation (Recommended)
+
 ```bash
 npm install -g sonarqube-issues-exporter
 ```
 
 After global installation, you can use the CLI from anywhere:
+
 ```bash
 sonarqube-exporter --help
 # or the short alias
@@ -15,11 +17,13 @@ sq-exporter --help
 ```
 
 ### Local Installation
+
 ```bash
 npm install sonarqube-issues-exporter
 ```
 
 Then use with npx:
+
 ```bash
 npx sonarqube-exporter --help
 ```
@@ -27,6 +31,7 @@ npx sonarqube-exporter --help
 ## 🚀 Quick Start
 
 ### Method 1: Environment Variables
+
 ```bash
 # Set required environment variables
 export SONARQUBE_URL="https://your-sonarqube-server.com"
@@ -38,7 +43,9 @@ sonarqube-exporter export
 ```
 
 ### Method 2: Configuration File
+
 Create a `sonarqube.config.json` file:
+
 ```json
 {
   "sonarqube": {
@@ -63,11 +70,13 @@ Create a `sonarqube.config.json` file:
 ```
 
 Then run:
+
 ```bash
 sonarqube-exporter export --config sonarqube.config.json
 ```
 
 ### Method 3: Command Line Options
+
 ```bash
 sonarqube-exporter export \
   --config ./my-config.json \
@@ -81,6 +90,7 @@ sonarqube-exporter export \
 ## 📋 Configuration Options
 
 ### Environment Variables
+
 - `SONARQUBE_URL` - SonarQube server URL
 - `SONARQUBE_TOKEN` - Authentication token
 - `SONARQUBE_PROJECT_KEY` - Project key to analyze
@@ -90,11 +100,12 @@ sonarqube-exporter export \
 - `LOG_LEVEL` - Logging level (error, warn, info, debug)
 
 ### Configuration File Schema
+
 ```json
 {
   "sonarqube": {
     "url": "string (required)",
-    "token": "string (required)", 
+    "token": "string (required)",
     "projectKey": "string (required)",
     "organization": "string (optional)"
   },
@@ -116,6 +127,7 @@ sonarqube-exporter export \
 ## 🔧 CLI Commands
 
 ### Export Command
+
 ```bash
 sonarqube-exporter export [options]
 
@@ -132,6 +144,7 @@ Options:
 ```
 
 ### Validate Command
+
 ```bash
 sonarqube-exporter validate [options]
 
@@ -143,6 +156,7 @@ Options:
 ## 💻 Programmatic Usage
 
 ### Basic Usage
+
 ```javascript
 const { exportSonarQubeIssues, loadConfig } = require('sonarqube-issues-exporter');
 
@@ -150,7 +164,7 @@ async function generateReport() {
   try {
     const config = loadConfig();
     const result = await exportSonarQubeIssues(config);
-    
+
     if (result.success) {
       console.log(`Report generated: ${result.outputPath}`);
       console.log(`Issues exported: ${result.issuesCount}`);
@@ -164,6 +178,7 @@ generateReport();
 ```
 
 ### Advanced Usage with Custom Configuration
+
 ```javascript
 const { exportSonarQubeIssues } = require('sonarqube-issues-exporter');
 
@@ -172,32 +187,34 @@ const customConfig = {
     url: 'https://sonarcloud.io',
     token: 'your-token',
     projectKey: 'your-project',
-    organization: 'your-org'
+    organization: 'your-org',
   },
   export: {
     outputPath: './custom-reports',
     filename: 'security-report.html',
     maxIssues: 5000,
-    excludeStatuses: ['CLOSED', 'RESOLVED']
+    excludeStatuses: ['CLOSED', 'RESOLVED'],
   },
   logging: {
-    level: 'debug'
-  }
+    level: 'debug',
+  },
 };
 
 exportSonarQubeIssues(customConfig)
-  .then(result => console.log('Success:', result))
-  .catch(error => console.error('Error:', error));
+  .then((result) => console.log('Success:', result))
+  .catch((error) => console.error('Error:', error));
 ```
 
 ## 🔐 Authentication
 
 ### SonarQube Server
+
 1. Go to User > My Account > Security
 2. Generate a new token
 3. Use the token in your configuration
 
 ### SonarCloud
+
 1. Go to Account > Security
 2. Generate a new token
 3. Include your organization key in the configuration
@@ -205,6 +222,7 @@ exportSonarQubeIssues(customConfig)
 ## 📊 Report Features
 
 The generated HTML reports include:
+
 - **Interactive Dashboard** - Overview metrics and charts
 - **Searchable Table** - All issues with filtering capabilities
 - **Dark/Light Theme** - Toggle between themes
@@ -217,35 +235,44 @@ The generated HTML reports include:
 ### Common Issues
 
 1. **Authentication Errors**
+
    ```
    Error: Failed to connect to SonarQube
    ```
+
    - Check your token permissions
    - Verify the server URL is correct
    - Ensure the project key exists
 
 2. **Permission Errors**
+
    ```
    Error: Insufficient privileges
    ```
+
    - Your token needs "Browse" permission on the project
    - Contact your SonarQube administrator
 
 3. **Network Issues**
+
    ```
    Error: timeout of 30000ms exceeded
    ```
+
    - Check your network connection
    - Verify firewall settings
    - Try increasing timeout in configuration
 
 ### Debug Mode
+
 Enable verbose logging for troubleshooting:
+
 ```bash
 sonarqube-exporter export --verbose
 ```
 
 Or set log level in configuration:
+
 ```json
 {
   "logging": {
@@ -258,6 +285,7 @@ Or set log level in configuration:
 ## 📝 Examples
 
 ### SonarCloud Example
+
 ```bash
 export SONARQUBE_URL="https://sonarcloud.io"
 export SONARQUBE_TOKEN="your_sonarcloud_token"
@@ -268,6 +296,7 @@ sonarqube-exporter export --output ./reports --verbose
 ```
 
 ### On-Premise SonarQube Example
+
 ```bash
 export SONARQUBE_URL="http://localhost:9000"
 export SONARQUBE_TOKEN="your_token"
@@ -277,6 +306,7 @@ sonarqube-exporter export --filename security-audit.html
 ```
 
 ### CI/CD Integration Example
+
 ```yaml
 # GitHub Actions example
 - name: Generate SonarQube Report

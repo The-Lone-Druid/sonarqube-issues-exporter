@@ -33,6 +33,9 @@
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write src/**/*.ts",
+    "format:check": "prettier --check src/**/*.ts",
+    "format:all": "prettier --write .",
+    "linefix": "npm run format:all && npm run lint:fix",
     "prepare": "husky install",
     "prepublishOnly": "npm run build && npm test",
     "prepack": "npm run build",
@@ -110,9 +113,11 @@
     "typescript": "^5.2.2"
   },
   "lint-staged": {
-    "*.ts": [
-      "eslint --fix",
+    "*.{ts,js,json,md,yml,yaml}": [
       "prettier --write"
+    ],
+    "*.ts": [
+      "eslint --fix"
     ]
   },
   "config": {

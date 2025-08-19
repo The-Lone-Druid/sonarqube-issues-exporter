@@ -4,9 +4,9 @@ import { AppConfig } from '../types/config';
 import { getLogger } from '../utils';
 
 export class SonarQubeService {
-  private api: AxiosInstance;
-  private logger = getLogger();
-  private config: AppConfig['sonarqube'];
+  private readonly api: AxiosInstance;
+  private readonly logger = getLogger();
+  private readonly config: AppConfig['sonarqube'];
 
   constructor(config: AppConfig['sonarqube']) {
     this.config = config;
@@ -27,7 +27,7 @@ export class SonarQubeService {
       },
       (error) => {
         this.logger.error('Request error:', error);
-        return Promise.reject(error);
+        return Promise.reject(error instanceof Error ? error : new Error(String(error)));
       }
     );
 

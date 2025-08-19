@@ -72,10 +72,9 @@ describe('HtmlExporter', () => {
         outputPath: './new-reports',
       });
 
-      expect(mockMkdir).toHaveBeenCalledWith(
-        expect.stringContaining('new-reports'),
-        { recursive: true }
-      );
+      expect(mockMkdir).toHaveBeenCalledWith(expect.stringContaining('new-reports'), {
+        recursive: true,
+      });
     });
   });
 

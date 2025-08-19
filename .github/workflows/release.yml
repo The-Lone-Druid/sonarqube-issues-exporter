@@ -14,7 +14,7 @@ jobs:
     name: 📦 Create Release
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'chore(release)')"
-    
+
     steps:
       - name: 🛎️ Checkout code
         uses: actions/checkout@v4
@@ -66,10 +66,10 @@ jobs:
         run: |
           # Get the latest tag
           LATEST_TAG=$(git describe --tags --abbrev=0)
-          
+
           # Extract changelog for this version
           CHANGELOG_CONTENT=$(sed -n "/## \[$(echo $LATEST_TAG | sed 's/v//')\]/,/## \[/{/## \[$(echo $LATEST_TAG | sed 's/v//')\]/!{/## \[/q};p}" CHANGELOG.md | head -n -1)
-          
+
           # Create GitHub release
           gh release create $LATEST_TAG \
             --title "Release $LATEST_TAG" \
