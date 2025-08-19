@@ -70,16 +70,16 @@ async function fetchIssues() {
 function generateHtml(issues) {
   function escapeHtml(str) {
     return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   }
 
   const data = issues.map((issue) => ({
     key: issue.key,
-    file: (issue.component || "N/A").split(':').pop(),
+    file: (issue.component || "N/A").split(":").pop(),
     line: issue.line || "N/A",
     message: escapeHtml(issue.message),
     severity: issue.severity,
@@ -91,23 +91,23 @@ function generateHtml(issues) {
   const metrics = {
     total: issues.length,
     severities: {
-      BLOCKER: issues.filter(i => i.severity === 'BLOCKER').length,
-      CRITICAL: issues.filter(i => i.severity === 'CRITICAL').length,
-      MAJOR: issues.filter(i => i.severity === 'MAJOR').length,
-      MINOR: issues.filter(i => i.severity === 'MINOR').length,
-      INFO: issues.filter(i => i.severity === 'INFO').length,
+      BLOCKER: issues.filter((i) => i.severity === "BLOCKER").length,
+      CRITICAL: issues.filter((i) => i.severity === "CRITICAL").length,
+      MAJOR: issues.filter((i) => i.severity === "MAJOR").length,
+      MINOR: issues.filter((i) => i.severity === "MINOR").length,
+      INFO: issues.filter((i) => i.severity === "INFO").length,
     },
     types: {
-      BUG: issues.filter(i => i.type === 'BUG').length,
-      VULNERABILITY: issues.filter(i => i.type === 'VULNERABILITY').length,
-      CODE_SMELL: issues.filter(i => i.type === 'CODE_SMELL').length,
+      BUG: issues.filter((i) => i.type === "BUG").length,
+      VULNERABILITY: issues.filter((i) => i.type === "VULNERABILITY").length,
+      CODE_SMELL: issues.filter((i) => i.type === "CODE_SMELL").length,
     },
     statuses: {
-      OPEN: issues.filter(i => i.status === 'OPEN').length,
-      CONFIRMED: issues.filter(i => i.status === 'CONFIRMED').length,
-      RESOLVED: issues.filter(i => i.status === 'RESOLVED').length,
-      REOPENED: issues.filter(i => i.status === 'REOPENED').length,
-    }
+      OPEN: issues.filter((i) => i.status === "OPEN").length,
+      CONFIRMED: issues.filter((i) => i.status === "CONFIRMED").length,
+      RESOLVED: issues.filter((i) => i.status === "RESOLVED").length,
+      REOPENED: issues.filter((i) => i.status === "REOPENED").length,
+    },
   };
 
   return `
@@ -122,6 +122,71 @@ function generateHtml(issues) {
       <link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" rel="stylesheet">
       <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
       <style>
+        :root {
+          --bs-body-bg: #ffffff;
+          --bs-body-color: #212529;
+          --bs-card-bg: #ffffff;
+          --bs-card-border-color: rgba(0,0,0,.125);
+          --bs-border-color: #dee2e6;
+          --bs-secondary-bg: #f8f9fa;
+          --shadow-color: rgba(58, 59, 69, 0.15);
+        }
+        
+        [data-bs-theme="dark"] {
+          --bs-body-bg: #212529;
+          --bs-body-color: #ffffff;
+          --bs-card-bg: #343a40;
+          --bs-card-border-color: rgba(255,255,255,.125);
+          --bs-border-color: #495057;
+          --bs-secondary-bg: #6c757d;
+          --shadow-color: rgba(0, 0, 0, 0.25);
+        }
+        
+        body {
+          background-color: var(--bs-body-bg) !important;
+          color: var(--bs-body-color) !important;
+          transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        /* Override Bootstrap's bg-light class */
+        body.bg-light {
+          background-color: var(--bs-body-bg) !important;
+        }
+        
+        [data-bs-theme="dark"] body,
+        [data-bs-theme="dark"] body.bg-light {
+          background-color: var(--bs-body-bg) !important;
+        }
+        
+        /* Additional background enforcement */
+        html {
+          transition: background-color 0.3s ease;
+        }
+        
+        [data-bs-theme="dark"] html {
+          background-color: var(--bs-body-bg) !important;
+        }
+        
+        [data-bs-theme="light"] html {
+          background-color: var(--bs-body-bg) !important;
+        }
+        
+        .card {
+          background-color: var(--bs-card-bg) !important;
+          border-color: var(--bs-card-border-color) !important;
+        }
+        
+        .table {
+          --bs-table-bg: var(--bs-card-bg);
+          --bs-table-border-color: var(--bs-border-color);
+        }
+        
+        .form-select, .form-control {
+          background-color: var(--bs-card-bg) !important;
+          border-color: var(--bs-border-color) !important;
+          color: var(--bs-body-color) !important;
+        }
+        
         body {
           padding: 0;
           margin: 0;
@@ -155,7 +220,7 @@ function generateHtml(issues) {
           color: #dddfeb !important;
         }
         .shadow {
-          box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+          box-shadow: 0 0.15rem 1.75rem 0 var(--shadow-color) !important;
         }
         .btn-link:hover {
           text-decoration: none !important;
@@ -169,6 +234,84 @@ function generateHtml(issues) {
         .btn-link:focus {
           box-shadow: none;
         }
+        
+        /* Dark theme adjustments */
+        [data-bs-theme="dark"] .btn-outline-primary {
+          color: #6ea8fe;
+          border-color: #6ea8fe;
+        }
+        
+        [data-bs-theme="dark"] .btn-outline-primary:hover {
+          background-color: #6ea8fe;
+          border-color: #6ea8fe;
+          color: #000;
+        }
+        
+        [data-bs-theme="dark"] .btn-outline-secondary {
+          color: #adb5bd;
+          border-color: #6c757d;
+        }
+        
+        [data-bs-theme="dark"] .btn-outline-secondary:hover {
+          background-color: #6c757d;
+          border-color: #6c757d;
+          color: #fff;
+        }
+        
+        [data-bs-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > td {
+          background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        [data-bs-theme="dark"] .table-hover > tbody > tr:hover > td {
+          background-color: rgba(255, 255, 255, 0.075);
+        }
+        
+        [data-bs-theme="dark"] .dataTables_wrapper .dataTables_length,
+        [data-bs-theme="dark"] .dataTables_wrapper .dataTables_filter,
+        [data-bs-theme="dark"] .dataTables_wrapper .dataTables_info,
+        [data-bs-theme="dark"] .dataTables_wrapper .dataTables_paginate {
+          color: var(--bs-body-color);
+        }
+        
+        [data-bs-theme="dark"] .page-link {
+          background-color: var(--bs-card-bg);
+          border-color: var(--bs-border-color);
+          color: var(--bs-body-color);
+        }
+        
+        [data-bs-theme="dark"] .page-link:hover {
+          background-color: var(--bs-secondary-bg);
+          border-color: var(--bs-border-color);
+          color: var(--bs-body-color);
+        }
+        
+        [data-bs-theme="dark"] .page-item.active .page-link {
+          background-color: #0d6efd;
+          border-color: #0d6efd;
+          color: #ffffff;
+        }
+        
+        [data-bs-theme="dark"] .page-item.disabled .page-link {
+          background-color: var(--bs-card-bg);
+          border-color: var(--bs-border-color);
+          color: #6c757d;
+        }
+        
+        /* Light theme pagination (ensure consistency) */
+        [data-bs-theme="light"] .page-item.active .page-link,
+        .page-item.active .page-link {
+          background-color: #0d6efd;
+          border-color: #0d6efd;
+          color: #ffffff;
+        }
+        
+        [data-bs-theme="light"] .page-link:hover,
+        .page-link:hover {
+          background-color: #e9ecef;
+          border-color: #dee2e6;
+          color: #0d6efd;
+        }
+        
         .severity-badge {
           padding: 0.25rem 0.5rem;
           border-radius: 0.25rem;
@@ -216,7 +359,14 @@ function generateHtml(issues) {
     <body class="bg-light">
       <div class="content-wrapper">
         <div class="container-fluid">
-          <h1 class="h3 mb-4">SonarQube Issues Report</h1>
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">SonarQube Issues Report</h1>
+            <div class="theme-toggle">
+              <button id="theme-toggle" class="btn btn-outline-secondary btn-sm" title="Toggle theme">
+                <i class="fas fa-moon" id="theme-icon"></i>
+              </button>
+            </div>
+          </div>
           
           <!-- Collapsible Metrics Overview -->
           <div class="card mb-4">
@@ -241,7 +391,9 @@ function generateHtml(issues) {
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                       <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Issues</div>
-                      <div class="h5 mb-0 font-weight-bold text-gray-800">${metrics.total}</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">${
+                        metrics.total
+                      }</div>
                     </div>
                     <div class="col-auto">
                       <i class="fas fa-bug fa-2x text-gray-300"></i>
@@ -257,7 +409,9 @@ function generateHtml(issues) {
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                       <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Critical Issues</div>
-                      <div class="h5 mb-0 font-weight-bold text-gray-800">${metrics.severities.BLOCKER + metrics.severities.CRITICAL}</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">${
+                        metrics.severities.BLOCKER + metrics.severities.CRITICAL
+                      }</div>
                     </div>
                     <div class="col-auto">
                       <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
@@ -273,7 +427,9 @@ function generateHtml(issues) {
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                       <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Bugs</div>
-                      <div class="h5 mb-0 font-weight-bold text-gray-800">${metrics.types.BUG}</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">${
+                        metrics.types.BUG
+                      }</div>
                     </div>
                     <div class="col-auto">
                       <i class="fas fa-times-circle fa-2x text-gray-300"></i>
@@ -289,7 +445,9 @@ function generateHtml(issues) {
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                       <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Vulnerabilities</div>
-                      <div class="h5 mb-0 font-weight-bold text-gray-800">${metrics.types.VULNERABILITY}</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">${
+                        metrics.types.VULNERABILITY
+                      }</div>
                     </div>
                     <div class="col-auto">
                       <i class="fas fa-shield-alt fa-2x text-gray-300"></i>
@@ -312,25 +470,35 @@ function generateHtml(issues) {
                     <div class="col-sm-6">
                       <div class="mb-2">
                         <span class="severity-badge severity-BLOCKER">BLOCKER</span>
-                        <span class="float-end fw-bold">${metrics.severities.BLOCKER}</span>
+                        <span class="float-end fw-bold">${
+                          metrics.severities.BLOCKER
+                        }</span>
                       </div>
                       <div class="mb-2">
                         <span class="severity-badge severity-CRITICAL">CRITICAL</span>
-                        <span class="float-end fw-bold">${metrics.severities.CRITICAL}</span>
+                        <span class="float-end fw-bold">${
+                          metrics.severities.CRITICAL
+                        }</span>
                       </div>
                       <div class="mb-2">
                         <span class="severity-badge severity-MAJOR">MAJOR</span>
-                        <span class="float-end fw-bold">${metrics.severities.MAJOR}</span>
+                        <span class="float-end fw-bold">${
+                          metrics.severities.MAJOR
+                        }</span>
                       </div>
                     </div>
                     <div class="col-sm-6">
                       <div class="mb-2">
                         <span class="severity-badge severity-MINOR">MINOR</span>
-                        <span class="float-end fw-bold">${metrics.severities.MINOR}</span>
+                        <span class="float-end fw-bold">${
+                          metrics.severities.MINOR
+                        }</span>
                       </div>
                       <div class="mb-2">
                         <span class="severity-badge severity-INFO">INFO</span>
-                        <span class="float-end fw-bold">${metrics.severities.INFO}</span>
+                        <span class="float-end fw-bold">${
+                          metrics.severities.INFO
+                        }</span>
                       </div>
                     </div>
                   </div>
@@ -349,34 +517,48 @@ function generateHtml(issues) {
                       <h6 class="text-secondary">By Type</h6>
                       <div class="mb-2">
                         <span class="type-badge type-BUG">BUG</span>
-                        <span class="float-end fw-bold">${metrics.types.BUG}</span>
+                        <span class="float-end fw-bold">${
+                          metrics.types.BUG
+                        }</span>
                       </div>
                       <div class="mb-2">
                         <span class="type-badge type-VULNERABILITY">VULNERABILITY</span>
-                        <span class="float-end fw-bold">${metrics.types.VULNERABILITY}</span>
+                        <span class="float-end fw-bold">${
+                          metrics.types.VULNERABILITY
+                        }</span>
                       </div>
                       <div class="mb-2">
                         <span class="type-badge type-CODE_SMELL">CODE_SMELL</span>
-                        <span class="float-end fw-bold">${metrics.types.CODE_SMELL}</span>
+                        <span class="float-end fw-bold">${
+                          metrics.types.CODE_SMELL
+                        }</span>
                       </div>
                     </div>
                     <div class="col-sm-6">
                       <h6 class="text-secondary">By Status</h6>
                       <div class="mb-2">
                         <span class="badge bg-danger">OPEN</span>
-                        <span class="float-end fw-bold">${metrics.statuses.OPEN}</span>
+                        <span class="float-end fw-bold">${
+                          metrics.statuses.OPEN
+                        }</span>
                       </div>
                       <div class="mb-2">
                         <span class="badge bg-warning">CONFIRMED</span>
-                        <span class="float-end fw-bold">${metrics.statuses.CONFIRMED}</span>
+                        <span class="float-end fw-bold">${
+                          metrics.statuses.CONFIRMED
+                        }</span>
                       </div>
                       <div class="mb-2">
                         <span class="badge bg-success">RESOLVED</span>
-                        <span class="float-end fw-bold">${metrics.statuses.RESOLVED}</span>
+                        <span class="float-end fw-bold">${
+                          metrics.statuses.RESOLVED
+                        }</span>
                       </div>
                       <div class="mb-2">
                         <span class="badge bg-info">REOPENED</span>
-                        <span class="float-end fw-bold">${metrics.statuses.REOPENED}</span>
+                        <span class="float-end fw-bold">${
+                          metrics.statuses.REOPENED
+                        }</span>
                       </div>
                     </div>
                   </div>
@@ -430,11 +612,14 @@ function generateHtml(issues) {
                     </tr>
                   </thead>
                   <tbody>
-                    ${data.map(row => {
+                    ${data
+                      .map((row) => {
                         const severity = `<span class="severity-badge severity-${row.severity}">${row.severity}</span>`;
                         const type = `<span class="type-badge type-${row.type}">${row.type}</span>`;
-                        const copyButton = `<button class="btn btn-sm btn-outline-primary" onclick="navigator.clipboard.writeText('${escapeHtml(row.file)}')" title="Copy file path">Copy Path</button>`;
-                        
+                        const copyButton = `<button class="btn btn-sm btn-outline-primary" onclick="navigator.clipboard.writeText('${escapeHtml(
+                          row.file
+                        )}')" title="Copy file path">Copy Path</button>`;
+
                         return `
                           <tr>
                             <td>${severity}</td>
@@ -446,7 +631,8 @@ function generateHtml(issues) {
                             <td>${copyButton}</td>
                           </tr>
                         `;
-                      }).join('')}
+                      })
+                      .join("")}
                   </tbody>
                 </table>
               </div>
@@ -462,7 +648,91 @@ function generateHtml(issues) {
       <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
       <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
       <script>
+        // Theme management
+        function getStoredTheme() {
+          return localStorage.getItem('theme');
+        }
+
+        function setStoredTheme(theme) {
+          localStorage.setItem('theme', theme);
+        }
+
+        function getPreferredTheme() {
+          const storedTheme = getStoredTheme();
+          if (storedTheme) {
+            return storedTheme;
+          }
+          return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        function setTheme(theme) {
+          const body = document.body;
+          
+          if (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.setAttribute('data-bs-theme', 'dark');
+            body.className = body.className.replace('bg-light', '').trim();
+            if (!body.className.includes('bg-dark')) {
+              body.classList.add('bg-dark');
+            }
+          } else if (theme === 'dark') {
+            document.documentElement.setAttribute('data-bs-theme', 'dark');
+            body.className = body.className.replace('bg-light', '').trim();
+            if (!body.className.includes('bg-dark')) {
+              body.classList.add('bg-dark');
+            }
+          } else {
+            document.documentElement.setAttribute('data-bs-theme', 'light');
+            body.className = body.className.replace('bg-dark', '').trim();
+            if (!body.className.includes('bg-light')) {
+              body.classList.add('bg-light');
+            }
+          }
+          
+          // Update icon
+          const themeIcon = document.getElementById('theme-icon');
+          const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+          if (currentTheme === 'dark') {
+            themeIcon.className = 'fas fa-sun';
+          } else {
+            themeIcon.className = 'fas fa-moon';
+          }
+        }
+
+        function showActiveTheme(theme) {
+          const activeThemeIcon = document.querySelector('#theme-icon');
+          const btnToActive = document.querySelector('#theme-toggle');
+          
+          if (!activeThemeIcon || !btnToActive) return;
+          
+          btnToActive.setAttribute('aria-pressed', 'true');
+          setTheme(theme);
+        }
+
+        // Initialize theme on page load
+        (() => {
+          const theme = getPreferredTheme();
+          setTheme(theme);
+          showActiveTheme(theme);
+        })();
+
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+          const storedTheme = getStoredTheme();
+          if (storedTheme !== 'light' && storedTheme !== 'dark') {
+            setTheme(getPreferredTheme());
+          }
+        });
+
         $(document).ready(function() {
+          // Theme toggle functionality
+          $('#theme-toggle').on('click', function() {
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setStoredTheme(newTheme);
+            setTheme(newTheme);
+            showActiveTheme(newTheme);
+          });
+
           // Initialize DataTable
           const table = $('#issues-table').DataTable({
             responsive: true,
