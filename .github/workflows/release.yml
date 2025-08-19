@@ -1,0 +1,83 @@
+name: 🚀 Release & Publish
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
+      - '*.md'
+
+jobs:
+  release:
+    name: 📦 Create Release
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'chore(release)')"
+    
+    steps:
+      - name: 🛎️ Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🧪 Run tests
+        run: npm test
+
+      - name: 🏗️ Build project
+        run: npm run build
+
+      - name: 🔍 Check for changes
+        id: check-changes
+        run: |
+          if git diff --quiet HEAD~1 HEAD -- src/ package.json; then
+            echo "changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🏷️ Generate release
+        if: steps.check-changes.outputs.changes == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          npm run release
+
+      - name: 🚀 Push changes
+        if: steps.check-changes.outputs.changes == 'true'
+        run: |
+          git push --follow-tags origin main
+
+      - name: 📢 Create GitHub Release
+        if: steps.check-changes.outputs.changes == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the latest tag
+          LATEST_TAG=$(git describe --tags --abbrev=0)
+          
+          # Extract changelog for this version
+          CHANGELOG_CONTENT=$(sed -n "/## \[$(echo $LATEST_TAG | sed 's/v//')\]/,/## \[/{/## \[$(echo $LATEST_TAG | sed 's/v//')\]/!{/## \[/q};p}" CHANGELOG.md | head -n -1)
+          
+          # Create GitHub release
+          gh release create $LATEST_TAG \
+            --title "Release $LATEST_TAG" \
+            --notes "$CHANGELOG_CONTENT" \
+            --latest
+
+      - name: 📦 Publish to NPM
+        if: steps.check-changes.outputs.changes == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public

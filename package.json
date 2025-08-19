@@ -1,28 +1,123 @@
 {
-  "name": "sonarqube-issues-viewer",
-  "version": "1.0.0",
-  "main": "app.js",
-  "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js"
+  "name": "sonarqube-issues-exporter",
+  "version": "2.0.0",
+  "description": "Enterprise-level SonarQube issues exporter with TypeScript support for generating shareable HTML reports",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "sonarqube-exporter": "dist/cli.js",
+    "sq-exporter": "dist/cli.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "A web application to view and manage SonarQube issues",
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/cli.ts",
+    "dev:lib": "ts-node src/index.ts",
+    "watch": "tsc --watch",
+    "dev:watch": "nodemon --exec ts-node src/cli.ts",
+    "export": "ts-node src/cli.ts",
+    "export:prod": "node dist/cli.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "format": "prettier --write src/**/*.ts",
+    "prepare": "husky install",
+    "prepublishOnly": "npm run build && npm test",
+    "prepack": "npm run build",
+    "clean": "rimraf dist",
+    "prebuild": "npm run clean",
+    "postbuild": "npm run copy-templates",
+    "copy-templates": "cp -r src/templates dist/ && cp -r src/assets dist/ 2>/dev/null || echo 'Templates and assets copied'",
+    "commit": "cz",
+    "commit:lint": "commitlint --edit",
+    "release": "standard-version",
+    "release:minor": "standard-version --release-as minor",
+    "release:major": "standard-version --release-as major",
+    "release:patch": "standard-version --release-as patch",
+    "release:first": "standard-version --first-release",
+    "release:dry": "standard-version --dry-run",
+    "postrelease": "git push --follow-tags origin main && npm publish"
+  },
+  "keywords": [
+    "sonarqube",
+    "issues",
+    "exporter",
+    "html",
+    "report",
+    "typescript",
+    "enterprise",
+    "cli",
+    "code-quality",
+    "static-analysis",
+    "vulnerability",
+    "bugs",
+    "code-smell",
+    "dashboard",
+    "npm-package"
+  ],
+  "author": "The-Lone-Druid <your.email@example.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/The-Lone-Druid/sonarqube-issues-exporter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/The-Lone-Druid/sonarqube-issues-exporter/issues"
+  },
+  "homepage": "https://github.com/The-Lone-Druid/sonarqube-issues-exporter#readme",
   "dependencies": {
     "axios": "^1.11.0",
-    "bootstrap": "^5.3.7",
-    "bootstrap-icons": "^1.13.1",
-    "datatables.net": "^2.3.2",
-    "datatables.net-bs5": "^2.3.2",
+    "commander": "^12.1.0",
     "dotenv": "^16.3.1",
-    "ejs": "^3.1.9",
-    "express": "^4.18.2",
-    "jquery": "^3.7.1",
-    "morgan": "^1.10.0"
+    "handlebars": "^4.7.8",
+    "winston": "^3.11.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@types/handlebars": "^4.0.40",
+    "@types/jest": "^29.5.8",
+    "@types/node": "^20.9.0",
+    "@typescript-eslint/eslint-plugin": "^6.12.0",
+    "@typescript-eslint/parser": "^6.12.0",
+    "commitizen": "^4.3.1",
+    "cz-conventional-changelog": "^3.3.0",
+    "eslint": "^8.54.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.1",
+    "husky": "^8.0.3",
+    "jest": "^29.7.0",
+    "lint-staged": "^15.1.0",
+    "nodemon": "^3.0.1",
+    "prettier": "^3.1.0",
+    "rimraf": "^5.0.5",
+    "standard-version": "^9.5.0",
+    "ts-jest": "^29.1.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
   }
 }

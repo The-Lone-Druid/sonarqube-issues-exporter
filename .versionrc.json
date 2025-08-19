@@ -1,0 +1,73 @@
+{
+  "types": [
+    {
+      "type": "feat",
+      "section": "🚀 Features"
+    },
+    {
+      "type": "fix",
+      "section": "🐛 Bug Fixes"
+    },
+    {
+      "type": "perf",
+      "section": "⚡ Performance Improvements"
+    },
+    {
+      "type": "refactor",
+      "section": "♻️ Code Refactoring"
+    },
+    {
+      "type": "docs",
+      "section": "📚 Documentation"
+    },
+    {
+      "type": "test",
+      "section": "🧪 Tests"
+    },
+    {
+      "type": "build",
+      "section": "🏗️ Build System"
+    },
+    {
+      "type": "ci",
+      "section": "👷 CI/CD"
+    },
+    {
+      "type": "style",
+      "section": "💄 Styles",
+      "hidden": false
+    },
+    {
+      "type": "chore",
+      "section": "🔧 Maintenance",
+      "hidden": false
+    }
+  ],
+  "commitUrlFormat": "https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/{{hash}}",
+  "compareUrlFormat": "https://github.com/The-Lone-Druid/sonarqube-issues-exporter/compare/{{previousTag}}...{{currentTag}}",
+  "issueUrlFormat": "https://github.com/The-Lone-Druid/sonarqube-issues-exporter/issues/{{id}}",
+  "userUrlFormat": "https://github.com/{{user}}",
+  "releaseCommitMessageFormat": "chore(release): {{currentTag}}",
+  "skip": {
+    "bump": false,
+    "changelog": false,
+    "commit": false,
+    "tag": false
+  },
+  "bumpFiles": [
+    {
+      "filename": "package.json",
+      "type": "json"
+    },
+    {
+      "filename": "package-lock.json",
+      "type": "json"
+    }
+  ],
+  "packageFiles": [
+    {
+      "filename": "package.json",
+      "type": "json"
+    }
+  ]
+}

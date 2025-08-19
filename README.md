@@ -1,111 +1,132 @@
 # SonarQube Issues Exporter
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub issues](https://img.shields.io/github/issues/The-Lone-Druid/sonarqube-issues-exporter)](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/issues)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.2+-blue.svg)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 
-A Node.js tool to export SonarQube issues into an interactive HTML report with filtering and search capabilities. Transform your SonarQube analysis results into a beautiful, responsive, and feature-rich HTML report.
+An enterprise-level Node.js application with TypeScript support for exporting SonarQube issues to beautiful, shareable HTML reports. Perfect for sharing code quality insights with your team and stakeholders.
 
-## Features
+## ✨ Features
 
-- Export SonarQube issues to an interactive HTML report
-- **Comprehensive Metrics Dashboard** - Overview of issues with key statistics
-- Filter issues by severity and type
-- Search through issues with DataTables integration
-- Copy file paths with a single click
-- Responsive design with Bootstrap 5
-- Pagination and sorting capabilities
-- Beautiful badges for severity and issue types
-- **Collapsible metrics section** for focused table viewing
+- 🚀 **Enterprise-Ready**: Built with TypeScript for type safety and maintainability
+- 📊 **Beautiful Reports**: Generate responsive HTML reports with dark/light theme support
+- 🔧 **Highly Configurable**: Flexible configuration via files, environment variables, or CLI options
+- 📈 **Progress Tracking**: Real-time progress reporting during data fetching
+- 🎯 **Filtering Options**: Filter by severity, type, status, and more
+- 🔒 **Secure**: Token-based authentication with SonarQube
+- 📱 **Responsive Design**: Reports work perfectly on desktop and mobile devices
+- 🌙 **Theme Support**: Automatic dark/light mode based on user preference
+- ⚡ **Fast**: Optimized data fetching with pagination and caching
+- 🧪 **Well Tested**: Comprehensive test suite with high coverage
 
-## Prerequisites
+## 📋 Prerequisites
 
-- Node.js (v12 or higher)
-- A running SonarQube instance
-- SonarQube authentication token
-- Project key from SonarQube
+- Node.js 18.0.0 or higher
+- npm 8.0.0 or higher
+- Access to a SonarQube server (version 7.9+)
+- SonarQube user token with appropriate permissions
 
-## Installation
+## 🚀 Quick Start
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/The-Lone-Druid/sonarqube-issues-exporter.git
-   cd sonarqube-issues-exporter
-   ```
+### Installation
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Set up environment variables:
-   - Copy `.env.example` to `.env`
-   - Fill in your SonarQube configuration:
-     ```bash
-     SONARQUBE_URL=http://your-sonarqube-url
-     SONARQUBE_TOKEN=your-token-here
-     SONARQUBE_PROJECT_KEY=your-project-key
-     ```
-
-## Usage
-
-Run the script to generate the report:
 ```bash
-node export_issues.js
+# Clone the repository
+git clone https://github.com/The-Lone-Druid/sonarqube-issues-exporter.git
+cd sonarqube-issues-exporter
+
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
 ```
 
-This will create `sonarqube_issues.html` in your current directory. Open it in a web browser to view the interactive report.
+### Configuration
 
-## Metrics Dashboard
+1. **Environment Variables** (Quick Setup):
+   ```bash
+   cp .env.example .env
+   # Edit .env with your SonarQube configuration
+   ```
 
-The generated HTML report includes a comprehensive metrics dashboard that provides:
+2. **Configuration File** (Recommended):
+   ```bash
+   cp config.example.json config.json
+   # Edit config.json with your settings
+   ```
 
-### Quick Overview Cards
-- **Total Issues**: Complete count of all issues in your project
-- **Critical Issues**: Combined count of Blocker and Critical severity issues
-- **Bugs**: Total number of bug-type issues
-- **Vulnerabilities**: Security vulnerability count
+### Basic Usage
 
-### Detailed Metrics
-- **Issues by Severity**: Visual breakdown with colored badges showing distribution across:
-  - Blocker, Critical, Major, Minor, and Info severities
-- **Issues by Type & Status**: Split view displaying:
-  - Issue types (Bug, Vulnerability, Code Smell)
-  - Current status (Open, Confirmed, Resolved, Reopened)
+```bash
+# Export issues using environment variables
+npm run export
 
-### User Experience
-- **Collapsible Design**: Metrics section is collapsed by default, allowing teams to focus on the issues table
-- **Easy Access**: Click the "Issues Metrics Overview" header to expand/collapse the metrics
-- **Visual Feedback**: Smooth animations and rotating chevron indicate section state
+# Export with custom configuration
+npm run export -- --config ./config.json
 
-## Report Features
+# Export with CLI options
+npm run export -- --output ./my-reports --filename my-report.html --verbose
+```
 
-- **Metrics Overview Dashboard**: 
-  - Total issues count with quick summary cards
-  - Critical issues count (Blocker + Critical severities)
-  - Bug and vulnerability counts
-  - Detailed breakdown by severity (Blocker, Critical, Major, Minor, Info)
-  - Issue type distribution (Bug, Vulnerability, Code Smell)
-  - Status overview (Open, Confirmed, Resolved, Reopened)
-  - **Collapsible design** - metrics section collapsed by default for focused table viewing
-- **Filtering**: Filter issues by severity (Blocker, Critical, Major, Minor, Info) and type (Bug, Vulnerability, Code Smell)
-- **Searching**: Full-text search across all issues
-- **Sorting**: Click column headers to sort issues
-- **Copy File Paths**: Easily copy file paths with a single click
-- **Responsive Design**: Works on all device sizes
-- **Pagination**: Configure how many issues to show per page
-- **Smart Filtering**: Automatically excludes closed issues from the report
+## 📖 Configuration
 
-## Contributing
+### Environment Variables
 
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `SONARQUBE_URL` | SonarQube server URL | `http://localhost:9000` |
+| `SONARQUBE_TOKEN` | User token for authentication | Required |
+| `SONARQUBE_PROJECT_KEY` | Project key to export | Required |
+| `SONARQUBE_ORGANIZATION` | Organization key (SonarCloud) | Optional |
+| `EXPORT_OUTPUT_PATH` | Output directory for reports | `./reports` |
+| `EXPORT_FILENAME` | Output filename | `sonarqube-issues-report.html` |
+| `EXPORT_EXCLUDE_STATUSES` | Comma-separated statuses to exclude | `CLOSED` |
+| `EXPORT_INCLUDE_RESOLVED` | Include resolved issues | `false` |
+| `EXPORT_MAX_ISSUES` | Maximum issues to fetch | `10000` |
+| `LOG_LEVEL` | Logging level | `info` |
 
-## License
+## 🛠️ Development
+
+### Setup Development Environment
+
+```bash
+# Install dependencies
+npm install
+
+# Start development mode (CLI interface)
+npm run dev
+
+# Run library development mode with demo export
+npm run dev:lib
+
+# Watch for TypeScript changes
+npm run watch
+
+# Development with auto-restart
+npm run dev:watch
+
+# Run tests
+npm test
+
+# Run linting
+npm run lint
+```
+
+### Project Structure
+
+```
+src/
+├── config/          # Configuration management
+├── services/        # Business logic services
+├── exporters/       # Export functionality
+├── types/          # TypeScript type definitions
+├── utils/          # Utility functions
+├── templates/      # HTML templates
+├── cli.ts          # CLI interface
+└── index.ts        # Main entry point
+```
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- [SonarQube](https://www.sonarqube.org/) for their excellent code quality tool
-- [DataTables](https://datatables.net/) for the interactive table features
-- [Bootstrap](https://getbootstrap.com/) for the responsive design framework

@@ -1,0 +1,20 @@
+{
+  "sonarqube": {
+    "url": "https://your-sonarqube-server.com",
+    "token": "your-sonarqube-token",
+    "projectKey": "your-project-key",
+    "organization": "your-organization-key"
+  },
+  "export": {
+    "outputPath": "./reports",
+    "filename": "sonarqube-issues-report.html",
+    "excludeStatuses": ["CLOSED"],
+    "includeResolvedIssues": false,
+    "maxIssues": 10000,
+    "template": "default"
+  },
+  "logging": {
+    "level": "info",
+    "file": "./logs/export.log"
+  }
+}
