@@ -59,20 +59,6 @@ npm install sonarqube-issues-exporter
 npx sonarqube-exporter --help
 ```
 
-#### Development Installation
-
-```bash
-# For development or contributing
-git clone https://github.com/The-Lone-Druid/sonarqube-issues-exporter.git
-cd sonarqube-issues-exporter
-
-# Install dependencies
-npm install
-
-# Build the project
-npm run build
-```
-
 ### Configuration
 
 The SonarQube Issues Exporter supports multiple ways to configure your connection and export settings. Choose the method that works best for your workflow.
@@ -306,26 +292,20 @@ npx sonarqube-exporter export --help
 npx sonarqube-exporter export --config ./config.json
 ```
 
-### Development Usage
-
-```bash
-# Export issues using npm scripts (for development)
-npm run export
-
-# Export with custom configuration
-npm run export -- --config ./config.json
-
-# Export with CLI options
-npm run export -- --output ./my-reports --filename my-report.html --verbose
-```
-
 ## 🛠️ Development
 
 ### Setup Development Environment
 
 ```bash
+# Clone the repository
+git clone https://github.com/The-Lone-Druid/sonarqube-issues-exporter.git
+cd sonarqube-issues-exporter
+
 # Install dependencies
 npm install
+
+# Build the project
+npm run build
 
 # Start development mode (CLI interface)
 npm run dev
@@ -344,6 +324,19 @@ npm test
 
 # Run linting
 npm run lint
+```
+
+### Development Usage
+
+```bash
+# Export issues using npm scripts (for development)
+npm run export
+
+# Export with custom configuration
+npm run export -- --config ./config.json
+
+# Export with CLI options
+npm run export -- --output ./my-reports --filename my-report.html --verbose
 ```
 
 ### Project Structure
