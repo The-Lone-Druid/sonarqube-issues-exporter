@@ -1,27 +1,51 @@
-# Migration Guide: v1.x to v2.x
+# Migration Guide: v1.x/v2.x to v3.0.0
 
-This guide helps you migrate from the JavaScript-based v1.x to the new TypeScript-based v2.x.
+This guide helps you migrate from the JavaScript-based v1.x or the early TypeScript v2.x to the new npm package-based v3.0.0.
 
-## Breaking Changes
+## What's New in v3.0.0
 
-### 1. Node.js Version Requirement
+### 🚀 Major Improvements
 
-- **Old**: Node.js v12+
-- **New**: Node.js v18+
+- **NPM Package**: Now available as a global npm package
+- **CLI Commands**: New `sonarqube-exporter` and `sq-exporter` global commands
+- **Simplified Installation**: No more git cloning required
+- **Automated Versioning**: Conventional commits and automated releases
+- **Enhanced Documentation**: Comprehensive guides and examples
 
-### 2. Command Changes
+## Breaking Changes from v1.x/v2.x
+
+### 1. Installation Method (BREAKING)
+
+```bash
+# v1.x/v2.x (old method)
+git clone https://github.com/The-Lone-Druid/sonarqube-issues-exporter.git
+cd sonarqube-issues-exporter
+npm install
+npm run build
+
+# v3.0.0 (new method)
+npm install -g sonarqube-issues-exporter
+```
+
+### 2. Command Usage (BREAKING)
 
 ```bash
 # v1.x
 node export_issues.js
 
-# v2.x
+# v2.x (development)
 npm run export
+
+# v3.0.0 (production - recommended)
+sonarqube-exporter
 # or
-npm run build && npm run export:prod
+sq-exporter
+
+# v3.0.0 (development - for contributors)
+npm run export
 ```
 
-### 3. Configuration
+### 3. Configuration (Enhanced)
 
 The configuration is now more structured and type-safe:
 
@@ -33,7 +57,7 @@ SONARQUBE_URL=http://localhost:9000
 SONARQUBE_TOKEN=your-token
 SONARQUBE_PROJECT_KEY=your-project
 
-# v2.x (comprehensive)
+# v2.x/v3.0.0 (comprehensive)
 SONARQUBE_URL=http://localhost:9000
 SONARQUBE_TOKEN=your-token
 SONARQUBE_PROJECT_KEY=your-project
@@ -45,7 +69,20 @@ EXPORT_MAX_ISSUES=10000          # New: performance control
 LOG_LEVEL=info                   # New: logging control
 ```
 
-#### Configuration Files (New)
+#### CLI Arguments (New in v3.0.0)
+
+```bash
+# v3.0.0 supports rich CLI arguments
+sonarqube-exporter \
+  --url https://sonarqube.company.com \
+  --token your-token \
+  --project your-project \
+  --output ./reports \
+  --filename custom-report.html \
+  --verbose
+```
+
+#### Configuration Files (Enhanced)
 
 You can now use JSON configuration files:
 
@@ -201,23 +238,104 @@ More descriptive error messages and validation.
 
 **Solution**: Check the new variable names in the updated `.env.example`.
 
+## Quick Migration Steps to v3.0.0
+
+### 1. Uninstall Old Version (if applicable)
+
+```bash
+# Remove old git clone directory
+rm -rf sonarqube-issues-exporter
+
+# Or move it for backup
+mv sonarqube-issues-exporter sonarqube-issues-exporter-backup
+```
+
+### 2. Install v3.0.0
+
+```bash
+# Install globally
+npm install -g sonarqube-issues-exporter
+
+# Verify installation
+sonarqube-exporter --version
+```
+
+### 3. Update Your Scripts
+
+```bash
+# Old way (v1.x/v2.x)
+cd sonarqube-issues-exporter
+npm run export
+
+# New way (v3.0.0)
+sonarqube-exporter --config ./config.json
+```
+
+### 4. Configuration Migration
+
+Your existing configuration files should work as-is:
+
+- `.env` files are supported
+- `config.json` files are supported
+- All environment variables remain the same
+
+## Troubleshooting v3.0.0
+
+### Issue: "Command not found: sonarqube-exporter"
+
+**Solution**: Ensure global installation completed successfully:
+
+```bash
+npm install -g sonarqube-issues-exporter
+npm list -g sonarqube-issues-exporter
+```
+
+### Issue: Permission errors on global install
+
+**Solution**: Use sudo (macOS/Linux) or run as administrator (Windows):
+
+```bash
+sudo npm install -g sonarqube-issues-exporter
+```
+
+### Issue: Want to use local installation
+
+**Solution**: Install locally and use npx:
+
+```bash
+npm install sonarqube-issues-exporter
+npx sonarqube-exporter --help
+```
+
+### Issue: Need development setup
+
+**Solution**: Clone and build for contributing:
+
+```bash
+git clone https://github.com/The-Lone-Druid/sonarqube-issues-exporter.git
+cd sonarqube-issues-exporter
+npm install
+npm run build
+npm run dev
+```
+
 ## Rollback Plan
 
-If you need to rollback to v1.x:
+If you need to rollback from v3.0.0:
 
-1. The old file is backed up as `export_issues.js.bak`
-2. Restore it: `mv export_issues.js.bak export_issues.js`
-3. Use the old command: `node export_issues.js`
+1. **Uninstall v3.0.0**: `npm uninstall -g sonarqube-issues-exporter`
+2. **Restore backup**: Use your backed-up git clone directory
+3. **Use old method**: `cd sonarqube-issues-exporter-backup && npm run export`
 
 ## Support
 
-If you encounter issues during migration:
+If you encounter issues during migration to v3.0.0:
 
 1. Check this migration guide
-2. Review the updated README.md
-3. Open an issue on GitHub
-4. Contact the development team
+2. Review the updated [README.md](./README.md) and [NPM_GUIDE.md](./NPM_GUIDE.md)
+3. Check the [VERSIONING.md](./VERSIONING.md) for development workflow
+4. Open an issue on [GitHub](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/issues)
 
 ---
 
-**Note**: The old v1.x functionality is preserved in `export_issues.js.bak` for emergency use, but we recommend completing the migration to benefit from the new features and improvements.
+**Note**: v3.0.0 is a major improvement with npm package distribution, global CLI access, and enhanced automation. We strongly recommend migrating to benefit from these improvements.

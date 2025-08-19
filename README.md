@@ -1,10 +1,14 @@
 # SonarQube Issues Exporter
 
+[![npm version](https://badge.fury.io/js/sonarqube-issues-exporter.svg)](https://badge.fury.io/js/sonarqube-issues-exporter)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.2+-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![Downloads](https://img.shields.io/npm/dm/sonarqube-issues-exporter.svg)](https://npmjs.org/package/sonarqube-issues-exporter)
 
 An enterprise-level Node.js application with TypeScript support for exporting SonarQube issues to beautiful, shareable HTML reports. Perfect for sharing code quality insights with your team and stakeholders.
+
+> **📦 Now Available as NPM Package!** Install globally with `npm install -g sonarqube-issues-exporter` and use anywhere with the `sonarqube-exporter` or `sq-exporter` commands.
 
 ## ✨ Features
 
@@ -30,8 +34,35 @@ An enterprise-level Node.js application with TypeScript support for exporting So
 
 ### Installation
 
+#### Global Installation (Recommended)
+
 ```bash
-# Clone the repository
+# Install globally via npm
+npm install -g sonarqube-issues-exporter
+```
+
+After global installation, you can use the CLI from anywhere:
+
+```bash
+sonarqube-exporter --help
+# or use the short alias
+sq-exporter --help
+```
+
+#### Local Installation
+
+```bash
+# Install in your project
+npm install sonarqube-issues-exporter
+
+# Use with npx
+npx sonarqube-exporter --help
+```
+
+#### Development Installation
+
+```bash
+# For development or contributing
 git clone https://github.com/The-Lone-Druid/sonarqube-issues-exporter.git
 cd sonarqube-issues-exporter
 
@@ -59,8 +90,33 @@ npm run build
 
 ### Basic Usage
 
+#### Using Global Installation
+
 ```bash
-# Export issues using environment variables
+# Export with default configuration
+sonarqube-exporter
+
+# Export with custom options
+sonarqube-exporter --url https://sonarqube.company.com --token your-token --project your-project
+
+# Use short alias
+sq-exporter --output ./reports --filename my-report.html --verbose
+```
+
+#### Using NPX (Local Installation)
+
+```bash
+# Export issues using npx
+npx sonarqube-exporter --help
+
+# Export with configuration
+npx sonarqube-exporter --config ./config.json
+```
+
+#### Development Usage
+
+```bash
+# Export issues using npm scripts (for development)
 npm run export
 
 # Export with custom configuration
