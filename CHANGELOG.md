@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.2.1](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/compare/v3.2.0...v3.2.1) (2025-08-19)
+
+
+### 🐛 Bug Fixes
+
+* resolve auto-deployment npm publishing issues ([16a3e49](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/16a3e495ae4ac21f9e7cfcf6469caab08e8b5af6))
+
 ## [3.2.0](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/compare/v3.1.0...v3.2.0) (2025-08-19)
 
 
