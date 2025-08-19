@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.2.0](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/compare/v3.1.0...v3.2.0) (2025-08-19)
+
+
+### 🚀 Features
+
+* comprehensive cli enhancement for global package usage ([570223f](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/570223fa8c6174b8a4ba27d42d03f032368e1893))
+
 ## [3.1.0](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/compare/v3.0.0...v3.1.0) (2025-08-19)
 
 
