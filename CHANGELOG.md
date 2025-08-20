@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.2.4](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/compare/v3.2.3...v3.2.4) (2025-08-20)
+
+
+### 🚀 Features
+
+* implement phase 2 complete tabbed dashboard interface ([02c2d47](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/02c2d47792643f99279e78ac1e56f63a8ab0620d))
+
+
+### 📚 Documentation
+
+* fix readme structure and remove redundancies ([65f5b69](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/65f5b690dba3d87618df2ac81dd3d14dc2c30244))
+
 ### [3.2.3](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/compare/v3.2.2...v3.2.3) (2025-08-20)
 
 
