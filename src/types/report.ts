@@ -1,3 +1,6 @@
+// Import enhanced types from service
+import { QualityGateStatus, ProjectMeasures, SecurityHotspotsData } from '../services/sonarqube';
+
 export interface ProcessedIssue {
   key: string;
   file: string;
@@ -17,6 +20,16 @@ export interface ProcessedIssue {
   debt?: string | undefined;
 }
 
+export interface EnhancedTemplateData {
+  issues: ProcessedIssue[];
+  metrics: ReportMetrics;
+  metadata: ReportMetadata;
+  qualityGate: QualityGateStatus;
+  projectMeasures: ProjectMeasures;
+  securityHotspots: SecurityHotspotsData;
+}
+
+// Keep backward compatibility
 export interface TemplateData {
   issues: ProcessedIssue[];
   metrics: ReportMetrics;

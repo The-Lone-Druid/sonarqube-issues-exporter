@@ -5,7 +5,7 @@ import Handlebars from 'handlebars';
 import {
   SonarQubeIssue,
   ProcessedIssue,
-  TemplateData,
+  EnhancedTemplateData,
   ReportMetrics,
   ReportMetadata,
   ExporterResult,
@@ -13,6 +13,7 @@ import {
 } from '../types';
 import { AppConfig } from '../types/config';
 import { getLogger, escapeHtml, extractFilename, formatDate, calculateMetrics } from '../utils';
+import { SonarQubeService } from '../services/sonarqube';
 
 export class HtmlExporter {
   private readonly logger = getLogger();
@@ -37,6 +38,29 @@ export class HtmlExporter {
     // Helper to escape HTML
     Handlebars.registerHelper('escapeHtml', (str: string) => {
       return escapeHtml(str);
+    });
+
+    // Helper for equality comparison
+    Handlebars.registerHelper('eq', (a: any, b: any) => {
+      return a === b;
+    });
+
+    // Helper for greater than comparison
+    Handlebars.registerHelper('gt', (a: any, b: any) => {
+      return a > b;
+    });
+
+    // Helper for conditional rendering
+    Handlebars.registerHelper('if_eq', function (this: any, a: any, b: any, options: any) {
+      if (a === b) {
+        return options.fn(this);
+      }
+      return options.inverse(this);
+    });
+
+    // Helper to get current year
+    Handlebars.registerHelper('currentYear', () => {
+      return new Date().getFullYear();
     });
   }
 
@@ -126,11 +150,15 @@ export class HtmlExporter {
       const metrics = this.calculateReportMetrics(processedIssues);
       const metadata = this.createReportMetadata(processedIssues);
 
+      // Fetch enhanced data using SonarQube service
+      const enhancedData = await this.fetchEnhancedData();
+
       // Prepare template data
-      const templateData: TemplateData = {
+      const templateData: EnhancedTemplateData = {
         issues: processedIssues,
         metrics,
         metadata,
+        ...enhancedData,
       };
 
       // Load and compile template
@@ -173,6 +201,34 @@ export class HtmlExporter {
           rules: {},
         },
         error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+
+  /**
+   * Fetch enhanced data from SonarQube API
+   */
+  private async fetchEnhancedData() {
+    const sonarQubeService = new SonarQubeService(this.config.sonarqube);
+
+    try {
+      const [qualityGate, projectMeasures, securityHotspots] = await Promise.all([
+        sonarQubeService.getQualityGateStatus(),
+        sonarQubeService.getProjectMeasures(),
+        sonarQubeService.getSecurityHotspots(),
+      ]);
+
+      return {
+        qualityGate,
+        projectMeasures,
+        securityHotspots,
+      };
+    } catch (error) {
+      this.logger.warn('Failed to fetch enhanced data, using defaults:', error);
+      return {
+        qualityGate: { status: 'NONE' as const, conditions: [] },
+        projectMeasures: {},
+        securityHotspots: { total: 0, byPriority: {}, byCategory: {}, hotspots: [] },
       };
     }
   }
