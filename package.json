@@ -13,7 +13,7 @@
     "README.md",
     "LICENSE",
     "CHANGELOG.md",
-    "VERSIONING.md"
+    "docs/"
   ],
   "engines": {
     "node": ">=18.0.0",

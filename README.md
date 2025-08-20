@@ -598,6 +598,29 @@ src/
 └── index.ts        # Main entry point
 ```
 
-## 📄 License
+## � Documentation
+
+Comprehensive documentation is available in the [`docs/`](./docs/) directory:
+
+### 🎯 For Users
+
+- **[NPM Guide](./docs/user-guide/npm-guide.md)** - Complete installation and usage guide
+- **[Migration Guide](./docs/user-guide/migration.md)** - Upgrading from previous versions
+- **[Security Guide](./docs/user-guide/security.md)** - Security best practices
+
+### 👨‍💻 For Developers
+
+- **[Contributing Guide](./docs/development/contributing.md)** - How to contribute
+- **[Commit Guidelines](./docs/development/commit-guidelines.md)** - Conventional commits
+- **[Publishing Guide](./docs/development/publishing.md)** - Release process
+- **[Versioning Guide](./docs/development/versioning.md)** - Version management
+
+### 📋 Project Resources
+
+- **[Enhancement Plan](./docs/project/enhancement-plan.md)** - Development roadmap
+- **[Changelog](./CHANGELOG.md)** - Release history
+- **[Documentation Overview](./docs/README.md)** - Full documentation index
+
+## �📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
