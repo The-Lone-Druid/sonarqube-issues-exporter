@@ -3,6 +3,7 @@ import { AppConfig } from '../types/config';
 
 export class AppLogger {
   private readonly logger: Logger;
+  private readonly MAX_META_LENGTH = 1000; // Maximum length for metadata objects
 
   constructor(config: AppConfig['logging']) {
     const logFormat = format.combine(
@@ -49,20 +50,58 @@ export class AppLogger {
     });
   }
 
+  private sanitizeMeta(meta: any): any {
+    if (!meta) return meta;
+
+    // If it's a string, truncate if too long
+    if (typeof meta === 'string') {
+      return meta.length > this.MAX_META_LENGTH
+        ? meta.substring(0, this.MAX_META_LENGTH) + '... [truncated]'
+        : meta;
+    }
+
+    // If it's an object, convert to string and truncate
+    if (typeof meta === 'object') {
+      try {
+        const jsonString = JSON.stringify(meta, (key, value) => {
+          // Hide sensitive data
+          if (
+            key.toLowerCase().includes('token') ||
+            key.toLowerCase().includes('password') ||
+            key.toLowerCase().includes('secret')
+          ) {
+            return '[REDACTED]';
+          }
+          return value;
+        });
+
+        if (jsonString.length > this.MAX_META_LENGTH) {
+          return jsonString.substring(0, this.MAX_META_LENGTH) + '... [truncated]';
+        }
+
+        return JSON.parse(jsonString);
+      } catch {
+        return '[Object - could not serialize]';
+      }
+    }
+
+    return meta;
+  }
+
   info(message: string, meta?: any): void {
-    this.logger.info(message, meta);
+    this.logger.info(message, this.sanitizeMeta(meta));
   }
 
   error(message: string, meta?: any): void {
-    this.logger.error(message, meta);
+    this.logger.error(message, this.sanitizeMeta(meta));
   }
 
   warn(message: string, meta?: any): void {
-    this.logger.warn(message, meta);
+    this.logger.warn(message, this.sanitizeMeta(meta));
   }
 
   debug(message: string, meta?: any): void {
-    this.logger.debug(message, meta);
+    this.logger.debug(message, this.sanitizeMeta(meta));
   }
 }
 

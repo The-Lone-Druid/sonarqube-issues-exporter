@@ -78,11 +78,12 @@ export class SonarQubeService {
     // Add request interceptor for logging
     this.api.interceptors.request.use(
       (config) => {
-        this.logger.debug(`Making request to: ${config.url}`);
+        // Only log URL and method, not the full config which may contain sensitive data
+        this.logger.debug(`Making ${config.method?.toUpperCase()} request to: ${config.url}`);
         return config;
       },
       (error) => {
-        this.logger.error('Request error:', error);
+        this.logger.error('Request error:', error.message || error);
         return Promise.reject(error instanceof Error ? error : new Error(String(error)));
       }
     );
@@ -152,7 +153,9 @@ export class SonarQubeService {
         allIssues = allIssues.concat(filteredIssues);
         totalFetched += filteredIssues.length;
 
-        this.logger.debug(`Fetched page ${page}: ${filteredIssues.length} issues`);
+        this.logger.debug(
+          `Fetched page ${page}: ${filteredIssues.length} issues (total: ${totalFetched})`
+        );
 
         if (onProgress) {
           onProgress(totalFetched, Math.min(paging.total, maxIssues));
@@ -165,7 +168,8 @@ export class SonarQubeService {
 
         page++;
       } catch (error) {
-        this.logger.error(`Failed to fetch page ${page}:`, error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        this.logger.error(`Failed to fetch page ${page}: ${errorMessage}`);
         throw error;
       }
     }
@@ -180,7 +184,8 @@ export class SonarQubeService {
       this.logger.info('SonarQube connection validated successfully');
       return true;
     } catch (error) {
-      this.logger.error('Failed to validate SonarQube connection:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to validate SonarQube connection:', errorMessage);
       return false;
     }
   }
@@ -196,7 +201,8 @@ export class SonarQubeService {
 
       return response.data.components[0] || null;
     } catch (error) {
-      this.logger.error('Failed to fetch project info:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to fetch project info:', errorMessage);
       return null;
     }
   }
@@ -230,7 +236,8 @@ export class SonarQubeService {
           })) || [],
       };
     } catch (error) {
-      this.logger.warn('Failed to fetch quality gate status:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.warn('Failed to fetch quality gate status:', errorMessage);
       return {
         status: 'NONE',
         conditions: [],
@@ -298,7 +305,8 @@ export class SonarQubeService {
 
       return result;
     } catch (error) {
-      this.logger.warn('Failed to fetch project measures:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.warn('Failed to fetch project measures:', errorMessage);
       return {};
     }
   }
@@ -340,7 +348,8 @@ export class SonarQubeService {
         hotspots: hotspots.slice(0, 100), // Limit to first 100 for performance
       };
     } catch (error) {
-      this.logger.warn('Failed to fetch security hotspots:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.warn('Failed to fetch security hotspots:', errorMessage);
       return {
         total: 0,
         byPriority: {},
