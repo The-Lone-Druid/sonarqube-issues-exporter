@@ -314,7 +314,7 @@ export class SonarQubeService {
           projectKey: this.config.projectKey,
           organization: this.config.organization,
           ps: 500, // Page size
-          status: 'TO_REVIEW,IN_REVIEW,REVIEWED',
+          status: 'TO_REVIEW',
         },
       });
 

@@ -6,7 +6,19 @@ export class AppLogger {
 
   constructor(config: AppConfig['logging']) {
     const logFormat = format.combine(
-      format.timestamp(),
+      format.timestamp({
+        format: () =>
+          new Date().toLocaleString('en-US', {
+            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+          }),
+      }),
       format.errors({ stack: true }),
       format.json(),
       format.prettyPrint()

@@ -1,1414 +1,677 @@
-<html lang='en'>
+<!DOCTYPE html>
+<html lang="en">
   <head>
-    <meta charset='UTF-8' />
-    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SonarQube Issues Report - {{metadata.projectKey}}</title>
-    <link
-      href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css'
-      rel='stylesheet'
-    />
-    <link
-      href='https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css'
-      rel='stylesheet'
-    />
-    <link
-      href='https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css'
-      rel='stylesheet'
-    />
-    <link
-      href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
-      rel='stylesheet'
-    />
-    <script src='https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js'></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- DataTables CSS (Tailwind compatible) -->
+    <link href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" rel="stylesheet" />
+    <link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css" rel="stylesheet" />
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+
+    <!-- Tailwind Configuration -->
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: '#f0f9ff',
+                500: '#3b82f6',
+                600: '#2563eb',
+                700: '#1d4ed8',
+                900: '#1e3a8a'
+              },
+              gray: {
+                50: '#f9fafb',
+                100: '#f3f4f6',
+                200: '#e5e7eb',
+                300: '#d1d5db',
+                400: '#9ca3af',
+                500: '#6b7280',
+                600: '#4b5563',
+                700: '#374151',
+                800: '#1f2937',
+                900: '#111827'
+              }
+            }
+          }
+        }
+      }
+    </script>
+
     <style>
-      :root {
-        --bs-body-bg: #ffffff;
-        --bs-body-color: #212529;
-        --bs-card-bg: #ffffff;
-        --bs-card-border-color: rgba(0, 0, 0, 0.125);
-        --bs-border-color: #dee2e6;
-        --bs-secondary-bg: #f8f9fa;
-        --shadow-color: rgba(58, 59, 69, 0.15);
+      /* Custom styles for enhanced functionality */
+      /* Quality Gate styles commented out - section hidden to avoid management confusion
+      .quality-gate-passed {
+        @apply bg-green-100 border-green-300 text-green-800 dark:bg-green-900 dark:border-green-700 dark:text-green-200;
       }
 
-      [data-bs-theme='dark'] {
-        --bs-body-bg: #212529;
-        --bs-body-color: #ffffff;
-        --bs-card-bg: #343a40;
-        --bs-card-border-color: rgba(255, 255, 255, 0.125);
-        --bs-border-color: #495057;
-        --bs-secondary-bg: #6c757d;
-        --shadow-color: rgba(0, 0, 0, 0.25);
+      .quality-gate-failed {
+        @apply bg-red-100 border-red-300 text-red-800 dark:bg-red-900 dark:border-red-700 dark:text-red-200;
       }
 
-      body {
-        background-color: var(--bs-body-bg) !important;
-        color: var(--bs-body-color) !important;
-        transition:
-          background-color 0.3s ease,
-          color 0.3s ease;
-        padding: 0;
-        margin: 0;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
+      .quality-gate-unknown {
+        @apply bg-yellow-100 border-yellow-300 text-yellow-800 dark:bg-yellow-900 dark:border-yellow-700 dark:text-yellow-200;
       }
+      */
 
-      .content-wrapper {
-        flex: 1;
-        padding: 1rem;
+      .severity-critical {
+        @apply bg-red-600 text-white;
       }
 
-      .card {
-        background-color: var(--bs-card-bg) !important;
-        border-color: var(--bs-card-border-color) !important;
+      .severity-major {
+        @apply bg-orange-500 text-white;
       }
 
-      .table {
-        --bs-table-bg: var(--bs-card-bg);
-        --bs-table-border-color: var(--bs-border-color);
+      .severity-minor {
+        @apply bg-yellow-500 text-white;
       }
 
-      .form-select,
-      .form-control {
-        background-color: var(--bs-card-bg) !important;
-        border-color: var(--bs-border-color) !important;
-        color: var(--bs-body-color) !important;
+      .severity-info {
+        @apply bg-blue-500 text-white;
       }
 
-      .border-left-primary {
-        border-left: 0.25rem solid #4e73df !important;
+      .type-bug {
+        @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200;
       }
-      .border-left-danger {
-        border-left: 0.25rem solid #e74a3b !important;
-      }
-      .border-left-warning {
-        border-left: 0.25rem solid #f6c23e !important;
-      }
-      .border-left-info {
-        border-left: 0.25rem solid #36b9cc !important;
-      }
-
-      .text-gray-800 {
-        color: #5a5c69 !important;
-      }
-      .text-gray-300 {
-        color: #dddfeb !important;
-      }
-
-      .shadow {
-        box-shadow: 0 0.15rem 1.75rem 0 var(--shadow-color) !important;
-      }
-
-      .severity-badge {
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-        font-weight: 500;
-      }
-
-      .severity-BLOCKER {
-        background-color: #dc3545;
-        color: white;
-      }
-      .severity-CRITICAL {
-        background-color: #fd7e14;
-        color: white;
-      }
-      .severity-MAJOR {
-        background-color: #ffc107;
-        color: black;
-      }
-      .severity-MINOR {
-        background-color: #0dcaf0;
-        color: black;
-      }
-      .severity-INFO {
-        background-color: #6c757d;
-        color: white;
-      }
-
-      .type-badge {
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-        font-weight: 500;
-      }
-
-      .type-BUG {
-        background-color: #dc3545;
-        color: white;
-      }
-      .type-VULNERABILITY {
-        background-color: #fd7e14;
-        color: white;
-      }
-      .type-CODE_SMELL {
-        background-color: #0dcaf0;
-        color: black;
-      }
-      .type-SECURITY_HOTSPOT {
-        background-color: #ffc107;
-        color: black;
-      }
-
-      /* Dark theme adjustments */
-      [data-bs-theme='dark'] {
-        --shadow-color: rgba(255, 255, 255, 0.15);
-      }
-
-      [data-bs-theme='dark'] body {
-        background-color: #1a1a1a !important;
-      }
-
-      [data-bs-theme='dark'] .table-striped > tbody > tr:nth-of-type(odd) > td {
-        background-color: rgba(255, 255, 255, 0.05);
-      }
-
-      [data-bs-theme='dark'] .table-hover > tbody > tr:hover > td {
-        background-color: rgba(255, 255, 255, 0.075);
-      }
-
-      .btn-link:hover {
-        text-decoration: none !important;
-      }
-      .btn-link .fas.fa-chevron-down {
-        transition: transform 0.3s ease-in-out;
-      }
-      .btn-link[aria-expanded='true'] .fas.fa-chevron-down {
-        transform: rotate(180deg);
-      }
-      .btn-link:focus {
-        box-shadow: none;
-      }
-
-      .report-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 2rem 0;
-        margin-bottom: 2rem;
-      }
-
-      .report-title {
-        font-size: 2.5rem;
-        font-weight: bold;
-        margin-bottom: 0.5rem;
-      }
-
-      .report-subtitle {
-        font-size: 1.1rem;
-        opacity: 0.9;
-      }
-
-      /* GitHub link styles */
-      .github-link {
-        transition: all 0.3s ease;
-        text-decoration: none !important;
-      }
-
-      .github-link:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      }
-
-      [data-bs-theme='dark'] .github-link:hover {
-        box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
-      }
-
-      .header-actions {
-        gap: 0.5rem;
-      }
-
-      /* Quality Gate Styles */
-      .quality-gate-card {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border-radius: 0.5rem;
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-        border: 1px solid #dee2e6;
-      }
-
-      [data-bs-theme='dark'] .quality-gate-card {
-        background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
-        border-color: #4a5568;
-      }
-
-      .gate-status {
-        display: flex;
-        align-items: center;
-        font-size: 1.5rem;
-        font-weight: bold;
-        margin-bottom: 1rem;
-      }
-
-      .gate-status.PASSED {
-        color: #28a745;
-      }
-
-      .gate-status.FAILED {
-        color: #dc3545;
-      }
-
-      .gate-status.NONE {
-        color: #6c757d;
-      }
-
-      .gate-status i {
-        margin-right: 0.5rem;
-        font-size: 1.8rem;
-      }
-
-      .gate-conditions {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 0.75rem;
-        margin-top: 1rem;
-      }
-
-      .condition {
-        padding: 0.75rem;
-        border-radius: 0.25rem;
-        font-size: 0.9rem;
-        border-left: 4px solid;
-      }
-
-      .condition.OK {
-        background-color: rgba(40, 167, 69, 0.1);
-        border-left-color: #28a745;
-        color: #155724;
-      }
-
-      .condition.WARN {
-        background-color: rgba(255, 193, 7, 0.1);
-        border-left-color: #ffc107;
-        color: #856404;
-      }
-
-      .condition.ERROR {
-        background-color: rgba(220, 53, 69, 0.1);
-        border-left-color: #dc3545;
-        color: #721c24;
-      }
-
-      [data-bs-theme='dark'] .condition.OK {
-        background-color: rgba(40, 167, 69, 0.2);
-        color: #a3e635;
-      }
-
-      [data-bs-theme='dark'] .condition.WARN {
-        background-color: rgba(255, 193, 7, 0.2);
-        color: #fbbf24;
-      }
-
-      [data-bs-theme='dark'] .condition.ERROR {
-        background-color: rgba(220, 53, 69, 0.2);
-        color: #fb7185;
-      }
-
-      /* Code Quality Rating Styles */
-      .code-quality-overview {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-        margin-bottom: 2rem;
-      }
-
-      .quality-metric-card {
-        background: var(--bs-card-bg);
-        border: 1px solid var(--bs-border-color);
-        border-radius: 0.5rem;
-        padding: 1.5rem;
-        text-align: center;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-      }
-
-      .quality-metric-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px var(--shadow-color);
-      }
-
-      .quality-rating {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        font-weight: bold;
-        margin: 0 auto 0.5rem;
-        color: white;
-      }
-
-      .quality-rating.A {
-        background: linear-gradient(135deg, #28a745, #20c997);
-      }
-
-      .quality-rating.B {
-        background: linear-gradient(135deg, #20c997, #17a2b8);
-      }
-
-      .quality-rating.C {
-        background: linear-gradient(135deg, #ffc107, #fd7e14);
-      }
-
-      .quality-rating.D {
-        background: linear-gradient(135deg, #fd7e14, #dc3545);
-      }
-
-      .quality-rating.E {
-        background: linear-gradient(135deg, #dc3545, #6f42c1);
-      }
-
-      .quality-rating.N-A {
-        background: linear-gradient(135deg, #6c757d, #495057);
-      }
-
-      .quality-metric-label {
-        font-size: 0.9rem;
-        color: var(--bs-body-color);
-        font-weight: 500;
-      }
 
-      .quality-metric-value {
-        font-size: 0.8rem;
-        color: var(--bs-secondary);
-        margin-top: 0.25rem;
+      .type-vulnerability {
+        @apply bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200;
       }
 
-      /* Project Measures Styles */
-      .project-measures {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-        margin-bottom: 2rem;
+      .type-code_smell {
+        @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200;
       }
 
-      .measure-card {
-        background: var(--bs-card-bg);
-        border: 1px solid var(--bs-border-color);
-        border-radius: 0.5rem;
-        padding: 1rem;
-        text-align: center;
+      .type-security_hotspot {
+        @apply bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200;
       }
 
-      .measure-value {
-        font-size: 1.8rem;
-        font-weight: bold;
-        color: var(--bs-primary);
-        display: block;
+      /* DataTables styling with Tailwind */
+      .dataTables_wrapper {
+        @apply w-full;
       }
 
-      .measure-label {
-        font-size: 0.9rem;
-        color: var(--bs-secondary);
-        margin-top: 0.25rem;
+      .dataTables_length,
+      .dataTables_filter,
+      .dataTables_info,
+      .dataTables_paginate {
+        @apply mb-4;
       }
 
-      .coverage-bar {
-        width: 100%;
-        height: 8px;
-        background-color: var(--bs-border-color);
-        border-radius: 4px;
-        overflow: hidden;
-        margin-top: 0.5rem;
+      .dataTables_length label,
+      .dataTables_filter label {
+        @apply flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300;
       }
 
-      .coverage-fill {
-        height: 100%;
-        background: linear-gradient(90deg, #dc3545 0%, #ffc107 50%, #28a745 100%);
-        transition: width 0.3s ease;
+      .dataTables_length select,
+      .dataTables_filter input {
+        @apply px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white;
       }
 
-      /* Footer styles */
-      .report-footer {
-        background-color: var(--bs-secondary-bg);
-        border-color: var(--bs-border-color) !important;
-        color: var(--bs-body-color) !important;
+      table.dataTable {
+        @apply w-full border-collapse;
       }
 
-      .report-footer .btn {
-        border: 1px solid var(--bs-border-color);
-        background-color: var(--bs-body-bg);
-        color: var(--bs-body-color);
-        transition: all 0.2s ease;
+      table.dataTable thead th {
+        @apply px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700;
       }
 
-      .report-footer .btn:hover {
-        transform: translateY(-1px);
-        background-color: var(--bs-primary);
-        border-color: var(--bs-primary);
-        color: white;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      table.dataTable tbody td {
+        @apply px-4 py-3 text-sm text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700;
       }
 
-      [data-bs-theme='dark'] .report-footer {
-        background-color: #2d2d2d;
-        color: #e9ecef;
+      table.dataTable tbody tr:hover {
+        @apply bg-gray-50 dark:bg-gray-800;
       }
 
-      [data-bs-theme='dark'] .report-footer .btn {
-        background-color: #3d3d3d;
-        border-color: #495057;
-        color: #e9ecef;
+      .dataTables_paginate .paginate_button {
+        @apply px-3 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200;
       }
 
-      [data-bs-theme='dark'] .report-footer .btn:hover {
-        background-color: #0d6efd;
-        border-color: #0d6efd;
-        color: white;
-        box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
+      .dataTables_paginate .paginate_button.current {
+        @apply px-3 py-2 text-sm bg-primary-600 text-white rounded-lg;
       }
 
-      /* Chart Styles */
+      /* Chart containers */
       .chart-container {
-        position: relative;
-        height: 300px;
-        padding: 1rem;
+        @apply relative w-full h-80;
       }
 
-      .chart-card {
-        transition: transform 0.2s ease-in-out;
-      }
-
-      .chart-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
-      }
-
-      [data-bs-theme='dark'] .chart-card:hover {
-        box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1) !important;
-      }
-
-      /* Chart loading states */
-      .chart-loading {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 300px;
-        color: var(--bs-secondary);
-      }
-
-      .chart-loading i {
-        animation: spin 1s linear infinite;
-        margin-right: 0.5rem;
-      }
-
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-
-      /* Responsive chart adjustments */
-      @media (max-width: 768px) {
-        .chart-container {
-          height: 250px;
-        }
-      }
-
-      @media (max-width: 576px) {
-        .chart-container {
-          height: 200px;
-          padding: 0.5rem;
-        }
+      /* Smooth transitions */
+      * {
+        @apply transition-colors duration-200;
       }
     </style>
   </head>
-  <body>
-    <div class='report-header'>
-      <div class='container-fluid'>
-        <div class='d-flex justify-content-between align-items-center'>
+
+  <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-lg">
+      <div class="container mx-auto px-6 py-6">
+        <div class="flex justify-between items-center">
           <div>
-            <h1 class='report-title'>SonarQube Issues Report</h1>
-            <p class='report-subtitle mb-0'>
-              Project:
-              <strong>{{metadata.projectKey}}</strong>
-              | Generated:
-              {{metadata.generatedAt}}
-              | Total Issues:
-              <strong>{{metadata.totalIssues}}</strong>
+            <h1 class="text-3xl font-bold">SonarQube Issues Report</h1>
+            <p class="text-primary-100 mt-1">
+              Project: <span class="font-semibold">{{metadata.projectKey}}</span>
+              {{#if metadata.projectName}}
+                - {{metadata.projectName}}
+              {{/if}}
+            </p>
+            <p class="text-primary-100 text-sm">
+              Generated on: {{metadata.generatedAt}}
             </p>
           </div>
-          <div class='d-flex align-items-center header-actions'>
-            <a
-              href='https://github.com/The-Lone-Druid/sonarqube-issues-exporter'
-              target='_blank'
-              rel='noopener noreferrer'
-              class='btn btn-outline-light btn-sm github-link'
-              title='View source code on GitHub'
-            >
-              <i class='fab fa-github'></i>
-              <span class='d-none d-md-inline ms-1'>Source</span>
+
+          <div class="flex items-center space-x-4">
+            <!-- GitHub Link -->
+            <a href="https://github.com/The-Lone-Druid/sonarqube-issues-exporter"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="flex items-center px-3 py-2 border border-primary-300 hover:border-white rounded-lg hover:bg-primary-500 transition-colors">
+              <i class="fab fa-github"></i>
+              <span class="hidden md:inline ml-2">Source</span>
             </a>
-            <div class='theme-toggle'>
-              <button id='theme-toggle' class='btn btn-outline-light btn-sm' title='Toggle theme'>
-                <i class='fas fa-moon' id='theme-icon'></i>
-              </button>
-            </div>
+
+            <!-- Theme Toggle -->
+            <button id="theme-toggle"
+                    class="flex items-center justify-center w-10 h-10 border border-primary-300 hover:border-white rounded-lg hover:bg-primary-500 transition-colors"
+                    title="Toggle theme">
+              <i class="fas fa-moon" id="theme-icon"></i>
+            </button>
           </div>
         </div>
       </div>
-    </div>
+    </header>
 
-    <div class='content-wrapper'>
-      <div class='container-fluid'>
-        <!-- Quality Gate Status -->
-        <div class='quality-gate-card'>
-          <div class='gate-status {{qualityGate.status}}'>
-            {{#if (eq qualityGate.status "PASSED")}}
-              <i class='fas fa-check-circle'></i>
-              Quality Gate: Passed
-            {{else if (eq qualityGate.status "FAILED")}}
-              <i class='fas fa-times-circle'></i>
-              Quality Gate: Failed
-            {{else}}
-              <i class='fas fa-question-circle'></i>
-              Quality Gate: No Gate
-            {{/if}}
-          </div>
-          {{#if qualityGate.conditions}}
-            <div class='gate-conditions'>
-              {{#each qualityGate.conditions}}
-                <div class='condition {{status}}'>
-                  <strong>{{metric}}</strong><br>
-                  {{actualValue}} {{operator}} {{errorThreshold}}
-                  {{#if (eq status "OK")}}
-                    <i class='fas fa-check float-end text-success'></i>
-                  {{else if (eq status "WARN")}}
-                    <i class='fas fa-exclamation-triangle float-end text-warning'></i>
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-8">
+      <!-- Quality Gate Status - HIDDEN to avoid management confusion with ERROR status display -->
+      {{!--
+      {{#if qualityGate}}
+      <div class="mb-8">
+        <div class="quality-gate-{{qualityGate.status}} border-2 rounded-lg p-6">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              {{#if (eq qualityGate.status 'PASSED')}}
+                <i class="fas fa-check-circle text-2xl mr-3"></i>
+              {{else if (eq qualityGate.status 'FAILED')}}
+                <i class="fas fa-times-circle text-2xl mr-3"></i>
+              {{else}}
+                <i class="fas fa-question-circle text-2xl mr-3"></i>
+              {{/if}}
+
+              <div>
+                <h2 class="text-xl font-bold">Quality Gate: {{qualityGate.status}}</h2>
+                <p class="text-sm opacity-75">{{qualityGate.conditions.length}} condition(s) evaluated</p>
+              </div>
+            </div>
+
+            {{#if qualityGate.conditions}}
+            <div class="text-right">
+              <div class="text-sm space-y-1">
+                {{#each qualityGate.conditions}}
+                <div class="flex items-center justify-end space-x-2">
+                  <span class="{{status}}">{{metricName}}: {{value}}</span>
+                  {{#if (eq status 'ERROR')}}
+                    <i class="fas fa-times text-red-500"></i>
                   {{else}}
-                    <i class='fas fa-times float-end text-danger'></i>
+                    <i class="fas fa-check text-green-500"></i>
                   {{/if}}
                 </div>
-              {{/each}}
+                {{/each}}
+              </div>
             </div>
-          {{/if}}
-        </div>
-
-        <!-- Code Quality Overview -->
-        <div class='code-quality-overview'>
-          <div class='quality-metric-card'>
-            <div class='quality-rating {{projectMeasures.maintainabilityRating}}'>
-              {{projectMeasures.maintainabilityRating}}
-            </div>
-            <div class='quality-metric-label'>Maintainability</div>
-            {{#if projectMeasures.technicalDebt}}
-              <div class='quality-metric-value'>{{projectMeasures.technicalDebt}} tech debt</div>
             {{/if}}
           </div>
+        </div>
+      </div>
+      {{/if}}
+      --}}
 
-          <div class='quality-metric-card'>
-            <div class='quality-rating {{projectMeasures.reliabilityRating}}'>
-              {{projectMeasures.reliabilityRating}}
-            </div>
-            <div class='quality-metric-label'>Reliability</div>
-            <div class='quality-metric-value'>{{metrics.types.BUG}} bugs</div>
-          </div>
-
-          <div class='quality-metric-card'>
-            <div class='quality-rating {{projectMeasures.securityRating}}'>
-              {{projectMeasures.securityRating}}
-            </div>
-            <div class='quality-metric-label'>Security</div>
-            <div class='quality-metric-value'>
-              {{metrics.types.VULNERABILITY}} vulnerabilities
-              {{#if securityHotspots.total}}
-                <br>{{securityHotspots.total}} hotspots
-              {{/if}}
-            </div>
+      <!-- Enhanced Dashboard with Charts -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Issues Overview Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+          <h3 class="text-lg font-semibold mb-4">Issues by Severity</h3>
+          <div class="chart-container">
+            <canvas id="severityChart"></canvas>
           </div>
         </div>
 
-        <!-- Project Measures -->
-        <div class='project-measures'>
-          {{#if projectMeasures.coverage}}
-            <div class='measure-card'>
-              <span class='measure-value'>{{projectMeasures.coverage}}%</span>
-              <div class='measure-label'>Code Coverage</div>
-              <div class='coverage-bar'>
-                <div class='coverage-fill' style='width: {{projectMeasures.coverage}}%'></div>
-              </div>
-            </div>
-          {{/if}}
-
-          {{#if projectMeasures.linesOfCode}}
-            <div class='measure-card'>
-              <span class='measure-value'>{{projectMeasures.linesOfCode}}</span>
-              <div class='measure-label'>Lines of Code</div>
-            </div>
-          {{/if}}
-
-          {{#if projectMeasures.duplicatedLinesDensity}}
-            <div class='measure-card'>
-              <span class='measure-value'>{{projectMeasures.duplicatedLinesDensity}}%</span>
-              <div class='measure-label'>Duplicated Lines</div>
-            </div>
-          {{/if}}
-
-          {{#if projectMeasures.complexity}}
-            <div class='measure-card'>
-              <span class='measure-value'>{{projectMeasures.complexity}}</span>
-              <div class='measure-label'>Complexity</div>
-            </div>
-          {{/if}}
-        </div>
-
-        <!-- Visual Charts Section -->
-        <div class='row mb-4'>
-          <!-- Issue Distribution Chart -->
-          <div class='col-lg-6 mb-4'>
-            <div class='card shadow h-100 chart-card'>
-              <div class='card-header py-3'>
-                <h6 class='m-0 font-weight-bold text-primary'>
-                  <i class='fas fa-chart-pie me-2'></i>
-                  Issues by Severity
-                </h6>
-              </div>
-              <div class='card-body'>
-                <div class='chart-container'>
-                  <canvas id='severityChart'></canvas>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Issue Type Chart -->
-          <div class='col-lg-6 mb-4'>
-            <div class='card shadow h-100 chart-card'>
-              <div class='card-header py-3'>
-                <h6 class='m-0 font-weight-bold text-primary'>
-                  <i class='fas fa-chart-bar me-2'></i>
-                  Issues by Type
-                </h6>
-              </div>
-              <div class='card-body'>
-                <div class='chart-container'>
-                  <canvas id='typeChart'></canvas>
-                </div>
-              </div>
-            </div>
+        <!-- Issues by Type Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+          <h3 class="text-lg font-semibold mb-4">Issues by Type</h3>
+          <div class="chart-container">
+            <canvas id="typeChart"></canvas>
           </div>
         </div>
 
-        <!-- Code Metrics Charts -->
-        {{#if projectMeasures.coverage}}
-        <div class='row mb-4'>
-          <!-- Code Coverage Progress -->
-          <div class='col-lg-6 mb-4'>
-            <div class='card shadow h-100 chart-card'>
-              <div class='card-header py-3'>
-                <h6 class='m-0 font-weight-bold text-primary'>
-                  <i class='fas fa-chart-line me-2'></i>
-                  Code Coverage Breakdown
-                </h6>
-              </div>
-              <div class='card-body'>
-                <div class='chart-container'>
-                  <canvas id='coverageChart'></canvas>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Technical Debt Visualization -->
-          <div class='col-lg-6 mb-4'>
-            <div class='card shadow h-100 chart-card'>
-              <div class='card-header py-3'>
-                <h6 class='m-0 font-weight-bold text-primary'>
-                  <i class='fas fa-chart-area me-2'></i>
-                  Technical Debt Overview
-                </h6>
-              </div>
-              <div class='card-body'>
-                <div class='chart-container'>
-                  <canvas id='technicalDebtChart'></canvas>
-                </div>
-              </div>
-            </div>
+        <!-- Metrics Overview -->
+        {{#if projectMeasures}}
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+          <h3 class="text-lg font-semibold mb-4">Code Quality Metrics</h3>
+          <div class="chart-container">
+            <canvas id="metricsChart"></canvas>
           </div>
         </div>
         {{/if}}
 
-        <!-- Collapsible Metrics Overview -->
-        <div class='card mb-4'>
-          <div class='card-header'>
-            <button
-              class='btn btn-link text-decoration-none p-0 w-100 text-start'
-              type='button'
-              data-bs-toggle='collapse'
-              data-bs-target='#metricsCollapse'
-              aria-expanded='false'
-              aria-controls='metricsCollapse'
-            >
-              <div class='d-flex justify-content-between align-items-center'>
-                <h5 class='mb-0 text-primary'>
-                  <i class='fas fa-chart-bar me-2'></i>
-                  Issues Metrics Overview
-                </h5>
-                <i class='fas fa-chevron-down'></i>
-              </div>
-            </button>
-          </div>
-          <div class='collapse' id='metricsCollapse'>
-            <div class='card-body'>
-              <!-- Summary Cards -->
-              <div class='row mb-4'>
-                <div class='col-xl-3 col-md-6 mb-3'>
-                  <div class='card border-left-primary shadow h-100'>
-                    <div class='card-body'>
-                      <div class='row no-gutters align-items-center'>
-                        <div class='col mr-2'>
-                          <div
-                            class='text-xs font-weight-bold text-primary text-uppercase mb-1'
-                          >Total Issues</div>
-                          <div
-                            class='h5 mb-0 font-weight-bold text-gray-800'
-                          >{{metrics.total}}</div>
-                        </div>
-                        <div class='col-auto'>
-                          <i class='fas fa-bug fa-2x text-gray-300'></i>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class='col-xl-3 col-md-6 mb-3'>
-                  <div class='card border-left-danger shadow h-100'>
-                    <div class='card-body'>
-                      <div class='row no-gutters align-items-center'>
-                        <div class='col mr-2'>
-                          <div
-                            class='text-xs font-weight-bold text-danger text-uppercase mb-1'
-                          >Critical Issues</div>
-                          <div class='h5 mb-0 font-weight-bold text-gray-800'>{{add
-                              metrics.severities.BLOCKER
-                              metrics.severities.CRITICAL
-                            }}</div>
-                        </div>
-                        <div class='col-auto'>
-                          <i class='fas fa-exclamation-triangle fa-2x text-gray-300'></i>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class='col-xl-3 col-md-6 mb-3'>
-                  <div class='card border-left-warning shadow h-100'>
-                    <div class='card-body'>
-                      <div class='row no-gutters align-items-center'>
-                        <div class='col mr-2'>
-                          <div
-                            class='text-xs font-weight-bold text-warning text-uppercase mb-1'
-                          >Bugs</div>
-                          <div
-                            class='h5 mb-0 font-weight-bold text-gray-800'
-                          >{{metrics.types.BUG}}</div>
-                        </div>
-                        <div class='col-auto'>
-                          <i class='fas fa-times-circle fa-2x text-gray-300'></i>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class='col-xl-3 col-md-6 mb-3'>
-                  <div class='card border-left-info shadow h-100'>
-                    <div class='card-body'>
-                      <div class='row no-gutters align-items-center'>
-                        <div class='col mr-2'>
-                          <div
-                            class='text-xs font-weight-bold text-info text-uppercase mb-1'
-                          >Vulnerabilities</div>
-                          <div
-                            class='h5 mb-0 font-weight-bold text-gray-800'
-                          >{{metrics.types.VULNERABILITY}}</div>
-                        </div>
-                        <div class='col-auto'>
-                          <i class='fas fa-shield-alt fa-2x text-gray-300'></i>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Detailed Metrics -->
-              <div class='row mb-4'>
-                <div class='col-lg-6 mb-3'>
-                  <div class='card shadow'>
-                    <div class='card-header py-3'>
-                      <h6 class='m-0 font-weight-bold text-primary'>Issues by Severity</h6>
-                    </div>
-                    <div class='card-body'>
-                      <div class='row'>
-                        <div class='col-sm-6'>
-                          {{#each metrics.severities}}
-                            <div class='mb-2'>
-                              <span class='severity-badge severity-{{@key}}'>{{@key}}</span>
-                              <span class='float-end fw-bold'>{{this}}</span>
-                            </div>
-                          {{/each}}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class='col-lg-6 mb-3'>
-                  <div class='card shadow'>
-                    <div class='card-header py-3'>
-                      <h6 class='m-0 font-weight-bold text-primary'>Issues by Type & Status</h6>
-                    </div>
-                    <div class='card-body'>
-                      <div class='row'>
-                        <div class='col-sm-6'>
-                          <h6 class='text-secondary'>By Type</h6>
-                          {{#each metrics.types}}
-                            <div class='mb-2'>
-                              <span class='type-badge type-{{@key}}'>{{@key}}</span>
-                              <span class='float-end fw-bold'>{{this}}</span>
-                            </div>
-                          {{/each}}
-                        </div>
-                        <div class='col-sm-6'>
-                          <h6 class='text-secondary'>By Status</h6>
-                          {{#each metrics.statuses}}
-                            <div class='mb-2'>
-                              <span class='badge bg-secondary'>{{@key}}</span>
-                              <span class='float-end fw-bold'>{{this}}</span>
-                            </div>
-                          {{/each}}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <!-- Security Hotspots -->
+        {{#if securityHotspots}}
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+          <h3 class="text-lg font-semibold mb-4">Security Hotspots</h3>
+          <div class="chart-container">
+            <canvas id="securityChart"></canvas>
           </div>
         </div>
+        {{/if}}
+      </div>
 
-        <!-- Issues Table -->
-        <div class='card'>
-          <div class='card-header'>
-            <div class='row align-items-center'>
-              <div class='col-md-8'>
-                <div class='row g-3'>
-                  <div class='col-md-3'>
-                    <select id='severity-filter' class='form-select'>
-                      <option value=''>All Severities</option>
-                      <option value='BLOCKER'>Blocker</option>
-                      <option value='CRITICAL'>Critical</option>
-                      <option value='MAJOR'>Major</option>
-                      <option value='MINOR'>Minor</option>
-                      <option value='INFO'>Info</option>
-                    </select>
-                  </div>
-                  <div class='col-md-3'>
-                    <select id='type-filter' class='form-select'>
-                      <option value=''>All Types</option>
-                      <option value='BUG'>Bug</option>
-                      <option value='VULNERABILITY'>Vulnerability</option>
-                      <option value='CODE_SMELL'>Code Smell</option>
-                      <option value='SECURITY_HOTSPOT'>Security Hotspot</option>
-                    </select>
-                  </div>
-                  <div class='col-md-3'>
-                    <select id='status-filter' class='form-select'>
-                      <option value=''>All Statuses</option>
-                      <option value='OPEN'>Open</option>
-                      <option value='CONFIRMED'>Confirmed</option>
-                      <option value='REOPENED'>Reopened</option>
-                      <option value='RESOLVED'>Resolved</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class='card-body'>
-            <div class='table-responsive'>
-              <table
-                id='issues-table'
-                class='table table-striped table-hover dt-responsive nowrap'
-                style='width:100%'
-              >
-                <thead>
-                  <tr>
-                    <th>Severity</th>
-                    <th>Status</th>
-                    <th>Type</th>
-                    <th>Message</th>
-                    <th>File</th>
-                    <th>Line</th>
-                    <th>Rule</th>
-                    <th>Created</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {{#each issues}}
-                    <tr>
-                      <td><span
-                          class='severity-badge severity-{{severity}}'
-                        >{{severity}}</span></td>
-                      <td>{{status}}</td>
-                      <td><span class='type-badge type-{{type}}'>{{type}}</span></td>
-                      <td>{{message}}</td>
-                      <td>{{file}}</td>
-                      <td>{{line}}</td>
-                      <td>{{rule}}</td>
-                      <td>{{creationDate}}</td>
-                      <td>
-                        <button
-                          class='btn btn-sm btn-outline-primary'
-                          onclick="navigator.clipboard.writeText('{{file}}')"
-                          title='Copy file path'
-                        >
-                          <i class='fas fa-copy'></i>
-                        </button>
-                        <button
-                          class='btn btn-sm btn-outline-info'
-                          onclick="navigator.clipboard.writeText('{{key}}')"
-                          title='Copy issue key'
-                        >
-                          <i class='fas fa-key'></i>
-                        </button>
-                      </td>
-                    </tr>
-                  {{/each}}
-                </tbody>
-              </table>
-            </div>
-          </div>
+      <!-- Summary Statistics -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
+          <div class="text-3xl font-bold text-primary-600 dark:text-primary-400">{{metadata.totalIssues}}</div>
+          <div class="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">Total Issues</div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
+          <div class="text-3xl font-bold text-red-600">{{#if metrics.severities.CRITICAL}}{{metrics.severities.CRITICAL}}{{else}}0{{/if}}</div>
+          <div class="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">Critical</div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
+          <div class="text-3xl font-bold text-green-600">{{#if metrics.types.BUG}}{{metrics.types.BUG}}{{else}}0{{/if}}</div>
+          <div class="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">Bugs</div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
+          <div class="text-3xl font-bold text-purple-600">{{#if metrics.types.VULNERABILITY}}{{metrics.types.VULNERABILITY}}{{else}}0{{/if}}</div>
+          <div class="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">Vulnerabilities</div>
         </div>
       </div>
 
-      <!-- Footer -->
-      <footer class='report-footer mt-5 py-4 border-top'>
-        <div class='container-fluid'>
-          <div class='row align-items-center'>
-            <div class='col-md-6'>
-              <p class='mb-0 text-muted'>
-                Generated by
-                <strong>SonarQube Issues Exporter</strong>
-              </p>
-              <small class='text-muted'>
-                Open source tool for creating beautiful SonarQube reports
-              </small>
-            </div>
-            <div class='col-md-6 text-md-end'>
-              <a
-                href='https://github.com/The-Lone-Druid/sonarqube-issues-exporter'
-                target='_blank'
-                rel='noopener noreferrer'
-                class='btn btn-outline-secondary btn-sm me-2'
-              >
-                <i class='fab fa-github me-1'></i>
-                View on GitHub
-              </a>
-              <a
-                href='https://github.com/The-Lone-Druid/sonarqube-issues-exporter/issues'
-                target='_blank'
-                rel='noopener noreferrer'
-                class='btn btn-outline-secondary btn-sm me-2'
-              >
-                <i class='fas fa-bug me-1'></i>
-                Report Issue
-              </a>
-              <a
-                href='https://github.com/The-Lone-Druid/sonarqube-issues-exporter/stargazers'
-                target='_blank'
-                rel='noopener noreferrer'
-                class='btn btn-outline-warning btn-sm'
-              >
-                <i class='fas fa-star me-1'></i>
-                Star
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+      <!-- Issues Table -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-bold mb-6">Detailed Issues</h2>
 
-    <script src='https://code.jquery.com/jquery-3.7.0.min.js'></script>
-    <script
-      src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js'
-    ></script>
-    <script src='https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js'></script>
-    <script src='https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js'></script>
-    <script
-      src='https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js'
-    ></script>
-    <script
-      src='https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js'
-    ></script>
+        <div class="overflow-x-auto">
+          <table id="issuesTable" class="display responsive nowrap" style="width:100%">
+            <thead>
+              <tr>
+                <th>Rule</th>
+                <th>Message</th>
+                <th>Component</th>
+                <th>Severity</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Author</th>
+                <th>Creation Date</th>
+                <th>Line</th>
+                <th>Effort</th>
+                <th>Tags</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each issues}}
+              <tr>
+                <td>
+                  <span class="font-mono text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{{rule}}</span>
+                </td>
+                <td>
+                  <div class="max-w-md">
+                    <div class="truncate" title="{{message}}">{{message}}</div>
+                  </div>
+                </td>
+                <td>
+                  <span class="font-mono text-xs">{{component}}</span>
+                </td>
+                <td>
+                  <span class="severity-{{severity}} px-2 py-1 rounded-full text-xs font-semibold uppercase">
+                    {{severity}}
+                  </span>
+                </td>
+                <td>
+                  <span class="type-{{type}} px-2 py-1 rounded-full text-xs font-semibold">
+                    {{#if (eq type 'BUG')}}Bug{{/if}}
+                    {{#if (eq type 'VULNERABILITY')}}Vulnerability{{/if}}
+                    {{#if (eq type 'CODE_SMELL')}}Code Smell{{/if}}
+                    {{#if (eq type 'SECURITY_HOTSPOT')}}Security Hotspot{{/if}}
+                  </span>
+                </td>
+                <td>
+                  <span class="px-2 py-1 rounded-full text-xs font-semibold
+                    {{#if (eq status 'OPEN')}}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200{{/if}}
+                    {{#if (eq status 'CONFIRMED')}}bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200{{/if}}
+                    {{#if (eq status 'RESOLVED')}}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200{{/if}}
+                    {{#if (eq status 'CLOSED')}}bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200{{/if}}">
+                    {{status}}
+                  </span>
+                </td>
+                <td>{{#if author}}{{author}}{{else}}-{{/if}}</td>
+                <td>{{creationDate}}</td>
+                <td>{{#if line}}{{line}}{{else}}-{{/if}}</td>
+                <td>{{#if effort}}{{effort}}{{else}}-{{/if}}</td>
+                <td>
+                  {{#if tags}}
+                    {{#each tags}}
+                      <span class="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs px-2 py-1 rounded mr-1">{{this}}</span>
+                    {{/each}}
+                  {{else}}
+                    -
+                  {{/if}}
+                </td>
+              </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 dark:bg-gray-900 text-white py-6 mt-12">
+      <div class="container mx-auto px-6 text-center">
+        <p>&copy; {{currentYear}} SonarQube Issues Exporter. Generated with ❤️ using
+          <a href="https://www.npmjs.com/package/sonarqube-issues-exporter"
+             target="_blank"
+             rel="noopener noreferrer"
+             class="text-primary-400 hover:text-primary-300 underline">
+            SonarQube Issues Exporter
+          </a>
+        </p>
+        <p class="text-sm text-gray-400 mt-2">
+          Report generated on: {{metadata.generatedAt}}
+        </p>
+      </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+
     <script>
       // Theme management
-      function getStoredTheme() {
-        return localStorage.getItem('theme');
-      }
+      const themeToggle = document.getElementById('theme-toggle');
+      const themeIcon = document.getElementById('theme-icon');
+      const html = document.documentElement;
 
-      function setStoredTheme(theme) {
-        localStorage.setItem('theme', theme);
-      }
+      // Check for saved theme preference or default to 'light'
+      const currentTheme = localStorage.getItem('theme') || 'light';
+      html.classList.toggle('dark', currentTheme === 'dark');
+      updateThemeIcon(currentTheme);
 
-      function getPreferredTheme() {
-        const storedTheme = getStoredTheme();
-        if (storedTheme) {
-          return storedTheme;
+      themeToggle.addEventListener('click', () => {
+        const isDark = html.classList.contains('dark');
+        const newTheme = isDark ? 'light' : 'dark';
+
+        html.classList.toggle('dark', newTheme === 'dark');
+        localStorage.setItem('theme', newTheme);
+        updateThemeIcon(newTheme);
+
+        // Update charts if they exist
+        if (window.chartInstances) {
+          Object.values(window.chartInstances).forEach(chart => {
+            updateChartTheme(chart, newTheme);
+          });
         }
-        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      });
+
+      function updateThemeIcon(theme) {
+        themeIcon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
       }
 
-      function setTheme(theme) {
-        if (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          document.documentElement.setAttribute('data-bs-theme', 'dark');
-        } else if (theme === 'dark') {
-          document.documentElement.setAttribute('data-bs-theme', 'dark');
-        } else {
-          document.documentElement.setAttribute('data-bs-theme', 'light');
-        }
-
-        // Update icon
-        const themeIcon = document.getElementById('theme-icon');
-        const currentTheme = document.documentElement.getAttribute('data-bs-theme');
-        if (currentTheme === 'dark') {
-          themeIcon.className = 'fas fa-sun';
-        } else {
-          themeIcon.className = 'fas fa-moon';
-        }
+      // Chart theme configuration
+      function getChartTheme(isDark = false) {
+        return {
+          backgroundColor: isDark ? '#1f2937' : '#ffffff',
+          borderColor: isDark ? '#4b5563' : '#e5e7eb',
+          textColor: isDark ? '#f9fafb' : '#111827',
+          gridColor: isDark ? '#374151' : '#f3f4f6'
+        };
       }
 
-      // Initialize theme on page load
-      (() => {
-        const theme = getPreferredTheme();
-        setTheme(theme);
-      })();
+      function updateChartTheme(chart, theme) {
+        const isDark = theme === 'dark';
+        const themeColors = getChartTheme(isDark);
 
+        chart.options.plugins.legend.labels.color = themeColors.textColor;
+        chart.options.scales.x.ticks.color = themeColors.textColor;
+        chart.options.scales.y.ticks.color = themeColors.textColor;
+        chart.options.scales.x.grid.color = themeColors.gridColor;
+        chart.options.scales.y.grid.color = themeColors.gridColor;
+
+        chart.update();
+      }
+
+      // Initialize DataTable
       $(document).ready(function() {
-        // Theme toggle functionality
-        $('#theme-toggle').on('click', function() {
-          const currentTheme = document.documentElement.getAttribute('data-bs-theme');
-          const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-          setStoredTheme(newTheme);
-          setTheme(newTheme);
-        });
-
-        // Initialize DataTable
-        const table = $('#issues-table').DataTable({
+        $('#issuesTable').DataTable({
           responsive: true,
           pageLength: 25,
-          order: [[0, 'desc']], // Sort by severity by default
-          dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
-               "<'row'<'col-sm-12'tr>>" +
-               "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+          order: [[3, 'desc'], [4, 'desc']],
           language: {
-            search: "Search issues:"
+            search: "Search issues:",
+            lengthMenu: "Show _MENU_ issues per page",
+            info: "Showing _START_ to _END_ of _TOTAL_ issues",
+            paginate: {
+              first: "First",
+              last: "Last",
+              next: "Next",
+              previous: "Previous"
+            }
           }
         });
 
-        // Custom filtering function
-        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-          const severityFilter = $('#severity-filter').val();
-          const typeFilter = $('#type-filter').val();
-          const statusFilter = $('#status-filter').val();
-
-          // Extract text content from HTML (for severity and type badges)
-          const severityText = $('<div>').html(data[0]).text(); // Severity column
-          const statusText = data[1];   // Status column
-          const typeText = $('<div>').html(data[2]).text();     // Type column
-
-          if ((severityFilter === '' || severityText.includes(severityFilter)) &&
-              (typeFilter === '' || typeText.includes(typeFilter)) &&
-              (statusFilter === '' || statusText.includes(statusFilter))) {
-            return true;
-          }
-          return false;
-        });
-
-        // Apply filters when changed
-        $('#severity-filter, #type-filter, #status-filter').on('change', function() {
-          table.draw();
-        });
-
-        // Initialize Charts
+        // Initialize charts
         initializeCharts();
       });
 
-      // Chart initialization function
+      // Chart initialization
+      window.chartInstances = {};
+
       function initializeCharts() {
-        const isDarkTheme = document.documentElement.getAttribute('data-bs-theme') === 'dark';
-        
-        // Chart color schemes based on theme
-        const chartColors = isDarkTheme ? {
-          background: '#343a40',
-          text: '#ffffff',
-          grid: '#495057',
-          border: '#6c757d'
-        } : {
-          background: '#ffffff',
-          text: '#212529',
-          grid: '#dee2e6',
-          border: '#6c757d'
+        const isDark = document.documentElement.classList.contains('dark');
+        const theme = getChartTheme(isDark);
+
+        // Severity Chart
+        const severityData = {
+          {{#if metrics.severities}}
+          critical: {{#if metrics.severities.CRITICAL}}{{metrics.severities.CRITICAL}}{{else}}0{{/if}},
+          major: {{#if metrics.severities.MAJOR}}{{metrics.severities.MAJOR}}{{else}}0{{/if}},
+          minor: {{#if metrics.severities.MINOR}}{{metrics.severities.MINOR}}{{else}}0{{/if}},
+          info: {{#if metrics.severities.INFO}}{{metrics.severities.INFO}}{{else}}0{{/if}}
+          {{else}}
+          critical: 0,
+          major: 0,
+          minor: 0,
+          info: 0
+          {{/if}}
         };
 
-        // Issues by Severity Chart (Doughnut)
-        const severityCtx = document.getElementById('severityChart');
-        if (severityCtx) {
-          new Chart(severityCtx, {
-            type: 'doughnut',
-            data: {
-              labels: ['Critical', 'Major', 'Minor', 'Info'],
-              datasets: [{
-                data: [
-                  {{metrics.bySeverity.CRITICAL}},
-                  {{metrics.bySeverity.MAJOR}},
-                  {{metrics.bySeverity.MINOR}},
-                  {{metrics.bySeverity.INFO}}
-                ],
-                backgroundColor: [
-                  '#dc3545', // Critical - Red
-                  '#fd7e14', // Major - Orange
-                  '#ffc107', // Minor - Yellow
-                  '#0dcaf0'  // Info - Cyan
-                ],
-                borderWidth: 2,
-                borderColor: chartColors.border
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: {
-                  position: 'bottom',
-                  labels: {
-                    color: chartColors.text,
-                    padding: 20,
-                    usePointStyle: true
-                  }
-                },
-                tooltip: {
-                  backgroundColor: chartColors.background,
-                  titleColor: chartColors.text,
-                  bodyColor: chartColors.text,
-                  borderColor: chartColors.border,
-                  borderWidth: 1
+        const severityCtx = document.getElementById('severityChart').getContext('2d');
+        window.chartInstances.severity = new Chart(severityCtx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Critical', 'Major', 'Minor', 'Info'],
+            datasets: [{
+              data: [severityData.critical, severityData.major, severityData.minor, severityData.info],
+              backgroundColor: ['#dc2626', '#ea580c', '#ca8a04', '#2563eb'],
+              borderWidth: 2,
+              borderColor: theme.backgroundColor
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  color: theme.textColor,
+                  padding: 20
                 }
               }
             }
-          });
-        }
+          }
+        });
 
-        // Issues by Type Chart (Bar)
-        const typeCtx = document.getElementById('typeChart');
-        if (typeCtx) {
-          new Chart(typeCtx, {
-            type: 'bar',
-            data: {
-              labels: ['Bugs', 'Vulnerabilities', 'Code Smells'],
-              datasets: [{
-                label: 'Issues',
-                data: [
-                  {{metrics.byType.BUG}},
-                  {{metrics.byType.VULNERABILITY}},
-                  {{metrics.byType.CODE_SMELL}}
-                ],
-                backgroundColor: [
-                  '#dc3545', // Bugs - Red
-                  '#6f42c1', // Vulnerabilities - Purple
-                  '#20c997'  // Code Smells - Teal
-                ],
-                borderColor: chartColors.border,
-                borderWidth: 1
-              }]
+        // Type Chart
+        const typeData = {
+          {{#if metrics.types}}
+          bugs: {{#if metrics.types.BUG}}{{metrics.types.BUG}}{{else}}0{{/if}},
+          vulnerabilities: {{#if metrics.types.VULNERABILITY}}{{metrics.types.VULNERABILITY}}{{else}}0{{/if}},
+          codeSmells: {{#if metrics.types.CODE_SMELL}}{{metrics.types.CODE_SMELL}}{{else}}0{{/if}},
+          securityHotspots: {{#if metrics.types.SECURITY_HOTSPOT}}{{metrics.types.SECURITY_HOTSPOT}}{{else}}0{{/if}}
+          {{else}}
+          bugs: 0,
+          vulnerabilities: 0,
+          codeSmells: 0,
+          securityHotspots: 0
+          {{/if}}
+        };
+
+        const typeCtx = document.getElementById('typeChart').getContext('2d');
+        window.chartInstances.type = new Chart(typeCtx, {
+          type: 'bar',
+          data: {
+            labels: ['Bugs', 'Vulnerabilities', 'Code Smells', 'Security Hotspots'],
+            datasets: [{
+              data: [typeData.bugs, typeData.vulnerabilities, typeData.codeSmells, typeData.securityHotspots],
+              backgroundColor: ['#dc2626', '#7c3aed', '#059669', '#ea580c'],
+              borderWidth: 1,
+              borderColor: theme.borderColor
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              }
             },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: {
-                  display: false
+            scales: {
+              x: {
+                ticks: {
+                  color: theme.textColor
                 },
-                tooltip: {
-                  backgroundColor: chartColors.background,
-                  titleColor: chartColors.text,
-                  bodyColor: chartColors.text,
-                  borderColor: chartColors.border,
-                  borderWidth: 1
+                grid: {
+                  color: theme.gridColor
                 }
               },
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  ticks: {
-                    color: chartColors.text,
-                    stepSize: 1
-                  },
-                  grid: {
-                    color: chartColors.grid
-                  }
+              y: {
+                ticks: {
+                  color: theme.textColor
                 },
-                x: {
-                  ticks: {
-                    color: chartColors.text
-                  },
-                  grid: {
-                    color: chartColors.grid
-                  }
+                grid: {
+                  color: theme.gridColor
                 }
               }
             }
-          });
-        }
+          }
+        });
 
-        {{#if projectMeasures.coverage}}
-        // Code Coverage Chart (Doughnut)
-        const coverageCtx = document.getElementById('coverageChart');
-        if (coverageCtx) {
-          const coverage = {{projectMeasures.coverage}};
-          const uncovered = 100 - coverage;
-          
-          new Chart(coverageCtx, {
-            type: 'doughnut',
-            data: {
-              labels: ['Covered', 'Uncovered'],
-              datasets: [{
-                data: [coverage, uncovered],
-                backgroundColor: [
-                  '#28a745', // Covered - Green
-                  '#dc3545'  // Uncovered - Red
-                ],
-                borderWidth: 2,
-                borderColor: chartColors.border
-              }]
+        {{#if projectMeasures}}
+        // Metrics Chart
+        const metricsCtx = document.getElementById('metricsChart').getContext('2d');
+        window.chartInstances.metrics = new Chart(metricsCtx, {
+          type: 'radar',
+          data: {
+            labels: [
+              'Coverage',
+              'Duplicated Lines',
+              'Lines of Code',
+              'Technical Debt',
+              'Maintainability',
+              'Reliability',
+              'Security'
+            ],
+            datasets: [{
+              label: 'Project Metrics',
+              data: [
+                {{projectMeasures.coverage}},
+                {{projectMeasures.duplicatedLinesDensity}},
+                Math.min({{projectMeasures.linesOfCode}} / 1000, 100), // Normalize NCLOC
+                Math.min(parseInt('{{projectMeasures.technicalDebt}}'.replace(/[^\d]/g, '')) / 10, 100), // Normalize tech debt
+                {{#if (eq projectMeasures.maintainabilityRating 'A')}}5{{else if (eq projectMeasures.maintainabilityRating 'B')}}4{{else if (eq projectMeasures.maintainabilityRating 'C')}}3{{else if (eq projectMeasures.maintainabilityRating 'D')}}2{{else}}1{{/if}},
+                {{#if (eq projectMeasures.reliabilityRating 'A')}}5{{else if (eq projectMeasures.reliabilityRating 'B')}}4{{else if (eq projectMeasures.reliabilityRating 'C')}}3{{else if (eq projectMeasures.reliabilityRating 'D')}}2{{else}}1{{/if}},
+                {{#if (eq projectMeasures.securityRating 'A')}}5{{else if (eq projectMeasures.securityRating 'B')}}4{{else if (eq projectMeasures.securityRating 'C')}}3{{else if (eq projectMeasures.securityRating 'D')}}2{{else}}1{{/if}}
+              ],
+              backgroundColor: 'rgba(59, 130, 246, 0.2)',
+              borderColor: 'rgba(59, 130, 246, 1)',
+              borderWidth: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                labels: {
+                  color: theme.textColor
+                }
+              }
             },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: {
-                  position: 'bottom',
-                  labels: {
-                    color: chartColors.text,
-                    padding: 20,
-                    usePointStyle: true
-                  }
+            scales: {
+              r: {
+                ticks: {
+                  color: theme.textColor
                 },
-                tooltip: {
-                  backgroundColor: chartColors.background,
-                  titleColor: chartColors.text,
-                  bodyColor: chartColors.text,
-                  borderColor: chartColors.border,
-                  borderWidth: 1,
-                  callbacks: {
-                    label: function(context) {
-                      return context.label + ': ' + context.parsed + '%';
-                    }
-                  }
+                grid: {
+                  color: theme.gridColor
                 }
               }
             }
-          });
-        }
+          }
+        });
+        {{/if}}
 
-        // Technical Debt Chart (Bar with complexity visualization)
-        const technicalDebtCtx = document.getElementById('technicalDebtChart');
-        if (technicalDebtCtx) {
-          const complexity = {{projectMeasures.complexity}};
-          const duplicatedLines = {{projectMeasures.duplicatedLinesDensity}};
-          
-          new Chart(technicalDebtCtx, {
-            type: 'bar',
-            data: {
-              labels: ['Complexity', 'Code Duplication %'],
-              datasets: [{
-                label: 'Technical Debt Indicators',
-                data: [complexity, duplicatedLines],
-                backgroundColor: [
-                  '#fd7e14', // Complexity - Orange
-                  '#e83e8c'  // Duplication - Pink
-                ],
-                borderColor: chartColors.border,
-                borderWidth: 1
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: {
-                  display: false
-                },
-                tooltip: {
-                  backgroundColor: chartColors.background,
-                  titleColor: chartColors.text,
-                  bodyColor: chartColors.text,
-                  borderColor: chartColors.border,
-                  borderWidth: 1,
-                  callbacks: {
-                    label: function(context) {
-                      const unit = context.label.includes('Duplication') ? '%' : '';
-                      return context.label + ': ' + context.parsed + unit;
-                    }
-                  }
-                }
-              },
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  ticks: {
-                    color: chartColors.text
-                  },
-                  grid: {
-                    color: chartColors.grid
-                  }
-                },
-                x: {
-                  ticks: {
-                    color: chartColors.text
-                  },
-                  grid: {
-                    color: chartColors.grid
-                  }
+        {{#if securityHotspots}}
+        // Security Hotspots Chart
+        const securityCtx = document.getElementById('securityChart').getContext('2d');
+        window.chartInstances.security = new Chart(securityCtx, {
+          type: 'pie',
+          data: {
+            labels: ['To Review', 'Reviewed'],
+            datasets: [{
+              data: [
+                {{securityHotspots.total}},
+                0 // No reviewed data available yet
+              ],
+              backgroundColor: ['#ea580c', '#059669'],
+              borderWidth: 2,
+              borderColor: theme.backgroundColor
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  color: theme.textColor,
+                  padding: 20
                 }
               }
             }
-          });
-        }
+          }
+        });
         {{/if}}
       }
-
-      // Reinitialize charts when theme changes
-      function reinitializeChartsOnThemeChange() {
-        // Destroy existing charts
-        Chart.helpers.each(Chart.instances, function(instance) {
-          instance.destroy();
-        });
-        
-        // Reinitialize with new theme
-        setTimeout(() => {
-          initializeCharts();
-        }, 100);
-      }
-
-      // Listen for theme changes and update charts
-      document.addEventListener('DOMContentLoaded', function() {
-        const observer = new MutationObserver(function(mutations) {
-          mutations.forEach(function(mutation) {
-            if (mutation.type === 'attributes' && mutation.attributeName === 'data-bs-theme') {
-              reinitializeChartsOnThemeChange();
-            }
-          });
-        });
-        
-        observer.observe(document.documentElement, {
-          attributes: true,
-          attributeFilter: ['data-bs-theme']
-        });
-      });
     </script>
   </body>
 </html>

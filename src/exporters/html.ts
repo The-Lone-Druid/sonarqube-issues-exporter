@@ -57,6 +57,11 @@ export class HtmlExporter {
       }
       return options.inverse(this);
     });
+
+    // Helper to get current year
+    Handlebars.registerHelper('currentYear', () => {
+      return new Date().getFullYear();
+    });
   }
 
   private processIssues(issues: SonarQubeIssue[]): ProcessedIssue[] {
