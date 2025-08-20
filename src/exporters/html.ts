@@ -50,6 +50,13 @@ export class HtmlExporter {
       return a > b;
     });
 
+    // Helper for logical OR
+    Handlebars.registerHelper('or', (...args: any[]) => {
+      // Remove the options object (last argument)
+      const values = args.slice(0, -1);
+      return values.some(Boolean);
+    });
+
     // Helper for conditional rendering
     Handlebars.registerHelper('if_eq', function (this: any, a: any, b: any, options: any) {
       if (a === b) {

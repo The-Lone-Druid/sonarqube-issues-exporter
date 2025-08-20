@@ -149,6 +149,20 @@
         @apply relative w-full h-80;
       }
 
+      /* Tab styles */
+      .tab-button.active {
+        @apply border-primary-500 text-primary-600 dark:text-primary-400;
+      }
+
+      .tab-content {
+        @apply transition-opacity duration-200;
+      }
+
+      .tab-content.hidden {
+        @apply opacity-0;
+        display: none;
+      }
+
       /* Smooth transitions */
       * {
         @apply transition-colors duration-200;
@@ -197,185 +211,543 @@
 
     <!-- Main Content -->
     <main class="container mx-auto px-6 py-8">
-      <!-- Quality Gate Status - HIDDEN to avoid management confusion with ERROR status display -->
-      {{!--
-      {{#if qualityGate}}
+      <!-- Tab Navigation -->
       <div class="mb-8">
-        <div class="quality-gate-{{qualityGate.status}} border-2 rounded-lg p-6">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center">
-              {{#if (eq qualityGate.status 'PASSED')}}
-                <i class="fas fa-check-circle text-2xl mr-3"></i>
-              {{else if (eq qualityGate.status 'FAILED')}}
-                <i class="fas fa-times-circle text-2xl mr-3"></i>
-              {{else}}
-                <i class="fas fa-question-circle text-2xl mr-3"></i>
+        <div class="border-b border-gray-200 dark:border-gray-700">
+          <nav class="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
+            <button id="tab-overview"
+                    class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm active"
+                    onclick="switchTab('overview')">
+              <i class="fas fa-chart-pie mr-2"></i>Overview Dashboard
+            </button>
+            <button id="tab-charts"
+                    class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
+                    onclick="switchTab('charts')">
+              <i class="fas fa-chart-bar mr-2"></i>Charts & Analytics
+            </button>
+            <button id="tab-issues"
+                    class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
+                    onclick="switchTab('issues')">
+              <i class="fas fa-bug mr-2"></i>Issues Analysis
+            </button>
+            <button id="tab-security"
+                    class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
+                    onclick="switchTab('security')">
+              <i class="fas fa-shield-alt mr-2"></i>Security Insights
+            </button>
+            <button id="tab-quality"
+                    class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
+                    onclick="switchTab('quality')">
+              <i class="fas fa-code mr-2"></i>Code Quality
+            </button>
+            <button id="tab-trends"
+                    class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
+                    onclick="switchTab('trends')">
+              <i class="fas fa-chart-line mr-2"></i>Trends & History
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Tab Content -->
+
+      <!-- Overview Dashboard Tab -->
+      <div id="content-overview" class="tab-content">
+        <!-- Summary Statistics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
+            <div class="text-3xl font-bold text-primary-600 dark:text-primary-400">{{metadata.totalIssues}}</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">Total Issues</div>
+          </div>
+
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
+            <div class="text-3xl font-bold text-red-600">{{#if metrics.severities.CRITICAL}}{{metrics.severities.CRITICAL}}{{else}}0{{/if}}</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">Critical</div>
+          </div>
+
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
+            <div class="text-3xl font-bold text-green-600">{{#if metrics.types.BUG}}{{metrics.types.BUG}}{{else}}0{{/if}}</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">Bugs</div>
+          </div>
+
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
+            <div class="text-3xl font-bold text-purple-600">{{#if metrics.types.VULNERABILITY}}{{metrics.types.VULNERABILITY}}{{else}}0{{/if}}</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">Vulnerabilities</div>
+          </div>
+        </div>
+
+        <!-- Quick Overview Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <!-- Project Info Card -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+              <i class="fas fa-info-circle mr-2 text-primary-600"></i>
+              Project Information
+            </h3>
+            <div class="space-y-3">
+              <div class="flex justify-between">
+                <span class="text-gray-600 dark:text-gray-400">Project Key:</span>
+                <span class="font-medium">{{metadata.projectKey}}</span>
+              </div>
+              {{#if metadata.projectName}}
+              <div class="flex justify-between">
+                <span class="text-gray-600 dark:text-gray-400">Project Name:</span>
+                <span class="font-medium">{{metadata.projectName}}</span>
+              </div>
               {{/if}}
-
-              <div>
-                <h2 class="text-xl font-bold">Quality Gate: {{qualityGate.status}}</h2>
-                <p class="text-sm opacity-75">{{qualityGate.conditions.length}} condition(s) evaluated</p>
+              <div class="flex justify-between">
+                <span class="text-gray-600 dark:text-gray-400">Generated:</span>
+                <span class="font-medium">{{metadata.generatedAt}}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600 dark:text-gray-400">Total Issues:</span>
+                <span class="font-medium">{{metadata.totalIssues}}</span>
               </div>
             </div>
+          </div>
 
-            {{#if qualityGate.conditions}}
-            <div class="text-right">
-              <div class="text-sm space-y-1">
-                {{#each qualityGate.conditions}}
-                <div class="flex items-center justify-end space-x-2">
-                  <span class="{{status}}">{{metricName}}: {{value}}</span>
-                  {{#if (eq status 'ERROR')}}
-                    <i class="fas fa-times text-red-500"></i>
-                  {{else}}
-                    <i class="fas fa-check text-green-500"></i>
-                  {{/if}}
+          <!-- Health Score Card -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+              <i class="fas fa-heart mr-2 text-red-500"></i>
+              Health Score Overview
+            </h3>
+            <div class="text-center">
+              <div class="text-4xl font-bold text-primary-600 dark:text-primary-400 mb-2">
+                {{#if (gt metadata.totalIssues 100)}}C{{else if (gt metadata.totalIssues 50)}}B{{else if (gt metadata.totalIssues 10)}}A{{else}}A+{{/if}}
+              </div>
+              <div class="text-sm text-gray-600 dark:text-gray-400 mb-4">Overall Code Quality</div>
+              <div class="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div class="text-lg font-semibold text-green-600">{{#if metrics.types.CODE_SMELL}}{{metrics.types.CODE_SMELL}}{{else}}0{{/if}}</div>
+                  <div class="text-xs text-gray-500">Code Smells</div>
                 </div>
-                {{/each}}
+                <div>
+                  <div class="text-lg font-semibold text-red-600">{{#if metrics.types.BUG}}{{metrics.types.BUG}}{{else}}0{{/if}}</div>
+                  <div class="text-xs text-gray-500">Bugs</div>
+                </div>
+                <div>
+                  <div class="text-lg font-semibold text-purple-600">{{#if metrics.types.VULNERABILITY}}{{metrics.types.VULNERABILITY}}{{else}}0{{/if}}</div>
+                  <div class="text-xs text-gray-500">Vulnerabilities</div>
+                </div>
               </div>
             </div>
-            {{/if}}
           </div>
         </div>
       </div>
-      {{/if}}
-      --}}
 
-      <!-- Enhanced Dashboard with Charts -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <!-- Issues Overview Chart -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-          <h3 class="text-lg font-semibold mb-4">Issues by Severity</h3>
-          <div class="chart-container">
-            <canvas id="severityChart"></canvas>
+      <!-- Charts & Analytics Tab -->
+      <div id="content-charts" class="tab-content hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <!-- Issues Overview Chart -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4">Issues by Severity</h3>
+            <div class="chart-container">
+              <canvas id="severityChart"></canvas>
+            </div>
           </div>
-        </div>
 
-        <!-- Issues by Type Chart -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-          <h3 class="text-lg font-semibold mb-4">Issues by Type</h3>
-          <div class="chart-container">
-            <canvas id="typeChart"></canvas>
+          <!-- Issues by Type Chart -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4">Issues by Type</h3>
+            <div class="chart-container">
+              <canvas id="typeChart"></canvas>
+            </div>
           </div>
-        </div>
 
-        <!-- Metrics Overview -->
-        {{#if projectMeasures}}
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-          <h3 class="text-lg font-semibold mb-4">Code Quality Metrics</h3>
-          <div class="chart-container">
-            <canvas id="metricsChart"></canvas>
+          <!-- Metrics Overview -->
+          {{#if projectMeasures}}
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4">Code Quality Metrics</h3>
+            <div class="chart-container">
+              <canvas id="metricsChart"></canvas>
+            </div>
           </div>
-        </div>
-        {{/if}}
+          {{/if}}
 
-        <!-- Security Hotspots -->
-        {{#if securityHotspots}}
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-          <h3 class="text-lg font-semibold mb-4">Security Hotspots</h3>
-          <div class="chart-container">
-            <canvas id="securityChart"></canvas>
+          <!-- Future: Technical Debt Visualization -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4">Technical Debt Analysis</h3>
+            <div class="chart-container">
+              <div class="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                <div class="text-center">
+                  <i class="fas fa-chart-area text-4xl mb-4"></i>
+                  <p>Technical debt visualization coming in Phase 3</p>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-        {{/if}}
-      </div>
-
-      <!-- Summary Statistics -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
-          <div class="text-3xl font-bold text-primary-600 dark:text-primary-400">{{metadata.totalIssues}}</div>
-          <div class="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">Total Issues</div>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
-          <div class="text-3xl font-bold text-red-600">{{#if metrics.severities.CRITICAL}}{{metrics.severities.CRITICAL}}{{else}}0{{/if}}</div>
-          <div class="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">Critical</div>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
-          <div class="text-3xl font-bold text-green-600">{{#if metrics.types.BUG}}{{metrics.types.BUG}}{{else}}0{{/if}}</div>
-          <div class="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">Bugs</div>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
-          <div class="text-3xl font-bold text-purple-600">{{#if metrics.types.VULNERABILITY}}{{metrics.types.VULNERABILITY}}{{else}}0{{/if}}</div>
-          <div class="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">Vulnerabilities</div>
         </div>
       </div>
 
-      <!-- Issues Table -->
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-        <h2 class="text-xl font-bold mb-6">Detailed Issues</h2>
+      <!-- Issues Analysis Tab -->
+      <div id="content-issues" class="tab-content hidden">
+        <!-- Issues Filter Panel -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+          <h3 class="text-lg font-semibold mb-4 flex items-center">
+            <i class="fas fa-filter mr-2 text-primary-600"></i>
+            Advanced Filters
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Severity</label>
+              <select id="severity-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                <option value="">All Severities</option>
+                <option value="CRITICAL">Critical</option>
+                <option value="MAJOR">Major</option>
+                <option value="MINOR">Minor</option>
+                <option value="INFO">Info</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Type</label>
+              <select id="type-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                <option value="">All Types</option>
+                <option value="BUG">Bug</option>
+                <option value="VULNERABILITY">Vulnerability</option>
+                <option value="CODE_SMELL">Code Smell</option>
+                <option value="SECURITY_HOTSPOT">Security Hotspot</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+              <select id="status-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                <option value="">All Statuses</option>
+                <option value="OPEN">Open</option>
+                <option value="CONFIRMED">Confirmed</option>
+                <option value="RESOLVED">Resolved</option>
+                <option value="CLOSED">Closed</option>
+              </select>
+            </div>
+          </div>
+        </div>
 
-        <div class="overflow-x-auto">
-          <table id="issuesTable" class="display responsive nowrap" style="width:100%">
-            <thead>
-              <tr>
-                <th>Rule</th>
-                <th>Message</th>
-                <th>Component</th>
-                <th>Severity</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Author</th>
-                <th>Creation Date</th>
-                <th>Line</th>
-                <th>Effort</th>
-                <th>Tags</th>
-              </tr>
-            </thead>
-            <tbody>
-              {{#each issues}}
-              <tr>
-                <td>
-                  <span class="font-mono text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{{rule}}</span>
-                </td>
-                <td>
-                  <div class="max-w-md">
-                    <div class="truncate" title="{{message}}">{{message}}</div>
+        <!-- Issues Table -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+          <h2 class="text-xl font-bold mb-6">Detailed Issues Analysis</h2>
+
+          <div class="overflow-x-auto">
+            <table id="issuesTable" class="display responsive nowrap" style="width:100%">
+              <thead>
+                <tr>
+                  <th>Rule</th>
+                  <th>Message</th>
+                  <th>Component</th>
+                  <th>Severity</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Author</th>
+                  <th>Creation Date</th>
+                  <th>Line</th>
+                  <th>Effort</th>
+                  <th>Tags</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{#each issues}}
+                <tr>
+                  <td>
+                    <span class="font-mono text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{{rule}}</span>
+                  </td>
+                  <td>
+                    <div class="max-w-md">
+                      <div class="truncate" title="{{message}}">{{message}}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="font-mono text-xs">{{component}}</span>
+                  </td>
+                  <td>
+                    <span class="severity-{{severity}} px-2 py-1 rounded-full text-xs font-semibold uppercase">
+                      {{severity}}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="type-{{type}} px-2 py-1 rounded-full text-xs font-semibold">
+                      {{#if (eq type 'BUG')}}Bug{{/if}}
+                      {{#if (eq type 'VULNERABILITY')}}Vulnerability{{/if}}
+                      {{#if (eq type 'CODE_SMELL')}}Code Smell{{/if}}
+                      {{#if (eq type 'SECURITY_HOTSPOT')}}Security Hotspot{{/if}}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="px-2 py-1 rounded-full text-xs font-semibold
+                      {{#if (eq status 'OPEN')}}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200{{/if}}
+                      {{#if (eq status 'CONFIRMED')}}bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200{{/if}}
+                      {{#if (eq status 'RESOLVED')}}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200{{/if}}
+                      {{#if (eq status 'CLOSED')}}bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200{{/if}}">
+                      {{status}}
+                    </span>
+                  </td>
+                  <td>{{#if author}}{{author}}{{else}}-{{/if}}</td>
+                  <td>{{creationDate}}</td>
+                  <td>{{#if line}}{{line}}{{else}}-{{/if}}</td>
+                  <td>{{#if effort}}{{effort}}{{else}}-{{/if}}</td>
+                  <td>
+                    {{#if tags}}
+                      {{#each tags}}
+                        <span class="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs px-2 py-1 rounded mr-1">{{this}}</span>
+                      {{/each}}
+                    {{else}}
+                      -
+                    {{/if}}
+                  </td>
+                </tr>
+                {{/each}}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Security Insights Tab -->
+      <div id="content-security" class="tab-content hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <!-- Security Overview -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+              <i class="fas fa-shield-alt mr-2 text-red-600"></i>
+              Security Overview
+            </h3>
+            <div class="space-y-4">
+              <div class="flex justify-between items-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                <span class="text-red-800 dark:text-red-200">Vulnerabilities</span>
+                <span class="font-bold text-red-600">{{#if metrics.types.VULNERABILITY}}{{metrics.types.VULNERABILITY}}{{else}}0{{/if}}</span>
+              </div>
+              <div class="flex justify-between items-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                <span class="text-orange-800 dark:text-orange-200">Security Hotspots</span>
+                <span class="font-bold text-orange-600">{{#if metrics.types.SECURITY_HOTSPOT}}{{metrics.types.SECURITY_HOTSPOT}}{{else}}0{{/if}}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Security Rating -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+              <i class="fas fa-star mr-2 text-yellow-500"></i>
+              Security Rating
+            </h3>
+            <div class="text-center">
+              <div class="text-4xl font-bold text-yellow-600 dark:text-yellow-400 mb-2">
+                {{#if (gt metrics.types.VULNERABILITY 10)}}E{{else if (gt metrics.types.VULNERABILITY 5)}}D{{else if (gt metrics.types.VULNERABILITY 2)}}C{{else if (gt metrics.types.VULNERABILITY 0)}}B{{else}}A{{/if}}
+              </div>
+              <div class="text-sm text-gray-600 dark:text-gray-400">Security Rating</div>
+            </div>
+          </div>
+
+          <!-- Security Hotspots Chart -->
+          {{#if securityHotspots}}
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4">Security Hotspots Distribution</h3>
+            <div class="chart-container">
+              <canvas id="securityChart"></canvas>
+            </div>
+          </div>
+          {{else}}
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4">Security Hotspots Analysis</h3>
+            <div class="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+              <div class="text-center">
+                <i class="fas fa-shield-alt text-4xl mb-4"></i>
+                <p>Enhanced security analysis coming in Phase 3</p>
+              </div>
+            </div>
+          </div>
+          {{/if}}
+
+          <!-- Security Recommendations -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+              <i class="fas fa-lightbulb mr-2 text-yellow-500"></i>
+              Security Recommendations
+            </h3>
+            <div class="space-y-3">
+              {{#if (gt metrics.types.VULNERABILITY 0)}}
+              <div class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                <div class="flex items-start">
+                  <i class="fas fa-exclamation-triangle text-red-600 mt-1 mr-2"></i>
+                  <div>
+                    <div class="font-medium text-red-800 dark:text-red-200">Address Vulnerabilities</div>
+                    <div class="text-sm text-red-600 dark:text-red-300">{{metrics.types.VULNERABILITY}} vulnerabilities need immediate attention</div>
                   </div>
-                </td>
-                <td>
-                  <span class="font-mono text-xs">{{component}}</span>
-                </td>
-                <td>
-                  <span class="severity-{{severity}} px-2 py-1 rounded-full text-xs font-semibold uppercase">
-                    {{severity}}
-                  </span>
-                </td>
-                <td>
-                  <span class="type-{{type}} px-2 py-1 rounded-full text-xs font-semibold">
-                    {{#if (eq type 'BUG')}}Bug{{/if}}
-                    {{#if (eq type 'VULNERABILITY')}}Vulnerability{{/if}}
-                    {{#if (eq type 'CODE_SMELL')}}Code Smell{{/if}}
-                    {{#if (eq type 'SECURITY_HOTSPOT')}}Security Hotspot{{/if}}
-                  </span>
-                </td>
-                <td>
-                  <span class="px-2 py-1 rounded-full text-xs font-semibold
-                    {{#if (eq status 'OPEN')}}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200{{/if}}
-                    {{#if (eq status 'CONFIRMED')}}bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200{{/if}}
-                    {{#if (eq status 'RESOLVED')}}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200{{/if}}
-                    {{#if (eq status 'CLOSED')}}bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200{{/if}}">
-                    {{status}}
-                  </span>
-                </td>
-                <td>{{#if author}}{{author}}{{else}}-{{/if}}</td>
-                <td>{{creationDate}}</td>
-                <td>{{#if line}}{{line}}{{else}}-{{/if}}</td>
-                <td>{{#if effort}}{{effort}}{{else}}-{{/if}}</td>
-                <td>
-                  {{#if tags}}
-                    {{#each tags}}
-                      <span class="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs px-2 py-1 rounded mr-1">{{this}}</span>
-                    {{/each}}
-                  {{else}}
-                    -
-                  {{/if}}
-                </td>
-              </tr>
-              {{/each}}
-            </tbody>
-          </table>
+                </div>
+              </div>
+              {{/if}}
+              {{#if (gt metrics.types.SECURITY_HOTSPOT 0)}}
+              <div class="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                <div class="flex items-start">
+                  <i class="fas fa-search text-orange-600 mt-1 mr-2"></i>
+                  <div>
+                    <div class="font-medium text-orange-800 dark:text-orange-200">Review Security Hotspots</div>
+                    <div class="text-sm text-orange-600 dark:text-orange-300">{{metrics.types.SECURITY_HOTSPOT}} security hotspots require review</div>
+                  </div>
+                </div>
+              </div>
+              {{/if}}
+              {{#unless (or (gt metrics.types.VULNERABILITY 0) (gt metrics.types.SECURITY_HOTSPOT 0))}}
+              <div class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <div class="flex items-start">
+                  <i class="fas fa-check-circle text-green-600 mt-1 mr-2"></i>
+                  <div>
+                    <div class="font-medium text-green-800 dark:text-green-200">Good Security Posture</div>
+                    <div class="text-sm text-green-600 dark:text-green-300">No critical security issues detected</div>
+                  </div>
+                </div>
+              </div>
+              {{/unless}}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Code Quality Tab -->
+      <div id="content-quality" class="tab-content hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <!-- Code Coverage -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+              <i class="fas fa-percentage mr-2 text-green-600"></i>
+              Code Coverage
+            </h3>
+            <div class="text-center">
+              <div class="relative w-32 h-32 mx-auto mb-4">
+                <!-- Placeholder for coverage chart - Phase 3 -->
+                <div class="w-full h-full rounded-full border-8 border-gray-200 dark:border-gray-700 flex items-center justify-center">
+                  <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-400">N/A</div>
+                    <div class="text-xs text-gray-400">Coverage</div>
+                  </div>
+                </div>
+              </div>
+              <p class="text-sm text-gray-600 dark:text-gray-400">Code coverage analysis coming in Phase 3</p>
+            </div>
+          </div>
+
+          <!-- Technical Debt -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+              <i class="fas fa-clock mr-2 text-orange-600"></i>
+              Technical Debt
+            </h3>
+            <div class="text-center">
+              <div class="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-2">
+                {{#if metrics.types.CODE_SMELL}}{{metrics.types.CODE_SMELL}}{{else}}0{{/if}}
+              </div>
+              <div class="text-sm text-gray-600 dark:text-gray-400 mb-4">Code Smells</div>
+              <div class="text-xs text-gray-500">Detailed debt analysis coming in Phase 3</div>
+            </div>
+          </div>
+
+          <!-- Maintainability -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+              <i class="fas fa-wrench mr-2 text-blue-600"></i>
+              Maintainability
+            </h3>
+            <div class="space-y-4">
+              <div class="flex justify-between items-center">
+                <span class="text-gray-600 dark:text-gray-400">Complexity:</span>
+                <span class="font-medium">Coming soon</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-gray-600 dark:text-gray-400">Duplicated Lines:</span>
+                <span class="font-medium">Coming soon</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-gray-600 dark:text-gray-400">Lines of Code:</span>
+                <span class="font-medium">Coming soon</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quality Metrics Chart -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4">Quality Metrics Overview</h3>
+            <div class="chart-container">
+              <div class="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                <div class="text-center">
+                  <i class="fas fa-chart-bar text-4xl mb-4"></i>
+                  <p>Advanced quality metrics coming in Phase 3</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trends & History Tab -->
+      <div id="content-trends" class="tab-content hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <!-- Trend Analysis -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+              <i class="fas fa-chart-line mr-2 text-purple-600"></i>
+              Trend Analysis
+            </h3>
+            <div class="chart-container">
+              <div class="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                <div class="text-center">
+                  <i class="fas fa-chart-line text-4xl mb-4"></i>
+                  <p>Historical trend analysis coming in Phase 4</p>
+                  <p class="text-sm mt-2">Requires multiple scan data points</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quality Evolution -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+              <i class="fas fa-history mr-2 text-indigo-600"></i>
+              Quality Evolution
+            </h3>
+            <div class="chart-container">
+              <div class="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                <div class="text-center">
+                  <i class="fas fa-history text-4xl mb-4"></i>
+                  <p>Quality evolution tracking coming in Phase 4</p>
+                  <p class="text-sm mt-2">Historical comparison features</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Comparison Tools -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+              <i class="fas fa-balance-scale mr-2 text-teal-600"></i>
+              Comparison Tools
+            </h3>
+            <div class="space-y-4">
+              <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                <div class="font-medium text-gray-900 dark:text-gray-100 mb-2">New vs Overall Code</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Compare metrics between new and overall code</div>
+              </div>
+              <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                <div class="font-medium text-gray-900 dark:text-gray-100 mb-2">Previous Scan Comparison</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Track improvements and regressions</div>
+              </div>
+              <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                <div class="font-medium text-gray-900 dark:text-gray-100 mb-2">Benchmark Analysis</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Compare against industry standards</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Timeline -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+              <i class="fas fa-clock mr-2 text-gray-600"></i>
+              Quality Timeline
+            </h3>
+            <div class="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+              <div class="text-center">
+                <i class="fas fa-clock text-4xl mb-4"></i>
+                <p>Quality timeline visualization coming in Phase 4</p>
+                <p class="text-sm mt-2">Milestone tracking and progress indicators</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </main>
@@ -403,6 +775,64 @@
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 
     <script>
+      // Tab Management
+      function switchTab(tabName) {
+        // Hide all tab contents
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabContents.forEach(content => {
+          content.classList.add('hidden');
+        });
+
+        // Remove active class from all tab buttons
+        const tabButtons = document.querySelectorAll('.tab-button');
+        tabButtons.forEach(button => {
+          button.classList.remove('active');
+          button.classList.remove('border-primary-500', 'text-primary-600', 'dark:text-primary-400');
+          button.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+        });
+
+        // Show selected tab content
+        const selectedContent = document.getElementById(`content-${tabName}`);
+        if (selectedContent) {
+          selectedContent.classList.remove('hidden');
+        }
+
+        // Activate selected tab button
+        const selectedButton = document.getElementById(`tab-${tabName}`);
+        if (selectedButton) {
+          selectedButton.classList.add('active');
+          selectedButton.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+          selectedButton.classList.add('border-primary-500', 'text-primary-600', 'dark:text-primary-400');
+        }
+
+        // Re-initialize DataTable if switching to issues tab
+        if (tabName === 'issues') {
+          setTimeout(() => {
+            if ($.fn.DataTable.isDataTable('#issuesTable')) {
+              $('#issuesTable').DataTable().columns.adjust().responsive.recalc();
+            }
+          }, 100);
+        }
+
+        // Re-render charts if switching to charts tab
+        if (tabName === 'charts' && window.chartInstances) {
+          setTimeout(() => {
+            Object.values(window.chartInstances).forEach(chart => {
+              chart.resize();
+            });
+          }, 100);
+        }
+
+        // Store active tab in localStorage
+        localStorage.setItem('activeTab', tabName);
+      }
+
+      // Initialize active tab on page load
+      document.addEventListener('DOMContentLoaded', function() {
+        const savedTab = localStorage.getItem('activeTab') || 'overview';
+        switchTab(savedTab);
+      });
+
       // Theme management
       const themeToggle = document.getElementById('theme-toggle');
       const themeIcon = document.getElementById('theme-icon');
@@ -458,7 +888,7 @@
 
       // Initialize DataTable
       $(document).ready(function() {
-        $('#issuesTable').DataTable({
+        const table = $('#issuesTable').DataTable({
           responsive: true,
           pageLength: 25,
           order: [[3, 'desc'], [4, 'desc']],
@@ -473,6 +903,22 @@
               previous: "Previous"
             }
           }
+        });
+
+        // Add filter functionality
+        $('#severity-filter').on('change', function() {
+          const value = this.value;
+          table.column(3).search(value ? '^' + value + '$' : '', true, false).draw();
+        });
+
+        $('#type-filter').on('change', function() {
+          const value = this.value;
+          table.column(4).search(value ? value : '', true, false).draw();
+        });
+
+        $('#status-filter').on('change', function() {
+          const value = this.value;
+          table.column(5).search(value ? '^' + value + '$' : '', true, false).draw();
         });
 
         // Initialize charts
