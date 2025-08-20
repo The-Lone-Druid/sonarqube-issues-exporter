@@ -546,10 +546,97 @@
           {{else}}
           <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
             <h3 class="text-lg font-semibold mb-4">Security Hotspots Analysis</h3>
-            <div class="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-              <div class="text-center">
-                <i class="fas fa-shield-alt text-4xl mb-4"></i>
-                <p>Enhanced security analysis coming in Phase 3</p>
+
+            <!-- Security Overview Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <!-- Total Security Issues -->
+              <div class="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-lg p-4 text-center">
+                <i class="fas fa-exclamation-triangle text-2xl text-red-600 mb-2"></i>
+                <div class="text-2xl font-bold text-red-700 dark:text-red-300">
+                  {{add (or metrics.types.VULNERABILITY 0) (or metrics.types.SECURITY_HOTSPOT 0)}}
+                </div>
+                <div class="text-sm text-red-600 dark:text-red-400">Security Issues</div>
+              </div>
+
+              <!-- Vulnerabilities -->
+              <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg p-4 text-center">
+                <i class="fas fa-bug text-2xl text-orange-600 mb-2"></i>
+                <div class="text-2xl font-bold text-orange-700 dark:text-orange-300">
+                  {{or metrics.types.VULNERABILITY 0}}
+                </div>
+                <div class="text-sm text-orange-600 dark:text-orange-400">Vulnerabilities</div>
+              </div>
+
+              <!-- Security Rating -->
+              <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-4 text-center">
+                <i class="fas fa-shield-alt text-2xl text-blue-600 mb-2"></i>
+                <div class="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                  {{#if measures.security_rating}}
+                    {{#eq measures.security_rating "1.0"}}A{{/eq}}
+                    {{#eq measures.security_rating "2.0"}}B{{/eq}}
+                    {{#eq measures.security_rating "3.0"}}C{{/eq}}
+                    {{#eq measures.security_rating "4.0"}}D{{/eq}}
+                    {{#eq measures.security_rating "5.0"}}E{{/eq}}
+                  {{else}}N/A{{/if}}
+                </div>
+                <div class="text-sm text-blue-600 dark:text-blue-400">Security Rating</div>
+              </div>
+            </div>
+
+            <!-- Security Distribution Chart -->
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+              <h4 class="text-md font-medium mb-3 flex items-center">
+                <i class="fas fa-chart-pie mr-2 text-purple-600"></i>
+                Security Issues Distribution
+              </h4>
+              <div class="flex items-center justify-center" style="height: 200px;">
+                <canvas id="securityChart" style="max-width: 300px; max-height: 200px;"></canvas>
+              </div>
+            </div>
+
+            <!-- Security Trend Analysis -->
+            <div class="mt-6 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+              <h4 class="text-md font-medium mb-3 flex items-center">
+                <i class="fas fa-chart-line mr-2 text-green-600"></i>
+                Security Health Score
+              </h4>
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm">Overall Security</span>
+                  <div class="flex items-center">
+                    <div class="w-32 bg-gray-200 dark:bg-gray-600 rounded-full h-2 mr-2">
+                      <div class="h-2 rounded-full {{#if measures.security_rating}}
+                        {{#if (eq measures.security_rating '1.0')}}bg-green-500{{/if}}
+                        {{#if (eq measures.security_rating '2.0')}}bg-yellow-500{{/if}}
+                        {{#if (eq measures.security_rating '3.0')}}bg-orange-500{{/if}}
+                        {{#if (eq measures.security_rating '4.0')}}bg-red-500{{/if}}
+                        {{#if (eq measures.security_rating '5.0')}}bg-red-700{{/if}}
+                      {{else}}bg-gray-400{{/if}}"
+                      style="width: {{#if measures.security_rating}}{{#if (eq measures.security_rating '1.0')}}90{{/if}}{{#if (eq measures.security_rating '2.0')}}75{{/if}}{{#if (eq measures.security_rating '3.0')}}60{{/if}}{{#if (eq measures.security_rating '4.0')}}40{{/if}}{{#if (eq measures.security_rating '5.0')}}20{{/if}}{{else}}50{{/if}}%"></div>
+                    </div>
+                    <span class="text-xs font-medium">
+                      {{#if measures.security_rating}}
+                        {{#if (eq measures.security_rating '1.0')}}90%{{/if}}
+                        {{#if (eq measures.security_rating '2.0')}}75%{{/if}}
+                        {{#if (eq measures.security_rating '3.0')}}60%{{/if}}
+                        {{#if (eq measures.security_rating '4.0')}}40%{{/if}}
+                        {{#if (eq measures.security_rating '5.0')}}20%{{/if}}
+                      {{else}}50%{{/if}}
+                    </span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm">Vulnerability Density</span>
+                  <div class="flex items-center">
+                    <div class="w-32 bg-gray-200 dark:bg-gray-600 rounded-full h-2 mr-2">
+                      <div class="h-2 rounded-full {{#if (gt metrics.types.VULNERABILITY 5)}}bg-red-500{{else}}{{#if (gt metrics.types.VULNERABILITY 0)}}bg-yellow-500{{else}}bg-green-500{{/if}}{{/if}}"
+                      style="width: {{#if (gt metrics.types.VULNERABILITY 10)}}80{{else}}{{#if (gt metrics.types.VULNERABILITY 5)}}60{{else}}{{#if (gt metrics.types.VULNERABILITY 0)}}30{{else}}95{{/if}}{{/if}}{{/if}}%"></div>
+                    </div>
+                    <span class="text-xs font-medium">
+                      {{#if (gt metrics.types.VULNERABILITY 10)}}High{{else}}{{#if (gt metrics.types.VULNERABILITY 5)}}Medium{{else}}{{#if (gt metrics.types.VULNERABILITY 0)}}Low{{else}}Excellent{{/if}}{{/if}}{{/if}}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1133,38 +1220,54 @@
         });
         {{/if}}
 
-        {{#if securityHotspots}}
-        // Security Hotspots Chart
-        const securityCtx = document.getElementById('securityChart').getContext('2d');
-        window.chartInstances.security = new Chart(securityCtx, {
-          type: 'pie',
-          data: {
-            labels: ['To Review', 'Reviewed'],
-            datasets: [{
-              data: [
-                {{securityHotspots.total}},
-                0 // No reviewed data available yet
-              ],
-              backgroundColor: ['#ea580c', '#059669'],
-              borderWidth: 2,
-              borderColor: theme.backgroundColor
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: 'bottom',
-                labels: {
-                  color: theme.textColor,
-                  padding: 20
+        // Security Distribution Chart (Security Insights Tab)
+        const securityCtx = document.getElementById('securityChart');
+        if (securityCtx) {
+          const vulnerabilities = {{or metrics.types.VULNERABILITY 0}};
+          const securityHotspots = {{or metrics.types.SECURITY_HOTSPOT 0}};
+          const totalSecurity = vulnerabilities + securityHotspots;
+
+          if (totalSecurity > 0) {
+            window.chartInstances.security = new Chart(securityCtx, {
+              type: 'doughnut',
+              data: {
+                labels: ['Vulnerabilities', 'Security Hotspots', 'Secure Code'],
+                datasets: [{
+                  data: [vulnerabilities, securityHotspots, Math.max(10 - totalSecurity, 0)],
+                  backgroundColor: ['#dc2626', '#ea580c', '#10b981'],
+                  borderWidth: 2,
+                  borderColor: theme.backgroundColor
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    position: 'bottom',
+                    labels: {
+                      color: theme.textColor,
+                      padding: 15,
+                      usePointStyle: true
+                    }
+                  },
+                  tooltip: {
+                    backgroundColor: theme.backgroundColor,
+                    titleColor: theme.textColor,
+                    bodyColor: theme.textColor,
+                    borderColor: theme.gridColor,
+                    borderWidth: 1
+                  }
                 }
               }
-            }
+            });
+          } else {
+            // Show "No Security Issues" message
+            securityCtx.canvas.style.display = 'none';
+            const container = securityCtx.canvas.parentElement;
+            container.innerHTML = '<div class="flex items-center justify-center h-full"><div class="text-center text-gray-500 dark:text-gray-400"><i class="fas fa-shield-check text-4xl text-green-500 mb-2"></i><p>No security issues detected</p></div></div>';
           }
-        });
-        {{/if}}
+        }
 
         // Coverage Chart (Code Quality Tab)
         const coverageCtx = document.getElementById('coverageChart');
