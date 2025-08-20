@@ -30,7 +30,17 @@ npx sonarqube-exporter --help
 
 ## 🚀 Quick Start
 
-### Method 1: Environment Variables
+### Method 1: Interactive Setup (New!)
+
+```bash
+# Interactive configuration wizard
+sonarqube-exporter setup
+
+# For global configuration
+sonarqube-exporter setup --global
+```
+
+### Method 2: Environment Variables
 
 ```bash
 # Set required environment variables
@@ -42,7 +52,7 @@ export SONARQUBE_PROJECT_KEY="your_project_key"
 sonarqube-exporter export
 ```
 
-### Method 2: Configuration File
+### Method 3: Configuration File
 
 Create a `sonarqube.config.json` file:
 
@@ -135,7 +145,7 @@ Options:
   -c, --config <path>            Path to configuration file
   -o, --output <path>            Output directory path
   -f, --filename <name>          Output filename
-  --template <name>              Template name (default: "default")
+  --template <name>              Template name: "default" or "enhanced"
   --max-issues <number>          Maximum issues to fetch (default: "10000")
   --include-resolved             Include resolved issues
   --exclude-statuses <statuses>  Comma-separated statuses to exclude
@@ -150,7 +160,88 @@ sonarqube-exporter validate [options]
 
 Options:
   -c, --config <path>   Path to configuration file
+  --url <url>           SonarQube server URL override
+  --token <token>       Authentication token override
+  --project <key>       Project key override
+  --organization <org>  Organization override
   -h, --help           Display help
+```
+
+### Setup Command
+
+```bash
+sonarqube-exporter setup [options]
+
+Options:
+  --global             Create global configuration file
+  -h, --help          Display help
+```
+
+## 🎨 Report Templates
+
+### Default Template
+
+A clean, professional interface with:
+
+- **Overview Dashboard**: Summary statistics and quality indicators
+- **Issues Analysis**: Interactive table with advanced filtering
+- **Responsive Design**: Works perfectly on all devices
+- **Dark/Light Theme**: Professional theme switching
+- **Export Options**: Print-friendly layout
+
+### Enhanced Template ✨ (New!)
+
+An enterprise-grade dashboard with comprehensive analytics and **professional theme design**:
+
+#### � **Professional Design System:**
+
+- **Modern Color Palette**: Slate-based color system with branded blue accents
+- **Enhanced Typography**: Inter font family for modern, readable interface
+- **Subtle Depth**: Professional shadows and layering for visual hierarchy
+- **Gradient Accents**: Beautiful gradient buttons and status indicators
+- **Improved Accessibility**: WCAG AA compliant contrast ratios
+
+#### �🏠 Six Interactive Tabs:
+
+1. **Overview Dashboard** - Executive summary and key metrics
+2. **Charts & Analytics** - Visual data analysis with charts
+3. **Issues Analysis** - Detailed issue breakdown and filtering
+4. **Security Insights** - Security hotspots and vulnerability tracking
+5. **Code Quality** - Coverage, complexity, and maintainability metrics
+6. **Trends & History** - Historical analysis and progress tracking
+
+#### 🎯 Success Animations (New!)
+
+The enhanced template celebrates excellent project metrics:
+
+- **🥇 90%+ Code Coverage**: Medal animation with congratulatory message
+- **🏆 Low Technical Debt**: Trophy display for < 1 hour debt
+- **⭐ Low Complexity**: Star animation for excellent maintainability
+- **🛡️ Zero Security Issues**: Shield animation for perfect security
+
+#### 🚀 Advanced Features:
+
+- **Professional Theme**: Modern slate color palette with branded accents
+- **Enhanced Typography**: Inter font family with improved readability
+- **Interactive Charts**: Chart.js powered visualizations with theme integration
+- **Real-time Filtering**: Advanced search and filter options
+- **Multi-theme Support**: Professional dark/light mode switching with seamless transitions
+- **Responsive Design**: Optimized for all screen sizes with mobile-first approach
+- **Progress Indicators**: Loading states and data fetch progress
+- **Data Export**: Multiple export formats available
+
+Usage:
+
+```bash
+# Use enhanced template
+sonarqube-exporter export --template enhanced
+
+# Configuration file
+{
+  "export": {
+    "template": "enhanced"
+  }
+}
 ```
 
 ## 💻 Programmatic Usage
