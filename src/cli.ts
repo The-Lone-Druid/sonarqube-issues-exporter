@@ -75,7 +75,7 @@ function buildExportOverrides(options: ExportCommandOptions): Partial<ExportConf
   const hasExportOptions =
     options.output ||
     options.filename ||
-    options.template !== 'default' ||
+    options.template ||
     options.includeResolved !== undefined ||
     options.excludeStatuses !== 'CLOSED' ||
     parseInt(options.maxIssues, 10) !== 10000;
@@ -87,7 +87,7 @@ function buildExportOverrides(options: ExportCommandOptions): Partial<ExportConf
   const exportOverrides: Partial<ExportConfig> = {};
   if (options.output) exportOverrides.outputPath = options.output;
   if (options.filename) exportOverrides.filename = options.filename;
-  if (options.template !== 'default') exportOverrides.template = options.template;
+  if (options.template) exportOverrides.template = options.template;
   if (parseInt(options.maxIssues, 10) !== 10000) {
     exportOverrides.maxIssues = parseInt(options.maxIssues, 10);
   }
@@ -159,7 +159,11 @@ program
   .option('--organization <org>', 'SonarQube organization (for SonarCloud)')
   .option('-o, --output <path>', 'Output directory path')
   .option('-f, --filename <name>', 'Output filename')
-  .option('--template <name>', 'Template name to use', 'default')
+  .option(
+    '--template <name>',
+    'Template: "default" (classic table view) or "enhanced" (interactive dashboard with charts)',
+    'default'
+  )
   .option('--max-issues <number>', 'Maximum number of issues to fetch', '10000')
   .option('--include-resolved', 'Include resolved issues in the report')
   .option('--exclude-statuses <statuses>', 'Comma-separated list of statuses to exclude', 'CLOSED')
