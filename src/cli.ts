@@ -27,6 +27,29 @@ function buildValidateConfigOverrides(
     : undefined;
 }
 
+// Helper function to create a safe configuration summary for logging
+function createConfigSummary(config: AppConfig): object {
+  return {
+    sonarqube: {
+      url: config.sonarqube.url,
+      projectKey: config.sonarqube.projectKey,
+      organization: config.sonarqube.organization || 'N/A',
+      tokenConfigured: !!config.sonarqube.token,
+    },
+    export: {
+      outputPath: config.export.outputPath,
+      filename: config.export.filename,
+      template: config.export.template,
+      maxIssues: config.export.maxIssues,
+      excludeStatuses: config.export.excludeStatuses.join(', '),
+      includeResolvedIssues: config.export.includeResolvedIssues,
+    },
+    logging: {
+      level: config.logging.level,
+    },
+  };
+}
+
 // Helper function to create configuration file content
 function createConfigFileContent(sonarQubeConfig: SonarQubeConfig): string {
   return JSON.stringify(
@@ -175,7 +198,11 @@ program
       const logger = getLogger();
 
       logger.info('Starting SonarQube issues export...');
-      logger.debug('Configuration:', config);
+
+      // Log configuration safely (without sensitive data) only in debug mode
+      if (config.logging.level === 'debug') {
+        logger.debug('Configuration (sanitized):', createConfigSummary(config));
+      }
 
       // Initialize services
       const sonarQubeService = new SonarQubeService(config.sonarqube);
@@ -197,13 +224,18 @@ program
 
       // Fetch issues with progress reporting
       logger.info('Fetching issues from SonarQube...');
+      let lastLoggedPercentage = 0;
       const issues = await sonarQubeService.fetchAllIssues({
         maxIssues: config.export.maxIssues,
         excludeStatuses: config.export.excludeStatuses,
         includeResolvedIssues: config.export.includeResolvedIssues,
         onProgress: (current, total) => {
           const percentage = Math.round((current / total) * 100);
-          logger.info(`Progress: ${current}/${total} issues (${percentage}%)`);
+          // Only log every 10% to reduce terminal noise
+          if (percentage >= lastLoggedPercentage + 10 || percentage === 100) {
+            logger.info(`Progress: ${current}/${total} issues (${percentage}%)`);
+            lastLoggedPercentage = percentage;
+          }
         },
       });
 

@@ -231,7 +231,8 @@ export class HtmlExporter {
         securityHotspots,
       };
     } catch (error) {
-      this.logger.warn('Failed to fetch enhanced data, using defaults:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.warn('Failed to fetch enhanced data, using defaults:', errorMessage);
       return {
         qualityGate: { status: 'NONE' as const, conditions: [] },
         projectMeasures: {},
