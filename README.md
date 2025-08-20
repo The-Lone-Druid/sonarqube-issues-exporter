@@ -34,7 +34,7 @@ Transform your SonarQube data into:
 - ✅ Client-ready deliverables
 - ✅ Professional reports for executives and stakeholders
 
-## � Who This Is For
+## 👥 Who This Is For
 
 ### 🏢 **Team Leads & Project Managers**
 
@@ -64,53 +64,6 @@ Transform your SonarQube data into:
 - Export issues for offline analysis and planning
 - Document technical debt for stakeholders
 
-## 🎯 Common Use Cases
-
-### 📈 **Sprint Reviews & Retrospectives**
-
-```bash
-# Generate a clean report for sprint retrospectives
-sq-exporter export --project "mobile-app" --filename "sprint-42-review.html"
-```
-
-_Perfect for showing code quality trends and improvements to the team._
-
-### 🔒 **Security Audits & Compliance**
-
-```bash
-# Export only security vulnerabilities for compliance reports
-sq-exporter export --project "banking-api" --exclude-statuses "CLOSED"
-```
-
-_Generate security-focused reports for compliance teams and auditors._
-
-### 👥 **Client Presentations & Meetings**
-
-```bash
-# Create a professional report for client meetings
-sq-exporter export --project "client-portal" --filename "quality-report-$(date +%Y%m%d).html"
-```
-
-_Show clients your commitment to code quality with professional reports._
-
-### ⚙️ **CI/CD Pipeline Integration**
-
-```bash
-# Automated quality reports in your pipeline
-sq-exporter export --project "$CI_PROJECT_NAME" --output "$CI_ARTIFACTS_DIR"
-```
-
-_Automatically generate reports for every deployment or release._
-
-### 📋 **Executive & Stakeholder Updates**
-
-```bash
-# Weekly quality dashboard for management
-sq-exporter export --project "main-product" --filename "weekly-quality-$(date +%Y-W%V).html"
-```
-
-_Keep stakeholders informed with regular, easy-to-understand quality reports._
-
 ## 👀 What You'll Get
 
 ### **Before: SonarQube Interface**
@@ -131,16 +84,13 @@ _Keep stakeholders informed with regular, easy-to-understand quality reports._
 
 ## ✨ Key Benefits
 
-- � **Stakeholder-Friendly Reports**: Transform technical data into executive-ready presentations
-- 🎨 **Professional Design**: Beautiful, responsive layouts that work on any device
+- 🎯 **Stakeholder-Friendly**: Transform technical data into executive-ready presentations
 - ⚡ **Quick Setup**: Get your first report in under 2 minutes
 - 🔧 **Flexible Configuration**: Works with any SonarQube setup (Cloud, Server, Enterprise)
-- 📱 **Mobile-Responsive**: Perfect viewing experience on desktop, tablet, and mobile
-- 🌙 **Theme Options**: Automatic dark/light mode based on user preference
-- 🔒 **Secure & Private**: Your data stays in your environment
-- 📈 **Progress Tracking**: Real-time feedback during report generation
-- 🎯 **Smart Filtering**: Focus on what matters most (severity, type, status)
-- 💾 **Offline Access**: Share reports without requiring SonarQube access
+- **Secure & Private**: Your data stays in your environment
+- 📈 **Real-time Progress**: Live feedback during report generation
+- � **Smart Filtering**: Focus on what matters most (severity, type, status)
+- � **Multiple Formats**: Support for different report templates and outputs
 
 ## 📋 Prerequisites
 
@@ -170,8 +120,6 @@ sq-exporter export \
 **That's it!** 🎉 Your professional SonarQube report is ready to share.
 
 > 💡 **Pro Tip**: Use `sq-exporter setup` for an interactive configuration wizard that saves your settings for future use.
-
-## 🚀 Installation & Setup
 
 ## 🚀 Installation & Setup
 
@@ -476,9 +424,7 @@ spec:
 
 ---
 
-## 📚 Advanced Configuration & Reference
-
-## 🛠️ CLI Commands
+## ⚙️ CLI Commands Reference
 
 ### Available Commands
 
@@ -537,7 +483,7 @@ npx sonarqube-exporter export --help
 npx sonarqube-exporter export --config ./config.json
 ```
 
-## 🛠️ Development
+## ‍💻 Development
 
 ### Setup Development Environment
 
@@ -598,7 +544,7 @@ src/
 └── index.ts        # Main entry point
 ```
 
-## � Documentation
+## 📚 Documentation
 
 Comprehensive documentation is available in the [`docs/`](./docs/) directory:
 
@@ -621,6 +567,6 @@ Comprehensive documentation is available in the [`docs/`](./docs/) directory:
 - **[Changelog](./CHANGELOG.md)** - Release history
 - **[Documentation Overview](./docs/README.md)** - Full documentation index
 
-## �📄 License
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

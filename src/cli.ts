@@ -129,13 +129,6 @@ function buildConfigOverrides(options: ExportCommandOptions): Partial<AppConfig>
 function logExportResults(logger: ReturnType<typeof getLogger>, result: ExporterResult): void {
   if (result.success) {
     logger.info(`✅ Report generated successfully!`);
-    logger.info(`📄 File: ${result.outputPath}`);
-    logger.info(`🔢 Issues: ${result.issuesCount}`);
-    logger.info(
-      `📊 Critical: ${(result.metrics.severities.BLOCKER || 0) + (result.metrics.severities.CRITICAL || 0)}`
-    );
-    logger.info(`🐛 Bugs: ${result.metrics.types.BUG || 0}`);
-    logger.info(`🔓 Vulnerabilities: ${result.metrics.types.VULNERABILITY || 0}`);
   } else {
     logger.error(`❌ Failed to generate report: ${result.error}`);
     process.exit(1);
