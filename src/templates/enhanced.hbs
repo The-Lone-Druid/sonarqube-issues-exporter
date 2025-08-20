@@ -611,15 +611,14 @@
             </h3>
             <div class="text-center">
               <div class="relative w-32 h-32 mx-auto mb-4">
-                <!-- Placeholder for coverage chart - Phase 3 -->
-                <div class="w-full h-full rounded-full border-8 border-gray-200 dark:border-gray-700 flex items-center justify-center">
-                  <div class="text-center">
-                    <div class="text-2xl font-bold text-gray-400">N/A</div>
-                    <div class="text-xs text-gray-400">Coverage</div>
-                  </div>
+                <canvas id="coverageChart" width="128" height="128"></canvas>
+              </div>
+              <div class="space-y-2">
+                <div class="text-sm text-gray-600 dark:text-gray-400">
+                  <span class="block">Lines: {{#if measures.coverage}}{{measures.coverage}}%{{else}}N/A{{/if}}</span>
+                  <span class="block">Branches: {{#if measures.branch_coverage}}{{measures.branch_coverage}}%{{else}}N/A{{/if}}</span>
                 </div>
               </div>
-              <p class="text-sm text-gray-600 dark:text-gray-400">Code coverage analysis coming in Phase 3</p>
             </div>
           </div>
 
@@ -629,12 +628,27 @@
               <i class="fas fa-clock mr-2 text-orange-600"></i>
               Technical Debt
             </h3>
-            <div class="text-center">
-              <div class="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-2">
-                {{#if metrics.types.CODE_SMELL}}{{metrics.types.CODE_SMELL}}{{else}}0{{/if}}
+            <div class="space-y-4">
+              <div class="text-center mb-4">
+                <div class="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-2">
+                  {{#if measures.sqale_index}}{{measures.sqale_index}}{{else}}0{{/if}}
+                </div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Total Effort (minutes)</div>
               </div>
-              <div class="text-sm text-gray-600 dark:text-gray-400 mb-4">Code Smells</div>
-              <div class="text-xs text-gray-500">Detailed debt analysis coming in Phase 3</div>
+              <div class="space-y-3">
+                <div class="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                  <span class="text-sm">Code Smells:</span>
+                  <span class="font-medium text-orange-600">{{#if metrics.types.CODE_SMELL}}{{metrics.types.CODE_SMELL}}{{else}}0{{/if}}</span>
+                </div>
+                <div class="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                  <span class="text-sm">Debt Ratio:</span>
+                  <span class="font-medium">{{#if measures.sqale_debt_ratio}}{{measures.sqale_debt_ratio}}%{{else}}0%{{/if}}</span>
+                </div>
+                <div class="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                  <span class="text-sm">Maintainability Rating:</span>
+                  <span class="font-medium">{{#if measures.sqale_rating}}{{measures.sqale_rating}}{{else}}A{{/if}}</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -642,20 +656,24 @@
           <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
             <h3 class="text-lg font-semibold mb-4 flex items-center">
               <i class="fas fa-wrench mr-2 text-blue-600"></i>
-              Maintainability
+              Maintainability Metrics
             </h3>
             <div class="space-y-4">
-              <div class="flex justify-between items-center">
+              <div class="flex justify-between items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                 <span class="text-gray-600 dark:text-gray-400">Complexity:</span>
-                <span class="font-medium">Coming soon</span>
+                <span class="font-medium text-blue-600">{{#if measures.complexity}}{{measures.complexity}}{{else}}N/A{{/if}}</span>
               </div>
-              <div class="flex justify-between items-center">
+              <div class="flex justify-between items-center p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
                 <span class="text-gray-600 dark:text-gray-400">Duplicated Lines:</span>
-                <span class="font-medium">Coming soon</span>
+                <span class="font-medium text-yellow-600">{{#if measures.duplicated_lines_density}}{{measures.duplicated_lines_density}}%{{else}}N/A{{/if}}</span>
               </div>
-              <div class="flex justify-between items-center">
+              <div class="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
                 <span class="text-gray-600 dark:text-gray-400">Lines of Code:</span>
-                <span class="font-medium">Coming soon</span>
+                <span class="font-medium text-green-600">{{#if measures.ncloc}}{{measures.ncloc}}{{else}}N/A{{/if}}</span>
+              </div>
+              <div class="flex justify-between items-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                <span class="text-gray-600 dark:text-gray-400">Security Rating:</span>
+                <span class="font-medium text-purple-600">{{#if measures.security_rating}}{{measures.security_rating}}{{else}}A{{/if}}</span>
               </div>
             </div>
           </div>
@@ -664,12 +682,7 @@
           <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
             <h3 class="text-lg font-semibold mb-4">Quality Metrics Overview</h3>
             <div class="chart-container">
-              <div class="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-                <div class="text-center">
-                  <i class="fas fa-chart-bar text-4xl mb-4"></i>
-                  <p>Advanced quality metrics coming in Phase 3</p>
-                </div>
-              </div>
+              <canvas id="qualityMetricsChart"></canvas>
             </div>
           </div>
         </div>
@@ -1152,6 +1165,136 @@
           }
         });
         {{/if}}
+
+        // Coverage Chart (Code Quality Tab)
+        const coverageCtx = document.getElementById('coverageChart');
+        if (coverageCtx) {
+          const coverage = {{#if measures.coverage}}{{measures.coverage}}{{else}}0{{/if}};
+          window.chartInstances.coverage = new Chart(coverageCtx, {
+            type: 'doughnut',
+            data: {
+              datasets: [{
+                data: [coverage, 100 - coverage],
+                backgroundColor: [
+                  coverage >= 80 ? '#10b981' : coverage >= 60 ? '#f59e0b' : '#ef4444',
+                  '#e5e7eb'
+                ],
+                borderWidth: 0
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              cutout: '70%',
+              plugins: {
+                legend: {
+                  display: false
+                },
+                tooltip: {
+                  enabled: false
+                }
+              }
+            },
+            plugins: [{
+              beforeDraw: function(chart) {
+                const ctx = chart.ctx;
+                ctx.save();
+                const fontSize = (chart.height / 100).toFixed(2);
+                ctx.font = fontSize + "em sans-serif";
+                ctx.textBaseline = "middle";
+                ctx.fillStyle = theme.textColor;
+
+                const text = coverage + "%";
+                const textX = Math.round((chart.width - ctx.measureText(text).width) / 2);
+                const textY = chart.height / 2;
+
+                ctx.fillText(text, textX, textY);
+                ctx.restore();
+              }
+            }]
+          });
+        }
+
+        // Quality Metrics Bar Chart (Code Quality Tab)
+        const qualityMetricsCtx = document.getElementById('qualityMetricsChart');
+        if (qualityMetricsCtx) {
+          const metricsData = {
+            coverage: {{#if measures.coverage}}{{measures.coverage}}{{else}}0{{/if}},
+            duplicated: {{#if measures.duplicated_lines_density}}{{measures.duplicated_lines_density}}{{else}}0{{/if}},
+            complexity: {{#if measures.complexity}}Math.min({{measures.complexity}} / 10, 100){{else}}0{{/if}}, // Normalized
+            maintainability: {{#if measures.sqale_rating}}
+              {{#eq measures.sqale_rating 'A'}}95{{/eq}}
+              {{#eq measures.sqale_rating 'B'}}75{{/eq}}
+              {{#eq measures.sqale_rating 'C'}}55{{/eq}}
+              {{#eq measures.sqale_rating 'D'}}35{{/eq}}
+              {{#eq measures.sqale_rating 'E'}}15{{/eq}}
+            {{else}}50{{/if}}
+          };
+
+          window.chartInstances.qualityMetrics = new Chart(qualityMetricsCtx, {
+            type: 'bar',
+            data: {
+              labels: ['Coverage', 'Duplication', 'Complexity', 'Maintainability'],
+              datasets: [{
+                label: 'Quality Score',
+                data: [metricsData.coverage, 100 - metricsData.duplicated, 100 - metricsData.complexity, metricsData.maintainability],
+                backgroundColor: [
+                  metricsData.coverage >= 80 ? '#10b981' : metricsData.coverage >= 60 ? '#f59e0b' : '#ef4444',
+                  metricsData.duplicated <= 5 ? '#10b981' : metricsData.duplicated <= 10 ? '#f59e0b' : '#ef4444',
+                  metricsData.complexity <= 10 ? '#10b981' : metricsData.complexity <= 20 ? '#f59e0b' : '#ef4444',
+                  metricsData.maintainability >= 80 ? '#10b981' : metricsData.maintainability >= 60 ? '#f59e0b' : '#ef4444'
+                ],
+                borderWidth: 1,
+                borderColor: theme.borderColor
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: false
+                },
+                tooltip: {
+                  callbacks: {
+                    label: function(context) {
+                      const label = context.label;
+                      const value = context.parsed.y;
+                      if (label === 'Coverage') return `Coverage: ${value}%`;
+                      if (label === 'Duplication') return `Low Duplication: ${value}%`;
+                      if (label === 'Complexity') return `Low Complexity: ${value}%`;
+                      if (label === 'Maintainability') return `Maintainability: ${value}%`;
+                      return `${label}: ${value}%`;
+                    }
+                  }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  max: 100,
+                  ticks: {
+                    color: theme.textColor,
+                    callback: function(value) {
+                      return value + '%';
+                    }
+                  },
+                  grid: {
+                    color: theme.gridColor
+                  }
+                },
+                x: {
+                  ticks: {
+                    color: theme.textColor
+                  },
+                  grid: {
+                    color: theme.gridColor
+                  }
+                }
+              }
+            }
+          });
+        }
       }
     </script>
   </body>
