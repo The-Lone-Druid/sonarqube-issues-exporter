@@ -19,6 +19,7 @@
       href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
       rel='stylesheet'
     />
+    <script src='https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js'></script>
     <style>
       :root {
         --bs-body-bg: #ffffff;
@@ -456,6 +457,59 @@
         color: white;
         box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
       }
+
+      /* Chart Styles */
+      .chart-container {
+        position: relative;
+        height: 300px;
+        padding: 1rem;
+      }
+
+      .chart-card {
+        transition: transform 0.2s ease-in-out;
+      }
+
+      .chart-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+      }
+
+      [data-bs-theme='dark'] .chart-card:hover {
+        box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1) !important;
+      }
+
+      /* Chart loading states */
+      .chart-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 300px;
+        color: var(--bs-secondary);
+      }
+
+      .chart-loading i {
+        animation: spin 1s linear infinite;
+        margin-right: 0.5rem;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      /* Responsive chart adjustments */
+      @media (max-width: 768px) {
+        .chart-container {
+          height: 250px;
+        }
+      }
+
+      @media (max-width: 576px) {
+        .chart-container {
+          height: 200px;
+          padding: 0.5rem;
+        }
+      }
     </style>
   </head>
   <body>
@@ -596,6 +650,83 @@
             </div>
           {{/if}}
         </div>
+
+        <!-- Visual Charts Section -->
+        <div class='row mb-4'>
+          <!-- Issue Distribution Chart -->
+          <div class='col-lg-6 mb-4'>
+            <div class='card shadow h-100 chart-card'>
+              <div class='card-header py-3'>
+                <h6 class='m-0 font-weight-bold text-primary'>
+                  <i class='fas fa-chart-pie me-2'></i>
+                  Issues by Severity
+                </h6>
+              </div>
+              <div class='card-body'>
+                <div class='chart-container'>
+                  <canvas id='severityChart'></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Issue Type Chart -->
+          <div class='col-lg-6 mb-4'>
+            <div class='card shadow h-100 chart-card'>
+              <div class='card-header py-3'>
+                <h6 class='m-0 font-weight-bold text-primary'>
+                  <i class='fas fa-chart-bar me-2'></i>
+                  Issues by Type
+                </h6>
+              </div>
+              <div class='card-body'>
+                <div class='chart-container'>
+                  <canvas id='typeChart'></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Code Metrics Charts -->
+        {{#if projectMeasures.coverage}}
+        <div class='row mb-4'>
+          <!-- Code Coverage Progress -->
+          <div class='col-lg-6 mb-4'>
+            <div class='card shadow h-100 chart-card'>
+              <div class='card-header py-3'>
+                <h6 class='m-0 font-weight-bold text-primary'>
+                  <i class='fas fa-chart-line me-2'></i>
+                  Code Coverage Breakdown
+                </h6>
+              </div>
+              <div class='card-body'>
+                <div class='chart-container'>
+                  <canvas id='coverageChart'></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Technical Debt Visualization -->
+          <div class='col-lg-6 mb-4'>
+            <div class='card shadow h-100 chart-card'>
+              <div class='card-header py-3'>
+                <h6 class='m-0 font-weight-bold text-primary'>
+                  <i class='fas fa-chart-area me-2'></i>
+                  Technical Debt Overview
+                </h6>
+              </div>
+              <div class='card-body'>
+                <div class='chart-container'>
+                  <canvas id='technicalDebtChart'></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {{/if}}
+
         <!-- Collapsible Metrics Overview -->
         <div class='card mb-4'>
           <div class='card-header'>
@@ -1000,6 +1131,282 @@
         // Apply filters when changed
         $('#severity-filter, #type-filter, #status-filter').on('change', function() {
           table.draw();
+        });
+
+        // Initialize Charts
+        initializeCharts();
+      });
+
+      // Chart initialization function
+      function initializeCharts() {
+        const isDarkTheme = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+        
+        // Chart color schemes based on theme
+        const chartColors = isDarkTheme ? {
+          background: '#343a40',
+          text: '#ffffff',
+          grid: '#495057',
+          border: '#6c757d'
+        } : {
+          background: '#ffffff',
+          text: '#212529',
+          grid: '#dee2e6',
+          border: '#6c757d'
+        };
+
+        // Issues by Severity Chart (Doughnut)
+        const severityCtx = document.getElementById('severityChart');
+        if (severityCtx) {
+          new Chart(severityCtx, {
+            type: 'doughnut',
+            data: {
+              labels: ['Critical', 'Major', 'Minor', 'Info'],
+              datasets: [{
+                data: [
+                  {{metrics.bySeverity.CRITICAL}},
+                  {{metrics.bySeverity.MAJOR}},
+                  {{metrics.bySeverity.MINOR}},
+                  {{metrics.bySeverity.INFO}}
+                ],
+                backgroundColor: [
+                  '#dc3545', // Critical - Red
+                  '#fd7e14', // Major - Orange
+                  '#ffc107', // Minor - Yellow
+                  '#0dcaf0'  // Info - Cyan
+                ],
+                borderWidth: 2,
+                borderColor: chartColors.border
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: 'bottom',
+                  labels: {
+                    color: chartColors.text,
+                    padding: 20,
+                    usePointStyle: true
+                  }
+                },
+                tooltip: {
+                  backgroundColor: chartColors.background,
+                  titleColor: chartColors.text,
+                  bodyColor: chartColors.text,
+                  borderColor: chartColors.border,
+                  borderWidth: 1
+                }
+              }
+            }
+          });
+        }
+
+        // Issues by Type Chart (Bar)
+        const typeCtx = document.getElementById('typeChart');
+        if (typeCtx) {
+          new Chart(typeCtx, {
+            type: 'bar',
+            data: {
+              labels: ['Bugs', 'Vulnerabilities', 'Code Smells'],
+              datasets: [{
+                label: 'Issues',
+                data: [
+                  {{metrics.byType.BUG}},
+                  {{metrics.byType.VULNERABILITY}},
+                  {{metrics.byType.CODE_SMELL}}
+                ],
+                backgroundColor: [
+                  '#dc3545', // Bugs - Red
+                  '#6f42c1', // Vulnerabilities - Purple
+                  '#20c997'  // Code Smells - Teal
+                ],
+                borderColor: chartColors.border,
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: false
+                },
+                tooltip: {
+                  backgroundColor: chartColors.background,
+                  titleColor: chartColors.text,
+                  bodyColor: chartColors.text,
+                  borderColor: chartColors.border,
+                  borderWidth: 1
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    color: chartColors.text,
+                    stepSize: 1
+                  },
+                  grid: {
+                    color: chartColors.grid
+                  }
+                },
+                x: {
+                  ticks: {
+                    color: chartColors.text
+                  },
+                  grid: {
+                    color: chartColors.grid
+                  }
+                }
+              }
+            }
+          });
+        }
+
+        {{#if projectMeasures.coverage}}
+        // Code Coverage Chart (Doughnut)
+        const coverageCtx = document.getElementById('coverageChart');
+        if (coverageCtx) {
+          const coverage = {{projectMeasures.coverage}};
+          const uncovered = 100 - coverage;
+          
+          new Chart(coverageCtx, {
+            type: 'doughnut',
+            data: {
+              labels: ['Covered', 'Uncovered'],
+              datasets: [{
+                data: [coverage, uncovered],
+                backgroundColor: [
+                  '#28a745', // Covered - Green
+                  '#dc3545'  // Uncovered - Red
+                ],
+                borderWidth: 2,
+                borderColor: chartColors.border
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: 'bottom',
+                  labels: {
+                    color: chartColors.text,
+                    padding: 20,
+                    usePointStyle: true
+                  }
+                },
+                tooltip: {
+                  backgroundColor: chartColors.background,
+                  titleColor: chartColors.text,
+                  bodyColor: chartColors.text,
+                  borderColor: chartColors.border,
+                  borderWidth: 1,
+                  callbacks: {
+                    label: function(context) {
+                      return context.label + ': ' + context.parsed + '%';
+                    }
+                  }
+                }
+              }
+            }
+          });
+        }
+
+        // Technical Debt Chart (Bar with complexity visualization)
+        const technicalDebtCtx = document.getElementById('technicalDebtChart');
+        if (technicalDebtCtx) {
+          const complexity = {{projectMeasures.complexity}};
+          const duplicatedLines = {{projectMeasures.duplicatedLinesDensity}};
+          
+          new Chart(technicalDebtCtx, {
+            type: 'bar',
+            data: {
+              labels: ['Complexity', 'Code Duplication %'],
+              datasets: [{
+                label: 'Technical Debt Indicators',
+                data: [complexity, duplicatedLines],
+                backgroundColor: [
+                  '#fd7e14', // Complexity - Orange
+                  '#e83e8c'  // Duplication - Pink
+                ],
+                borderColor: chartColors.border,
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: false
+                },
+                tooltip: {
+                  backgroundColor: chartColors.background,
+                  titleColor: chartColors.text,
+                  bodyColor: chartColors.text,
+                  borderColor: chartColors.border,
+                  borderWidth: 1,
+                  callbacks: {
+                    label: function(context) {
+                      const unit = context.label.includes('Duplication') ? '%' : '';
+                      return context.label + ': ' + context.parsed + unit;
+                    }
+                  }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    color: chartColors.text
+                  },
+                  grid: {
+                    color: chartColors.grid
+                  }
+                },
+                x: {
+                  ticks: {
+                    color: chartColors.text
+                  },
+                  grid: {
+                    color: chartColors.grid
+                  }
+                }
+              }
+            }
+          });
+        }
+        {{/if}}
+      }
+
+      // Reinitialize charts when theme changes
+      function reinitializeChartsOnThemeChange() {
+        // Destroy existing charts
+        Chart.helpers.each(Chart.instances, function(instance) {
+          instance.destroy();
+        });
+        
+        // Reinitialize with new theme
+        setTimeout(() => {
+          initializeCharts();
+        }, 100);
+      }
+
+      // Listen for theme changes and update charts
+      document.addEventListener('DOMContentLoaded', function() {
+        const observer = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'data-bs-theme') {
+              reinitializeChartsOnThemeChange();
+            }
+          });
+        });
+        
+        observer.observe(document.documentElement, {
+          attributes: true,
+          attributeFilter: ['data-bs-theme']
         });
       });
     </script>
