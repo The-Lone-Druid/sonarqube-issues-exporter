@@ -3,6 +3,62 @@ import { SonarQubeIssue, SonarQubeSearchResponse, FetchIssuesOptions } from '../
 import { AppConfig } from '../types/config';
 import { getLogger } from '../utils';
 
+// New interfaces for enhanced data
+export interface QualityGateCondition {
+  metric: string;
+  operator: string;
+  value?: string;
+  errorThreshold?: string;
+  warningThreshold?: string;
+  actualValue?: string;
+  status: 'OK' | 'WARN' | 'ERROR';
+}
+
+export interface QualityGateStatus {
+  status: 'PASSED' | 'FAILED' | 'NONE';
+  conditions: QualityGateCondition[];
+}
+
+export interface ProjectMeasures {
+  coverage?: number;
+  duplicatedLinesDensity?: number;
+  linesOfCode?: number;
+  technicalDebt?: string;
+  maintainabilityRating?: string;
+  reliabilityRating?: string;
+  securityRating?: string;
+  complexity?: number;
+  sqaleRating?: string;
+  reliabilityRemediation?: string;
+  securityRemediation?: string;
+}
+
+export interface SecurityHotspot {
+  key: string;
+  component: string;
+  project: string;
+  securityCategory: string;
+  vulnerabilityProbability: string;
+  status: string;
+  resolution?: string;
+  line?: number;
+  hash: string;
+  textRange?: any;
+  flows: any[];
+  ruleKey: string;
+  messageFormattings: any[];
+  creationDate: string;
+  updateDate: string;
+  assignee?: string;
+}
+
+export interface SecurityHotspotsData {
+  total: number;
+  byPriority: Record<string, number>;
+  byCategory: Record<string, number>;
+  hotspots: SecurityHotspot[];
+}
+
 export class SonarQubeService {
   private readonly api: AxiosInstance;
   private readonly logger = getLogger();
@@ -143,5 +199,182 @@ export class SonarQubeService {
       this.logger.error('Failed to fetch project info:', error);
       return null;
     }
+  }
+
+  /**
+   * Fetch quality gate status for the project
+   */
+  async getQualityGateStatus(): Promise<QualityGateStatus> {
+    try {
+      this.logger.info('Fetching quality gate status...');
+      const response = await this.api.get('/api/qualitygates/project_status', {
+        params: {
+          projectKey: this.config.projectKey,
+          organization: this.config.organization,
+        },
+      });
+
+      const data = response.data.projectStatus;
+
+      return {
+        status: data.status as 'PASSED' | 'FAILED' | 'NONE',
+        conditions:
+          data.conditions?.map((condition: any) => ({
+            metric: condition.metricKey,
+            operator: condition.comparator,
+            value: condition.periodValue || condition.value,
+            errorThreshold: condition.errorThreshold,
+            warningThreshold: condition.warningThreshold,
+            actualValue: condition.actualValue,
+            status: condition.status,
+          })) || [],
+      };
+    } catch (error) {
+      this.logger.warn('Failed to fetch quality gate status:', error);
+      return {
+        status: 'NONE',
+        conditions: [],
+      };
+    }
+  }
+
+  /**
+   * Fetch project measures (code coverage, technical debt, etc.)
+   */
+  async getProjectMeasures(): Promise<ProjectMeasures> {
+    try {
+      this.logger.info('Fetching project measures...');
+      const metrics = [
+        'coverage',
+        'duplicated_lines_density',
+        'ncloc',
+        'sqale_index',
+        'sqale_rating',
+        'reliability_rating',
+        'security_rating',
+        'complexity',
+        'sqale_debt_ratio',
+      ];
+
+      const response = await this.api.get('/api/measures/component', {
+        params: {
+          component: this.config.projectKey,
+          organization: this.config.organization,
+          metricKeys: metrics.join(','),
+        },
+      });
+
+      const measures = response.data.component.measures;
+      const result: ProjectMeasures = {};
+
+      for (const measure of measures) {
+        switch (measure.metric) {
+          case 'coverage':
+            result.coverage = parseFloat(measure.value || '0');
+            break;
+          case 'duplicated_lines_density':
+            result.duplicatedLinesDensity = parseFloat(measure.value || '0');
+            break;
+          case 'ncloc':
+            result.linesOfCode = parseInt(measure.value || '0', 10);
+            break;
+          case 'sqale_index':
+            result.technicalDebt = this.formatTechnicalDebt(parseInt(measure.value || '0', 10));
+            break;
+          case 'sqale_rating':
+            result.maintainabilityRating = this.formatRating(measure.value);
+            break;
+          case 'reliability_rating':
+            result.reliabilityRating = this.formatRating(measure.value);
+            break;
+          case 'security_rating':
+            result.securityRating = this.formatRating(measure.value);
+            break;
+          case 'complexity':
+            result.complexity = parseInt(measure.value || '0', 10);
+            break;
+        }
+      }
+
+      return result;
+    } catch (error) {
+      this.logger.warn('Failed to fetch project measures:', error);
+      return {};
+    }
+  }
+
+  /**
+   * Fetch security hotspots data
+   */
+  async getSecurityHotspots(): Promise<SecurityHotspotsData> {
+    try {
+      this.logger.info('Fetching security hotspots...');
+      const response = await this.api.get('/api/hotspots/search', {
+        params: {
+          projectKey: this.config.projectKey,
+          organization: this.config.organization,
+          ps: 500, // Page size
+          status: 'TO_REVIEW,IN_REVIEW,REVIEWED',
+        },
+      });
+
+      const hotspots = response.data.hotspots || [];
+      const total = response.data.paging?.total || 0;
+
+      // Group by priority and category
+      const byPriority: Record<string, number> = {};
+      const byCategory: Record<string, number> = {};
+
+      for (const hotspot of hotspots) {
+        const priority = hotspot.vulnerabilityProbability || 'UNKNOWN';
+        const category = hotspot.securityCategory || 'UNKNOWN';
+
+        byPriority[priority] = (byPriority[priority] || 0) + 1;
+        byCategory[category] = (byCategory[category] || 0) + 1;
+      }
+
+      return {
+        total,
+        byPriority,
+        byCategory,
+        hotspots: hotspots.slice(0, 100), // Limit to first 100 for performance
+      };
+    } catch (error) {
+      this.logger.warn('Failed to fetch security hotspots:', error);
+      return {
+        total: 0,
+        byPriority: {},
+        byCategory: {},
+        hotspots: [],
+      };
+    }
+  }
+
+  /**
+   * Helper method to format technical debt from minutes to human readable format
+   */
+  private formatTechnicalDebt(minutes: number): string {
+    if (minutes === 0) return '0min';
+
+    const days = Math.floor(minutes / (8 * 60)); // 8 hours per day
+    const hours = Math.floor((minutes % (8 * 60)) / 60);
+    const mins = minutes % 60;
+
+    const parts = [];
+    if (days > 0) parts.push(`${days}d`);
+    if (hours > 0) parts.push(`${hours}h`);
+    if (mins > 0 && days === 0) parts.push(`${mins}min`);
+
+    return parts.join(' ') || '0min';
+  }
+
+  /**
+   * Helper method to format numeric rating to letter rating
+   */
+  private formatRating(value?: string): string {
+    if (!value) return 'N/A';
+    const numValue = parseInt(value, 10);
+    const ratings = ['A', 'B', 'C', 'D', 'E'];
+    return ratings[numValue - 1] || 'N/A';
   }
 }
