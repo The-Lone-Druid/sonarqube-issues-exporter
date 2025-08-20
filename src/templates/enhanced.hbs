@@ -403,10 +403,10 @@
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Type</label>
               <select id="type-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                 <option value="">All Types</option>
-                <option value="BUG">Bug</option>
-                <option value="VULNERABILITY">Vulnerability</option>
-                <option value="CODE_SMELL">Code Smell</option>
-                <option value="SECURITY_HOTSPOT">Security Hotspot</option>
+                <option value="Bug">Bug</option>
+                <option value="Vulnerability">Vulnerability</option>
+                <option value="Code Smell">Code Smell</option>
+                <option value="Security Hotspot">Security Hotspot</option>
               </select>
             </div>
             <div>
@@ -886,40 +886,75 @@
         chart.update();
       }
 
-      // Initialize DataTable
+      // Initialize DataTable and filters
       $(document).ready(function() {
-        const table = $('#issuesTable').DataTable({
-          responsive: true,
-          pageLength: 25,
-          order: [[3, 'desc'], [4, 'desc']],
-          language: {
-            search: "Search issues:",
-            lengthMenu: "Show _MENU_ issues per page",
-            info: "Showing _START_ to _END_ of _TOTAL_ issues",
-            paginate: {
-              first: "First",
-              last: "Last",
-              next: "Next",
-              previous: "Previous"
+        // Check if the issues table exists (only in Issues Analysis tab)
+        if ($('#issuesTable').length > 0) {
+          const table = $('#issuesTable').DataTable({
+            responsive: true,
+            pageLength: 25,
+            order: [[3, 'desc'], [4, 'desc']],
+            language: {
+              search: "Search issues:",
+              lengthMenu: "Show _MENU_ issues per page",
+              info: "Showing _START_ to _END_ of _TOTAL_ issues",
+              paginate: {
+                first: "First",
+                last: "Last",
+                next: "Next",
+                previous: "Previous"
+              }
             }
-          }
-        });
+          });
 
-        // Add filter functionality
-        $('#severity-filter').on('change', function() {
-          const value = this.value;
-          table.column(3).search(value ? '^' + value + '$' : '', true, false).draw();
-        });
+          // Custom filtering function
+          $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+            if (settings.nTable.id !== 'issuesTable') {
+              return true;
+            }
 
-        $('#type-filter').on('change', function() {
-          const value = this.value;
-          table.column(4).search(value ? value : '', true, false).draw();
-        });
+            const severityFilter = $('#severity-filter').val();
+            const typeFilter = $('#type-filter').val();
+            const statusFilter = $('#status-filter').val();
 
-        $('#status-filter').on('change', function() {
-          const value = this.value;
-          table.column(5).search(value ? '^' + value + '$' : '', true, false).draw();
-        });
+            // Check severity filter
+            if (severityFilter && severityFilter !== '') {
+              // Extract text content from HTML string and normalize whitespace
+              const severityHtml = data[3];
+              const severityText = $('<div>').html(severityHtml).text().trim().replace(/\s+/g, ' ').toUpperCase();
+              if (severityText !== severityFilter.toUpperCase()) {
+                return false;
+              }
+            }
+
+            // Check type filter
+            if (typeFilter && typeFilter !== '') {
+              // Extract text content from HTML string and normalize whitespace
+              const typeHtml = data[4];
+              const typeText = $('<div>').html(typeHtml).text().trim().replace(/\s+/g, ' ');
+              if (typeText !== typeFilter) {
+                return false;
+              }
+            }
+
+            // Check status filter
+            if (statusFilter && statusFilter !== '') {
+              // Extract text content from HTML string and normalize whitespace
+              const statusHtml = data[5];
+              const statusText = $('<div>').html(statusHtml).text().trim().replace(/\s+/g, ' ').toUpperCase();
+              if (statusText !== statusFilter.toUpperCase()) {
+                return false;
+              }
+            }
+
+            return true;
+          });
+
+          // Add filter functionality
+          $('#severity-filter, #type-filter, #status-filter').on('change', function() {
+            table.draw();
+          });
+        }
 
         // Initialize charts
         initializeCharts();
