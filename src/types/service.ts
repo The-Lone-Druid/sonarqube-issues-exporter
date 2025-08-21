@@ -75,14 +75,6 @@ export interface SonarQubeServiceConfig {
 }
 
 /**
- * Progress callback function type
- *
- * @type ProgressCallback
- * @description Function signature for progress reporting callbacks
- */
-export type ProgressCallback = (current: number, total: number, message?: string) => void;
-
-/**
  * Service operation result
  *
  * @interface ServiceResult

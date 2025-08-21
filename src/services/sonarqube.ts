@@ -1,63 +1,14 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
-import { SonarQubeIssue, SonarQubeSearchResponse, FetchIssuesOptions } from '../types';
+import {
+  SonarQubeIssue,
+  SonarQubeSearchResponse,
+  FetchIssuesOptions,
+  QualityGateStatus,
+  ProjectMeasures,
+  SecurityHotspotsData,
+} from '../types';
 import { AppConfig } from '../types/config';
 import { getLogger } from '../utils';
-
-// New interfaces for enhanced data
-export interface QualityGateCondition {
-  metric: string;
-  operator: string;
-  value?: string;
-  errorThreshold?: string;
-  warningThreshold?: string;
-  actualValue?: string;
-  status: 'OK' | 'WARN' | 'ERROR';
-}
-
-export interface QualityGateStatus {
-  status: 'PASSED' | 'FAILED' | 'NONE';
-  conditions: QualityGateCondition[];
-}
-
-export interface ProjectMeasures {
-  coverage?: number;
-  duplicatedLinesDensity?: number;
-  linesOfCode?: number;
-  technicalDebt?: string;
-  maintainabilityRating?: string;
-  reliabilityRating?: string;
-  securityRating?: string;
-  complexity?: number;
-  sqaleRating?: string;
-  reliabilityRemediation?: string;
-  securityRemediation?: string;
-}
-
-export interface SecurityHotspot {
-  key: string;
-  component: string;
-  project: string;
-  securityCategory: string;
-  vulnerabilityProbability: string;
-  status: string;
-  resolution?: string;
-  line?: number;
-  hash: string;
-  textRange?: any;
-  flows: any[];
-  ruleKey: string;
-  messageFormattings: any[];
-  creationDate: string;
-  updateDate: string;
-  assignee?: string;
-}
-
-export interface SecurityHotspotsData {
-  total: number;
-  byPriority: Record<string, number>;
-  byCategory: Record<string, number>;
-  hotspots: SecurityHotspot[];
-}
 
 export class SonarQubeService {
   private readonly api: AxiosInstance;

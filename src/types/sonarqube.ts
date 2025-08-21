@@ -122,3 +122,61 @@ export interface FacetValue {
   val: string;
   count: number;
 }
+
+// Quality Gate Types
+export interface QualityGateCondition {
+  metric: string;
+  operator: string;
+  value?: string;
+  errorThreshold?: string;
+  warningThreshold?: string;
+  actualValue?: string;
+  status: 'OK' | 'WARN' | 'ERROR';
+}
+
+export interface QualityGateStatus {
+  status: 'PASSED' | 'FAILED' | 'NONE';
+  conditions: QualityGateCondition[];
+}
+
+// Project Measures Types
+export interface ProjectMeasures {
+  coverage?: number;
+  duplicatedLinesDensity?: number;
+  linesOfCode?: number;
+  technicalDebt?: string;
+  maintainabilityRating?: string;
+  reliabilityRating?: string;
+  securityRating?: string;
+  complexity?: number;
+  sqaleRating?: string;
+  reliabilityRemediation?: string;
+  securityRemediation?: string;
+}
+
+// Security Hotspot Types
+export interface SecurityHotspot {
+  key: string;
+  component: string;
+  project: string;
+  securityCategory: string;
+  vulnerabilityProbability: string;
+  status: string;
+  resolution?: string;
+  line?: number;
+  hash: string;
+  textRange?: TextRange;
+  flows: Flow[];
+  ruleKey: string;
+  messageFormattings: MessageFormatting[];
+  creationDate: string;
+  updateDate: string;
+  assignee?: string;
+}
+
+export interface SecurityHotspotsData {
+  total: number;
+  byPriority: Record<string, number>;
+  byCategory: Record<string, number>;
+  hotspots: SecurityHotspot[];
+}

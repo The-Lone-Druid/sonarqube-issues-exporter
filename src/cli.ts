@@ -3,8 +3,7 @@
 import { Command } from 'commander';
 import { loadConfig } from './config';
 import { initLogger, getLogger } from './utils';
-import { SonarQubeService } from './services';
-import { HtmlExporter } from './exporters';
+import { exportSonarQubeIssues, validateSonarQubeConnection } from './index';
 import type { ExportCommandOptions, ValidateCommandOptions } from './types';
 import type { AppConfig, SonarQubeConfig, ExportConfig } from './types/config';
 import type { ExporterResult } from './types/report';
@@ -204,52 +203,22 @@ program
         logger.debug('Configuration (sanitized):', createConfigSummary(config));
       }
 
-      // Initialize services
-      const sonarQubeService = new SonarQubeService(config.sonarqube);
-      const htmlExporter = new HtmlExporter(config);
-
-      // Validate connection
-      logger.info('Validating SonarQube connection...');
-      const isConnected = await sonarQubeService.validateConnection();
-      if (!isConnected) {
-        logger.error('Failed to connect to SonarQube. Please check your configuration.');
-        process.exit(1);
-      }
-
-      // Fetch project info
-      const projectInfo = await sonarQubeService.getProjectInfo();
-      if (projectInfo) {
-        logger.info(`Project found: ${projectInfo.name}`);
-      }
-
-      // Fetch issues with progress reporting
-      logger.info('Fetching issues from SonarQube...');
+      // Progress reporting
       let lastLoggedPercentage = 0;
-      const issues = await sonarQubeService.fetchAllIssues({
-        maxIssues: config.export.maxIssues,
-        excludeStatuses: config.export.excludeStatuses,
-        includeResolvedIssues: config.export.includeResolvedIssues,
-        onProgress: (current, total) => {
-          const percentage = Math.round((current / total) * 100);
-          // Only log every 10% to reduce terminal noise
-          if (percentage >= lastLoggedPercentage + 10 || percentage === 100) {
-            logger.info(`Progress: ${current}/${total} issues (${percentage}%)`);
-            lastLoggedPercentage = percentage;
-          }
-        },
-      });
+      const progressCallback = (current: number, total: number) => {
+        const percentage = Math.round((current / total) * 100);
+        // Only log every 10% to reduce terminal noise
+        if (percentage >= lastLoggedPercentage + 10 || percentage === 100) {
+          logger.info(`Progress: ${current}/${total} issues (${percentage}%)`);
+          lastLoggedPercentage = percentage;
+        }
+      };
 
-      if (issues.length === 0) {
-        logger.warn('No issues found. Check your project key or run a new analysis.');
-        return;
-      }
-
-      // Export to HTML
-      logger.info('Generating HTML report...');
-      const result = await htmlExporter.export(issues, {
-        outputPath: config.export.outputPath,
-        filename: config.export.filename,
-        template: config.export.template,
+      // Export issues using the library function
+      const result = await exportSonarQubeIssues(config, {
+        onProgress: progressCallback,
+        validateConnection: true,
+        logProjectInfo: true,
       });
 
       // Log results
@@ -280,22 +249,10 @@ program
 
       logger.info('Validating configuration...');
 
-      const sonarQubeService = new SonarQubeService(config.sonarqube);
+      // Use the library function for validation
+      const isValid = await validateSonarQubeConnection(config);
 
-      logger.info('Testing SonarQube connection...');
-      const isConnected = await sonarQubeService.validateConnection();
-
-      if (isConnected) {
-        logger.info('✅ SonarQube connection successful');
-
-        const projectInfo = await sonarQubeService.getProjectInfo();
-        if (projectInfo) {
-          logger.info(`✅ Project found: ${projectInfo.name} (${projectInfo.key})`);
-        } else {
-          logger.warn('⚠️  Project not found or no access');
-        }
-      } else {
-        logger.error('❌ SonarQube connection failed');
+      if (!isValid) {
         process.exit(1);
       }
     } catch (error) {
