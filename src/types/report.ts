@@ -1,5 +1,5 @@
-// Import enhanced types from service
-import { QualityGateStatus, ProjectMeasures, SecurityHotspotsData } from '../services/sonarqube';
+// Import enhanced types from sonarqube types
+import { QualityGateStatus, ProjectMeasures, SecurityHotspotsData } from './sonarqube';
 
 export interface ProcessedIssue {
   key: string;
