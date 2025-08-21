@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.2.6](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/compare/v3.2.5...v3.2.6) (2025-08-21)
+
+
+### ♻️ Code Refactoring
+
+* improve code structure and readability ([6fbc7f9](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/6fbc7f9e5fca9b1c262d465dfe6d5f761936b108))
+
 ### [3.2.5](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/compare/v3.2.4...v3.2.5) (2025-08-20)
 
 
