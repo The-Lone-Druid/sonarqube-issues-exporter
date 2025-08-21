@@ -12,6 +12,7 @@
 // Core domain types
 export * from './sonarqube';
 export * from './report';
+export * from './core';
 
 // Configuration types
 export * from './config';
@@ -39,6 +40,11 @@ export type {
   IssueStatus,
   IssueType,
   SonarQubeSearchResponse,
+  QualityGateCondition,
+  QualityGateStatus,
+  ProjectMeasures,
+  SecurityHotspot,
+  SecurityHotspotsData,
 } from './sonarqube';
 
 // Most commonly used configuration types
@@ -64,3 +70,6 @@ export type {
 
 // Most commonly used utility types
 export type { Result, LogLevel, LoggerConfig, ValidationResult, Pagination } from './utils';
+
+// Most commonly used core types
+export type { ProgressCallback, ExportOptions, ValidationOptions } from './core';

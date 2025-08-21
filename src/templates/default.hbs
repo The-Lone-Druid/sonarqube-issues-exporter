@@ -25,129 +25,103 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
 
   <!-- Tailwind Configuration -->
-    <!-- Tailwind Configuration -->
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            colors: {
-              primary: {
-                50: '#f0f9ff',
-                100: '#e0f2fe',
-                200: '#bae6fd',
-                300: '#7dd3fc',
-                400: '#38bdf8',
-                500: '#0ea5e9',
-                600: '#0284c7',
-                700: '#0369a1',
-                800: '#075985',
-                900: '#0c4a6e'
-              },
-              slate: {
-                50: '#f8fafc',
-                100: '#f1f5f9',
-                200: '#e2e8f0',
-                300: '#cbd5e1',
-                400: '#94a3b8',
-                500: '#64748b',
-                600: '#475569',
-                700: '#334155',
-                800: '#1e293b',
-                900: '#0f172a'
-              },
-              success: {
-                50: '#ecfdf5',
-                100: '#d1fae5',
-                500: '#10b981',
-                600: '#059669',
-                700: '#047857'
-              },
-              warning: {
-                50: '#fffbeb',
-                100: '#fef3c7',
-                500: '#f59e0b',
-                600: '#d97706',
-                700: '#b45309'
-              },
-              error: {
-                50: '#fef2f2',
-                100: '#fee2e2',
-                500: '#ef4444',
-                600: '#dc2626',
-                700: '#b91c1c'
-              }
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              200: '#bae6fd',
+              300: '#7dd3fc',
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e'
             },
-            fontFamily: {
-              'sans': ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-              'mono': ['JetBrains Mono', 'Monaco', 'Cascadia Code', 'Segoe UI Mono', 'monospace']
+            slate: {
+              50: '#f8fafc',
+              100: '#f1f5f9',
+              200: '#e2e8f0',
+              300: '#cbd5e1',
+              400: '#94a3b8',
+              500: '#64748b',
+              600: '#475569',
+              700: '#334155',
+              800: '#1e293b',
+              900: '#0f172a'
             },
-            boxShadow: {
-              'soft': '0 2px 8px 0 rgba(15, 23, 42, 0.08)',
-              'medium': '0 4px 16px 0 rgba(15, 23, 42, 0.12)',
-              'large': '0 8px 32px 0 rgba(15, 23, 42, 0.16)'
+            success: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857'
+            },
+            warning: {
+              50: '#fffbeb',
+              100: '#fef3c7',
+              500: '#f59e0b',
+              600: '#d97706',
+              700: '#b45309'
+            },
+            error: {
+              50: '#fef2f2',
+              100: '#fee2e2',
+              500: '#ef4444',
+              600: '#dc2626',
+              700: '#b91c1c'
             }
+          },
+          fontFamily: {
+            'sans': ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            'mono': ['JetBrains Mono', 'Monaco', 'Cascadia Code', 'Segoe UI Mono', 'monospace']
+          },
+          boxShadow: {
+            'soft': '0 2px 8px 0 rgba(15, 23, 42, 0.08)',
+            'medium': '0 4px 16px 0 rgba(15, 23, 42, 0.12)',
+            'large': '0 8px 32px 0 rgba(15, 23, 42, 0.16)'
           }
         }
-      }  <style>
-    /* Custom styles for enhanced functionality */
-    /* Quality Gate styles commented out - section hidden to avoid management confusion
-      .quality-gate-passed {
-        @apply bg-green-100 border-green-300 text-green-800 dark:bg-green-900 dark:border-green-700 dark:text-green-200;
       }
+    }
+  </script>
+  <style>
+    /* ==================================================
+     * COMPONENT-SPECIFIC STYLES
+     * ================================================== */
 
-      .quality-gate-failed {
-        @apply bg-red-100 border-red-300 text-red-800 dark:bg-red-900 dark:border-red-700 dark:text-red-200;
-      }
+    /* Severity Badge Styles */
+    .severity-critical { @apply bg-red-600 text-white; }
+    .severity-major { @apply bg-orange-500 text-white; }
+    .severity-minor { @apply bg-yellow-500 text-white; }
+    .severity-info { @apply bg-blue-500 text-white; }
 
-      .quality-gate-unknown {
-        @apply bg-yellow-100 border-yellow-300 text-yellow-800 dark:bg-yellow-900 dark:border-yellow-700 dark:text-yellow-200;
-      }
-      */
+    /* Issue Type Badge Styles */
+    .type-bug { @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200; }
+    .type-vulnerability { @apply bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200; }
+    .type-code_smell { @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200; }
+    .type-security_hotspot { @apply bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200; }
 
-    .severity-critical {
-      @apply bg-red-600 text-white;
+    /* Tab Styles */
+    .tab-button.active {
+      @apply border-primary-500 text-primary-600 dark:text-primary-400;
     }
 
-    .severity-major {
-      @apply bg-orange-500 text-white;
+    .tab-content.hidden {
+      @apply opacity-0;
+      display: none;
     }
 
-    .severity-minor {
-      @apply bg-yellow-500 text-white;
-    }
+    /* ==================================================
+     * DATATABLE CUSTOM STYLES
+     * ================================================== */
 
-    .severity-info {
-      @apply bg-blue-500 text-white;
-    }
-
-    .type-bug {
-      @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200;
-    }
-
-    .type-vulnerability {
-      @apply bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200;
-    }
-
-    .type-code_smell {
-      @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200;
-    }
-
-    .type-security_hotspot {
-      @apply bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200;
-    }
-
-    /* DataTables styling with Tailwind */
-    .dataTables_wrapper {
-      @apply w-full;
-    }
-
-    .dataTables_length,
-    .dataTables_filter,
-    .dataTables_info,
-    .dataTables_paginate {
-      @apply mb-4;
-    }
+    .dataTables_wrapper { @apply w-full; }
 
     .dataTables_length label,
     .dataTables_filter label {
@@ -157,10 +131,6 @@
     .dataTables_length select,
     .dataTables_filter input {
       @apply px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white;
-    }
-
-    table.dataTable {
-      @apply w-full border-collapse;
     }
 
     table.dataTable thead th {
@@ -183,71 +153,17 @@
       @apply px-3 py-2 text-sm bg-primary-600 text-white rounded-lg;
     }
 
-    /* Chart containers */
-    .chart-container {
-      @apply relative w-full h-80;
-    }
-
-    /* Tab styles */
-    .tab-button.active {
-      @apply border-primary-500 text-primary-600 dark:text-primary-400;
-    }
-
-    .tab-content {
-      @apply transition-opacity duration-200;
-    }
-
-    .tab-content.hidden {
-      @apply opacity-0;
-      display: none;
-    }
-
-    /* Smooth transitions */
-    * {
-      @apply transition-colors duration-200;
-    }
-
-    /* Success Animation Styles */
-    .success-animation {
-      @apply flex items-center justify-center h-full text-center;
-    }
+    /* ==================================================
+     * ANIMATION STYLES
+     * ================================================== */
 
     .success-pulse {
       animation: successPulse 2s ease-in-out infinite;
     }
 
     @keyframes successPulse {
-
-      0%,
-      100% {
-        transform: scale(1);
-        opacity: 1;
-      }
-
-      50% {
-        transform: scale(1.05);
-        opacity: 0.8;
-      }
-    }
-
-    .success-checkmark {
-      animation: checkmarkDraw 1.5s ease-in-out forwards;
-    }
-
-    @keyframes checkmarkDraw {
-      0% {
-        stroke-dasharray: 0, 100;
-        opacity: 0;
-      }
-
-      50% {
-        opacity: 1;
-      }
-
-      100% {
-        stroke-dasharray: 100, 0;
-        opacity: 1;
-      }
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.8; }
     }
 
     .loading-spinner {
@@ -255,41 +171,26 @@
     }
 
     @keyframes spin {
-      from {
-        transform: rotate(0deg);
-      }
-
-      to {
-        transform: rotate(360deg);
-      }
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
 
-    .gradient-pulse {
-      animation: gradientPulse 3s ease-in-out infinite;
-    }
-
-    @keyframes gradientPulse {
-
-      0%,
-      100% {
-        background-size: 100% 100%;
-      }
-
-      50% {
-        background-size: 120% 120%;
-      }
-    }
+    /* Global smooth transitions */
+    * { @apply transition-colors duration-200; }
   </style>
 </head>
 
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans antialiased">
-  <!-- Header -->
+  <!-- ===========================
+       APPLICATION HEADER
+       =========================== -->
   <header class="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 text-white shadow-xl border-b border-primary-500/20">
     <div class="container mx-auto px-6 py-6">
       <div class="flex justify-between items-center">
-        <div>
+        <!-- Project Information -->
+        <div class="space-y-1">
           <h1 class="text-3xl font-bold">SonarQube Issues Report</h1>
-          <p class="text-primary-100 mt-1">
+          <p class="text-primary-100">
             Project: <span class="font-semibold">{{metadata.projectKey}}</span>
             {{#if metadata.projectName}}
             - {{metadata.projectName}}
@@ -300,19 +201,23 @@
           </p>
         </div>
 
+        <!-- Action Buttons -->
         <div class="flex items-center space-x-4">
-          <!-- GitHub Link -->
-          <a href="https://github.com/The-Lone-Druid/sonarqube-issues-exporter" target="_blank"
-            rel="noopener noreferrer"
-            class="flex items-center px-3 py-2 border border-primary-300 hover:border-white rounded-lg hover:bg-primary-500 transition-colors">
+          <!-- GitHub Repository Link -->
+          <a href="https://github.com/The-Lone-Druid/sonarqube-issues-exporter"
+             target="_blank"
+             rel="noopener noreferrer"
+             class="flex items-center px-3 py-2 border border-primary-300 hover:border-white rounded-lg hover:bg-primary-500 transition-colors"
+             title="View source code on GitHub">
             <i class="fab fa-github"></i>
             <span class="hidden md:inline ml-2">Source</span>
           </a>
 
-          <!-- Theme Toggle -->
+          <!-- Dark/Light Theme Toggle -->
           <button id="theme-toggle"
-            class="flex items-center justify-center w-10 h-10 border border-primary-300 hover:border-white rounded-lg hover:bg-primary-500 transition-colors"
-            title="Toggle theme">
+                  class="flex items-center justify-center w-10 h-10 border border-primary-300 hover:border-white rounded-lg hover:bg-primary-500 transition-colors"
+                  title="Toggle dark/light theme"
+                  aria-label="Toggle theme">
             <i class="fas fa-moon" id="theme-icon"></i>
           </button>
         </div>
@@ -322,152 +227,172 @@
 
   <!-- Main Content -->
   <main class="container mx-auto px-6 py-8">
-    <!-- Tab Navigation -->
-    <div class="mb-8">
+    <!-- ===========================
+         TAB NAVIGATION
+         =========================== -->
+    <section class="mb-8" role="tablist" aria-label="Report sections">
       <div class="border-b border-gray-200 dark:border-gray-700">
-        <nav class="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
+        <nav class="-mb-px flex space-x-8 overflow-x-auto">
           <button id="tab-overview"
-            class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm active"
-            onclick="switchTab('overview')">
-            <i class="fas fa-chart-pie mr-2"></i>Overview Dashboard
+                  class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm active"
+                  role="tab"
+                  aria-selected="true"
+                  aria-controls="content-overview"
+                  onclick="switchTab('overview')">
+            <i class="fas fa-chart-pie mr-2" aria-hidden="true"></i>
+            Overview Dashboard
           </button>
+
           <button id="tab-issues"
-            class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
-            onclick="switchTab('issues')">
-            <i class="fas fa-bug mr-2"></i>Issues Analysis
+                  class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
+                  role="tab"
+                  aria-selected="false"
+                  aria-controls="content-issues"
+                  onclick="switchTab('issues')">
+            <i class="fas fa-bug mr-2" aria-hidden="true"></i>
+            Issues Analysis
           </button>
         </nav>
       </div>
-    </div>
+    </section>
 
-    <!-- Tab Content -->
+    <!-- ===========================
+         OVERVIEW DASHBOARD TAB
+         =========================== -->
+    <div id="content-overview" class="tab-content" role="tabpanel" aria-labelledby="tab-overview">
 
-    <!-- Overview Dashboard Tab -->
-    <div id="content-overview" class="tab-content">
-      <!-- Quality Gate Status Hero Section -->
-      {{!-- <div class="mb-8">
-        <div
-          class="bg-gradient-to-r {{#if metadata.qualityGateStatus}}from-green-500 to-green-600{{else}}from-red-500 to-red-600{{/if}} rounded-lg shadow-lg p-6 text-white">
-          <div class="flex items-center justify-between">
-            <div>
-              <h2 class="text-2xl font-bold mb-2">Quality Gate Status</h2>
-              <div class="text-3xl font-bold">
-                {{#if metadata.qualityGateStatus}}✅ PASSED{{else}}❌ FAILED{{/if}}
-              </div>
-              <p class="text-lg opacity-90 mt-2">{{metadata.projectKey}} - {{metadata.generatedAt}}</p>
-            </div>
-            <div class="text-right">
-              <div class="text-6xl opacity-75">
-                <i class="fas {{#if metadata.qualityGateStatus}}fa-check-circle{{else}}fa-times-circle{{/if}}"></i>
-              </div>
-            </div>
+      <!-- Key Metrics Summary -->
+      <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" aria-label="Key metrics">
+        <!-- Total Issues Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
+          <div class="text-3xl font-bold text-primary-600 dark:text-primary-400">
+            {{metadata.totalIssues}}
+          </div>
+          <div class="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+            Total Issues
           </div>
         </div>
-      </div> --}}
 
-      <!-- Summary Statistics -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Critical Issues Card -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
-          <div class="text-3xl font-bold text-primary-600 dark:text-primary-400">{{metadata.totalIssues}}</div>
-          <div class="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">Total Issues</div>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
-          <div class="text-3xl font-bold text-red-600">{{#if
-            metrics.severities.CRITICAL}}{{metrics.severities.CRITICAL}}{{else}}0{{/if}}</div>
-          <div class="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">Critical</div>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
-          <div class="text-3xl font-bold text-green-600">{{#if metrics.types.BUG}}{{metrics.types.BUG}}{{else}}0{{/if}}
+          <div class="text-3xl font-bold text-red-600">
+            {{#if metrics.severities.CRITICAL}}{{metrics.severities.CRITICAL}}{{else}}0{{/if}}
           </div>
-          <div class="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">Bugs</div>
+          <div class="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+            Critical
+          </div>
         </div>
 
+        <!-- Bugs Card -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
-          <div class="text-3xl font-bold text-purple-600">{{#if
-            metrics.types.VULNERABILITY}}{{metrics.types.VULNERABILITY}}{{else}}0{{/if}}</div>
-          <div class="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">Vulnerabilities</div>
+          <div class="text-3xl font-bold text-green-600">
+            {{#if metrics.types.BUG}}{{metrics.types.BUG}}{{else}}0{{/if}}
+          </div>
+          <div class="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+            Bugs
+          </div>
         </div>
-      </div>
 
-      <!-- Quick Overview Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <!-- Project Info Card -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+        <!-- Vulnerabilities Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
+          <div class="text-3xl font-bold text-purple-600">
+            {{#if metrics.types.VULNERABILITY}}{{metrics.types.VULNERABILITY}}{{else}}0{{/if}}
+          </div>
+          <div class="text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+            Vulnerabilities
+          </div>
+        </div>
+      </section>
+
+      <!-- Detailed Information Grid -->
+      <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8" aria-label="Detailed information">
+
+        <!-- Project Information Card -->
+        <article class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
           <h3 class="text-lg font-semibold mb-4 flex items-center">
-            <i class="fas fa-info-circle mr-2 text-primary-600"></i>
+            <i class="fas fa-info-circle mr-2 text-primary-600" aria-hidden="true"></i>
             Project Information
           </h3>
-          <div class="space-y-3">
+          <dl class="space-y-3">
             <div class="flex justify-between">
-              <span class="text-gray-600 dark:text-gray-400">Project Key:</span>
-              <span class="font-medium">{{metadata.projectKey}}</span>
+              <dt class="text-gray-600 dark:text-gray-400">Project Key:</dt>
+              <dd class="font-medium">{{metadata.projectKey}}</dd>
             </div>
             {{#if metadata.projectName}}
             <div class="flex justify-between">
-              <span class="text-gray-600 dark:text-gray-400">Project Name:</span>
-              <span class="font-medium">{{metadata.projectName}}</span>
+              <dt class="text-gray-600 dark:text-gray-400">Project Name:</dt>
+              <dd class="font-medium">{{metadata.projectName}}</dd>
             </div>
             {{/if}}
             <div class="flex justify-between">
-              <span class="text-gray-600 dark:text-gray-400">Generated:</span>
-              <span class="font-medium">{{metadata.generatedAt}}</span>
+              <dt class="text-gray-600 dark:text-gray-400">Generated:</dt>
+              <dd class="font-medium">{{metadata.generatedAt}}</dd>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-600 dark:text-gray-400">Total Issues:</span>
-              <span class="font-medium">{{metadata.totalIssues}}</span>
+              <dt class="text-gray-600 dark:text-gray-400">Total Issues:</dt>
+              <dd class="font-medium">{{metadata.totalIssues}}</dd>
             </div>
-          </div>
-        </div>
+          </dl>
+        </article>
 
         <!-- Health Score Card -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+        <article class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
           <h3 class="text-lg font-semibold mb-4 flex items-center">
-            <i class="fas fa-heart mr-2 text-red-500"></i>
+            <i class="fas fa-heart mr-2 text-red-500" aria-hidden="true"></i>
             Health Score Overview
           </h3>
           <div class="text-center">
             <div class="text-4xl font-bold text-primary-600 dark:text-primary-400 mb-2">
-              {{#if (gt metadata.totalIssues 100)}}C{{else if (gt metadata.totalIssues 50)}}B{{else if (gt
-              metadata.totalIssues 10)}}A{{else}}A+{{/if}}
+              {{#if (gt metadata.totalIssues 100)}}C{{else if (gt metadata.totalIssues 50)}}B{{else if (gt metadata.totalIssues 10)}}A{{else}}A+{{/if}}
             </div>
             <div class="text-sm text-gray-600 dark:text-gray-400 mb-4">Overall Code Quality</div>
+
             <div class="grid grid-cols-3 gap-4 text-center">
               <div>
-                <div class="text-lg font-semibold text-green-600">{{#if
-                  metrics.types.CODE_SMELL}}{{metrics.types.CODE_SMELL}}{{else}}0{{/if}}</div>
+                <div class="text-lg font-semibold text-green-600">
+                  {{#if metrics.types.CODE_SMELL}}{{metrics.types.CODE_SMELL}}{{else}}0{{/if}}
+                </div>
                 <div class="text-xs text-gray-500">Code Smells</div>
               </div>
               <div>
-                <div class="text-lg font-semibold text-red-600">{{#if
-                  metrics.types.BUG}}{{metrics.types.BUG}}{{else}}0{{/if}}</div>
+                <div class="text-lg font-semibold text-red-600">
+                  {{#if metrics.types.BUG}}{{metrics.types.BUG}}{{else}}0{{/if}}
+                </div>
                 <div class="text-xs text-gray-500">Bugs</div>
               </div>
               <div>
-                <div class="text-lg font-semibold text-purple-600">{{#if
-                  metrics.types.VULNERABILITY}}{{metrics.types.VULNERABILITY}}{{else}}0{{/if}}</div>
+                <div class="text-lg font-semibold text-purple-600">
+                  {{#if metrics.types.VULNERABILITY}}{{metrics.types.VULNERABILITY}}{{else}}0{{/if}}
+                </div>
                 <div class="text-xs text-gray-500">Vulnerabilities</div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </article>
+      </section>
     </div>
 
-    <!-- Issues Analysis Tab -->
-    <div id="content-issues" class="tab-content hidden">
-      <!-- Issues Filter Panel -->
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+    <!-- ===========================
+         ISSUES ANALYSIS TAB
+         =========================== -->
+    <div id="content-issues" class="tab-content hidden" role="tabpanel" aria-labelledby="tab-issues">
+
+      <!-- Filter Controls -->
+      <section class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6" aria-label="Filter controls">
         <h3 class="text-lg font-semibold mb-4 flex items-center">
-          <i class="fas fa-filter mr-2 text-primary-600"></i>
+          <i class="fas fa-filter mr-2 text-primary-600" aria-hidden="true"></i>
           Advanced Filters
         </h3>
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Severity Filter -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Severity</label>
+            <label for="severity-filter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Severity
+            </label>
             <select id="severity-filter"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    aria-label="Filter by severity">
               <option value="">All Severities</option>
               <option value="CRITICAL">Critical</option>
               <option value="MAJOR">Major</option>
@@ -475,10 +400,15 @@
               <option value="INFO">Info</option>
             </select>
           </div>
+
+          <!-- Type Filter -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Type</label>
+            <label for="type-filter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Type
+            </label>
             <select id="type-filter"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    aria-label="Filter by issue type">
               <option value="">All Types</option>
               <option value="Bug">Bug</option>
               <option value="Vulnerability">Vulnerability</option>
@@ -486,10 +416,15 @@
               <option value="Security Hotspot">Security Hotspot</option>
             </select>
           </div>
+
+          <!-- Status Filter -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+            <label for="status-filter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Status
+            </label>
             <select id="status-filter"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    aria-label="Filter by status">
               <option value="">All Statuses</option>
               <option value="OPEN">Open</option>
               <option value="CONFIRMED">Confirmed</option>
@@ -498,48 +433,64 @@
             </select>
           </div>
         </div>
-      </div>
+      </section>
 
-      <!-- Issues Table -->
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+      <!-- Issues Data Table -->
+      <section class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6" aria-label="Issues table">
         <h2 class="text-xl font-bold mb-6">Detailed Issues Analysis</h2>
 
         <div class="overflow-x-auto">
-          <table id="issuesTable" class="display responsive nowrap" style="width:100%">
+          <table id="issuesTable"
+                 class="display responsive nowrap"
+                 style="width:100%"
+                 role="table"
+                 aria-label="Issues data table">
             <thead>
               <tr>
-                <th>Rule</th>
-                <th>Message</th>
-                <th>Component</th>
-                <th>Severity</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Author</th>
-                <th>Creation Date</th>
-                <th>Line</th>
-                <th>Effort</th>
-                <th>Tags</th>
+                <th scope="col">Rule</th>
+                <th scope="col">Message</th>
+                <th scope="col">Component</th>
+                <th scope="col">Severity</th>
+                <th scope="col">Type</th>
+                <th scope="col">Status</th>
+                <th scope="col">Author</th>
+                <th scope="col">Creation Date</th>
+                <th scope="col">Line</th>
+                <th scope="col">Effort</th>
+                <th scope="col">Tags</th>
               </tr>
             </thead>
             <tbody>
               {{#each issues}}
               <tr>
+                <!-- Rule Column -->
                 <td>
-                  <span class="font-mono text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{{rule}}</span>
+                  <span class="font-mono text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded"
+                        title="{{rule}}">
+                    {{rule}}
+                  </span>
                 </td>
+
+                <!-- Message Column -->
                 <td>
                   <div class="max-w-md">
                     <div class="truncate" title="{{message}}">{{message}}</div>
                   </div>
                 </td>
+
+                <!-- Component Column -->
                 <td>
-                  <span class="font-mono text-xs">{{component}}</span>
+                  <span class="font-mono text-xs" title="{{component}}">{{component}}</span>
                 </td>
+
+                <!-- Severity Column -->
                 <td>
                   <span class="severity-{{severity}} px-2 py-1 rounded-full text-xs font-semibold uppercase">
                     {{severity}}
                   </span>
                 </td>
+
+                <!-- Type Column -->
                 <td>
                   <span class="type-{{type}} px-2 py-1 rounded-full text-xs font-semibold">
                     {{#if (eq type 'BUG')}}Bug{{/if}}
@@ -548,26 +499,38 @@
                     {{#if (eq type 'SECURITY_HOTSPOT')}}Security Hotspot{{/if}}
                   </span>
                 </td>
+
+                <!-- Status Column -->
                 <td>
-                  <span
-                    class="px-2 py-1 rounded-full text-xs font-semibold
-                      {{#if (eq status 'OPEN')}}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200{{/if}}
-                      {{#if (eq status 'CONFIRMED')}}bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200{{/if}}
-                      {{#if (eq status 'RESOLVED')}}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200{{/if}}
-                      {{#if (eq status 'CLOSED')}}bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200{{/if}}">
+                  <span class="px-2 py-1 rounded-full text-xs font-semibold
+                        {{#if (eq status 'OPEN')}}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200{{/if}}
+                        {{#if (eq status 'CONFIRMED')}}bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200{{/if}}
+                        {{#if (eq status 'RESOLVED')}}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200{{/if}}
+                        {{#if (eq status 'CLOSED')}}bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200{{/if}}">
                     {{status}}
                   </span>
                 </td>
+
+                <!-- Author Column -->
                 <td>{{#if author}}{{author}}{{else}}-{{/if}}</td>
+
+                <!-- Creation Date Column -->
                 <td>{{creationDate}}</td>
+
+                <!-- Line Column -->
                 <td>{{#if line}}{{line}}{{else}}-{{/if}}</td>
+
+                <!-- Effort Column -->
                 <td>{{#if effort}}{{effort}}{{else}}-{{/if}}</td>
+
+                <!-- Tags Column -->
                 <td>
                   {{#if tags}}
-                  {{#each tags}}
-                  <span
-                    class="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs px-2 py-1 rounded mr-1">{{this}}</span>
-                  {{/each}}
+                    {{#each tags}}
+                    <span class="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs px-2 py-1 rounded mr-1 mb-1">
+                      {{this}}
+                    </span>
+                    {{/each}}
                   {{else}}
                   -
                   {{/if}}
@@ -577,215 +540,536 @@
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
     </div>
   </main>
 
-  <!-- Footer -->
-  <footer class="bg-gray-800 dark:bg-gray-900 text-white py-6 mt-12">
+  <!-- ===========================
+       APPLICATION FOOTER
+       =========================== -->
+  <footer class="bg-gray-800 dark:bg-gray-900 text-white py-6 mt-12" role="contentinfo">
     <div class="container mx-auto px-6 text-center">
-      <p>&copy; {{currentYear}} SonarQube Issues Exporter. Generated with ❤️ using
-        <a href="https://www.npmjs.com/package/sonarqube-issues-exporter" target="_blank" rel="noopener noreferrer"
-          class="text-primary-400 hover:text-primary-300 underline">
+      <p>&copy; 2025 SonarQube Issues Exporter. Generated with ❤️ using
+        <a href="https://www.npmjs.com/package/sonarqube-issues-exporter"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="text-primary-400 hover:text-primary-300 underline">
           SonarQube Issues Exporter
         </a>
       </p>
       <p class="text-sm text-gray-400 mt-2">
-        Report generated on: {{metadata.generatedAt}}
+        Report generated on: <time datetime="{{metadata.generatedAt}}">{{metadata.generatedAt}}</time>
       </p>
     </div>
   </footer>
 
-  <!-- Scripts -->
+  <!-- ===========================
+       EXTERNAL SCRIPTS
+       =========================== -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
   <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 
+  <!-- ===========================
+       APPLICATION JAVASCRIPT
+       =========================== -->
   <script>
-    // Tab Management
-    function switchTab(tabName) {
-      // Hide all tab contents
-      const tabContents = document.querySelectorAll('.tab-content');
-      tabContents.forEach(content => {
-        content.classList.add('hidden');
-      });
+    /**
+     * SonarQube Issues Report Dashboard
+     * Main application script with modular architecture
+     */
+    (function() {
+      'use strict';
 
-      // Remove active class from all tab buttons
-      const tabButtons = document.querySelectorAll('.tab-button');
-      tabButtons.forEach(button => {
-        button.classList.remove('active');
-        button.classList.remove('border-primary-500', 'text-primary-600', 'dark:text-primary-400');
-        button.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
-      });
-
-      // Show selected tab content
-      const selectedContent = document.getElementById(`content-${tabName}`);
-      if (selectedContent) {
-        selectedContent.classList.remove('hidden');
-      }
-
-      // Activate selected tab button
-      const selectedButton = document.getElementById(`tab-${tabName}`);
-      if (selectedButton) {
-        selectedButton.classList.add('active');
-        selectedButton.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
-        selectedButton.classList.add('border-primary-500', 'text-primary-600', 'dark:text-primary-400');
-      }
-
-      // Re-initialize DataTable if switching to issues tab
-      if (tabName === 'issues') {
-        setTimeout(() => {
-          if ($.fn.DataTable.isDataTable('#issuesTable')) {
-            $('#issuesTable').DataTable().columns.adjust().responsive.recalc();
+      // ============================
+      // CONSTANTS & CONFIGURATION
+      // ============================
+      const CONFIG = {
+        STORAGE_KEYS: {
+          ACTIVE_TAB: 'sonarqube-report-active-tab',
+          THEME: 'sonarqube-report-theme'
+        },
+        DEFAULTS: {
+          TAB: 'overview',
+          THEME: 'light',
+          TABLE_PAGE_LENGTH: 25
+        },
+        SELECTORS: {
+          TAB_BUTTONS: '.tab-button',
+          TAB_CONTENTS: '.tab-content',
+          THEME_TOGGLE: '#theme-toggle',
+          THEME_ICON: '#theme-icon',
+          ISSUES_TABLE: '#issuesTable',
+          FILTERS: {
+            SEVERITY: '#severity-filter',
+            TYPE: '#type-filter',
+            STATUS: '#status-filter'
           }
-        }, 100);
-      }
-
-      // Re-render charts if switching to charts tab
-      if (tabName === 'charts' && window.chartInstances) {
-        setTimeout(() => {
-          Object.values(window.chartInstances).forEach(chart => {
-            chart.resize();
-          });
-        }, 100);
-      }
-
-      // Store active tab in localStorage
-      localStorage.setItem('activeTab', tabName);
-    }
-
-    // Initialize active tab on page load
-    document.addEventListener('DOMContentLoaded', function () {
-      const savedTab = localStorage.getItem('activeTab') || 'overview';
-      switchTab(savedTab);
-    });
-
-    // Theme management
-    const themeToggle = document.getElementById('theme-toggle');
-    const themeIcon = document.getElementById('theme-icon');
-    const html = document.documentElement;
-
-    // Check for saved theme preference or default to 'light'
-    const currentTheme = localStorage.getItem('theme') || 'light';
-    html.classList.toggle('dark', currentTheme === 'dark');
-    updateThemeIcon(currentTheme);
-
-    themeToggle.addEventListener('click', () => {
-      const isDark = html.classList.contains('dark');
-      const newTheme = isDark ? 'light' : 'dark';
-
-      html.classList.toggle('dark', newTheme === 'dark');
-      localStorage.setItem('theme', newTheme);
-      updateThemeIcon(newTheme);
-
-      // Update charts if they exist
-      if (window.chartInstances) {
-        Object.values(window.chartInstances).forEach(chart => {
-          updateChartTheme(chart, newTheme);
-        });
-      }
-    });
-
-    function updateThemeIcon(theme) {
-      themeIcon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-    }
-
-    // Chart theme configuration
-    function getChartTheme(isDark = false) {
-      return {
-        backgroundColor: isDark ? '#1f2937' : '#ffffff',
-        borderColor: isDark ? '#4b5563' : '#e5e7eb',
-        textColor: isDark ? '#f9fafb' : '#111827',
-        gridColor: isDark ? '#374151' : '#f3f4f6'
+        },
+        CSS_CLASSES: {
+          HIDDEN: 'hidden',
+          ACTIVE: 'active',
+          TAB_ACTIVE: ['border-primary-500', 'text-primary-600', 'dark:text-primary-400'],
+          TAB_INACTIVE: ['border-transparent', 'text-gray-500', 'dark:text-gray-400']
+        }
       };
-    }
 
-    function updateChartTheme(chart, theme) {
-      const isDark = theme === 'dark';
-      const themeColors = getChartTheme(isDark);
+      // ============================
+      // UTILITY FUNCTIONS
+      // ============================
+      const Utils = {
+        /**
+         * Get element safely with error handling
+         */
+        getElement(selector) {
+          try {
+            return document.querySelector(selector);
+          } catch (error) {
+            console.warn(`Element not found: ${selector}`);
+            return null;
+          }
+        },
 
-      chart.options.plugins.legend.labels.color = themeColors.textColor;
-      chart.options.scales.x.ticks.color = themeColors.textColor;
-      chart.options.scales.y.ticks.color = themeColors.textColor;
-      chart.options.scales.x.grid.color = themeColors.gridColor;
-      chart.options.scales.y.grid.color = themeColors.gridColor;
+        /**
+         * Get multiple elements safely
+         */
+        getElements(selector) {
+          try {
+            return document.querySelectorAll(selector);
+          } catch (error) {
+            console.warn(`Elements not found: ${selector}`);
+            return [];
+          }
+        },
 
-      chart.update();
-    }
+        /**
+         * Extract text content from HTML string
+         */
+        extractText(htmlString) {
+          if (!htmlString) return '';
+          const div = document.createElement('div');
+          div.innerHTML = htmlString;
+          return div.textContent.trim().replace(/\s+/g, ' ');
+        },
 
-    // Initialize DataTable and filters
-    $(document).ready(function () {
-      // Check if the issues table exists (only in Issues Analysis tab)
-      if ($('#issuesTable').length > 0) {
-        const table = $('#issuesTable').DataTable({
-          responsive: true,
-          pageLength: 25,
-          order: [[3, 'desc'], [4, 'desc']],
-          language: {
-            search: "Search issues:",
-            lengthMenu: "Show _MENU_ issues per page",
-            info: "Showing _START_ to _END_ of _TOTAL_ issues",
-            paginate: {
-              first: "First",
-              last: "Last",
-              next: "Next",
-              previous: "Previous"
+        /**
+         * Debounce function for performance optimization
+         */
+        debounce(func, wait) {
+          let timeout;
+          return function executedFunction(...args) {
+            const later = () => {
+              clearTimeout(timeout);
+              func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+          };
+        }
+      };
+
+      // ============================
+      // TAB MANAGEMENT MODULE
+      // ============================
+      const TabManager = {
+        /**
+         * Initialize tab functionality
+         */
+        init() {
+          this.setupEventListeners();
+          this.loadSavedTab();
+        },
+
+        /**
+         * Setup tab click event listeners
+         */
+        setupEventListeners() {
+          const tabButtons = Utils.getElements(CONFIG.SELECTORS.TAB_BUTTONS);
+          tabButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+              e.preventDefault();
+              const tabName = button.id.replace('tab-', '');
+              this.switchTab(tabName);
+            });
+          });
+        },
+
+        /**
+         * Switch to specified tab
+         */
+        switchTab(tabName) {
+          if (!tabName) {
+            console.warn('Tab name is required');
+            return;
+          }
+
+          try {
+            this.hideAllTabs();
+            this.deactivateAllButtons();
+            this.showTab(tabName);
+            this.activateButton(tabName);
+            this.handleTabSpecificLogic(tabName);
+            this.saveActiveTab(tabName);
+            this.updateAccessibility(tabName);
+          } catch (error) {
+            console.error('Error switching tab:', error);
+          }
+        },
+
+        /**
+         * Hide all tab contents
+         */
+        hideAllTabs() {
+          const tabContents = Utils.getElements(CONFIG.SELECTORS.TAB_CONTENTS);
+          tabContents.forEach(content => {
+            content.classList.add(CONFIG.CSS_CLASSES.HIDDEN);
+          });
+        },
+
+        /**
+         * Show specific tab content
+         */
+        showTab(tabName) {
+          const selectedContent = Utils.getElement(`#content-${tabName}`);
+          if (selectedContent) {
+            selectedContent.classList.remove(CONFIG.CSS_CLASSES.HIDDEN);
+          }
+        },
+
+        /**
+         * Deactivate all tab buttons
+         */
+        deactivateAllButtons() {
+          const tabButtons = Utils.getElements(CONFIG.SELECTORS.TAB_BUTTONS);
+          tabButtons.forEach(button => {
+            button.classList.remove(CONFIG.CSS_CLASSES.ACTIVE);
+            button.classList.remove(...CONFIG.CSS_CLASSES.TAB_ACTIVE);
+            button.classList.add(...CONFIG.CSS_CLASSES.TAB_INACTIVE);
+          });
+        },
+
+        /**
+         * Activate specific tab button
+         */
+        activateButton(tabName) {
+          const selectedButton = Utils.getElement(`#tab-${tabName}`);
+          if (selectedButton) {
+            selectedButton.classList.add(CONFIG.CSS_CLASSES.ACTIVE);
+            selectedButton.classList.remove(...CONFIG.CSS_CLASSES.TAB_INACTIVE);
+            selectedButton.classList.add(...CONFIG.CSS_CLASSES.TAB_ACTIVE);
+          }
+        },
+
+        /**
+         * Handle tab-specific logic (DataTable reflow, chart resize, etc.)
+         */
+        handleTabSpecificLogic(tabName) {
+          const debouncedReflow = Utils.debounce(() => {
+            if (tabName === 'issues' && window.$ && window.$.fn.DataTable) {
+              this.refreshDataTable();
             }
-          }
-        });
+          }, 100);
 
-        // Custom filtering function
-        $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-          if (settings.nTable.id !== 'issuesTable') {
-            return true;
+          setTimeout(debouncedReflow, 50);
+        },
+
+        /**
+         * Refresh DataTable layout
+         */
+        refreshDataTable() {
+          try {
+            const table = $(CONFIG.SELECTORS.ISSUES_TABLE);
+            if (table.length && $.fn.DataTable.isDataTable(CONFIG.SELECTORS.ISSUES_TABLE)) {
+              table.DataTable().columns.adjust().responsive.recalc();
+            }
+          } catch (error) {
+            console.warn('DataTable refresh failed:', error);
+          }
+        },
+
+        /**
+         * Update ARIA attributes for accessibility
+         */
+        updateAccessibility(tabName) {
+          const tabButtons = Utils.getElements(CONFIG.SELECTORS.TAB_BUTTONS);
+          tabButtons.forEach(button => {
+            const isActive = button.id === `tab-${tabName}`;
+            button.setAttribute('aria-selected', isActive.toString());
+          });
+        },
+
+        /**
+         * Save active tab to localStorage
+         */
+        saveActiveTab(tabName) {
+          try {
+            localStorage.setItem(CONFIG.STORAGE_KEYS.ACTIVE_TAB, tabName);
+          } catch (error) {
+            console.warn('Could not save active tab to localStorage:', error);
+          }
+        },
+
+        /**
+         * Load and activate saved tab
+         */
+        loadSavedTab() {
+          try {
+            const savedTab = localStorage.getItem(CONFIG.STORAGE_KEYS.ACTIVE_TAB) || CONFIG.DEFAULTS.TAB;
+            this.switchTab(savedTab);
+          } catch (error) {
+            console.warn('Could not load saved tab:', error);
+            this.switchTab(CONFIG.DEFAULTS.TAB);
+          }
+        }
+      };
+
+      // ============================
+      // THEME MANAGEMENT MODULE
+      // ============================
+      const ThemeManager = {
+        /**
+         * Initialize theme functionality
+         */
+        init() {
+          this.themeToggle = Utils.getElement(CONFIG.SELECTORS.THEME_TOGGLE);
+          this.themeIcon = Utils.getElement(CONFIG.SELECTORS.THEME_ICON);
+          this.html = document.documentElement;
+
+          if (this.themeToggle && this.themeIcon) {
+            this.setupEventListener();
+            this.loadSavedTheme();
+          }
+        },
+
+        /**
+         * Setup theme toggle event listener
+         */
+        setupEventListener() {
+          this.themeToggle.addEventListener('click', () => {
+            try {
+              this.toggleTheme();
+            } catch (error) {
+              console.error('Error toggling theme:', error);
+            }
+          });
+        },
+
+        /**
+         * Toggle between light and dark themes
+         */
+        toggleTheme() {
+          const isDark = this.html.classList.contains('dark');
+          const newTheme = isDark ? 'light' : 'dark';
+          this.applyTheme(newTheme);
+          this.saveTheme(newTheme);
+        },
+
+        /**
+         * Apply theme to document
+         */
+        applyTheme(theme) {
+          const isDark = theme === 'dark';
+          this.html.classList.toggle('dark', isDark);
+          this.updateThemeIcon(theme);
+        },
+
+        /**
+         * Update theme toggle icon
+         */
+        updateThemeIcon(theme) {
+          if (this.themeIcon) {
+            this.themeIcon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+          }
+        },
+
+        /**
+         * Save theme preference to localStorage
+         */
+        saveTheme(theme) {
+          try {
+            localStorage.setItem(CONFIG.STORAGE_KEYS.THEME, theme);
+          } catch (error) {
+            console.warn('Could not save theme to localStorage:', error);
+          }
+        },
+
+        /**
+         * Load and apply saved theme
+         */
+        loadSavedTheme() {
+          try {
+            const savedTheme = localStorage.getItem(CONFIG.STORAGE_KEYS.THEME) || CONFIG.DEFAULTS.THEME;
+            this.applyTheme(savedTheme);
+          } catch (error) {
+            console.warn('Could not load saved theme:', error);
+            this.applyTheme(CONFIG.DEFAULTS.THEME);
+          }
+        }
+      };
+
+      // ============================
+      // DATATABLE MANAGEMENT MODULE
+      // ============================
+      const DataTableManager = {
+        table: null,
+
+        /**
+         * Initialize DataTable functionality
+         */
+        init() {
+          if (!window.$ || !window.$.fn.DataTable) {
+            console.warn('jQuery or DataTables not available');
+            return;
           }
 
-          const severityFilter = $('#severity-filter').val();
-          const typeFilter = $('#type-filter').val();
-          const statusFilter = $('#status-filter').val();
+          $(document).ready(() => {
+            this.initializeTable();
+            this.setupFilters();
+          });
+        },
+
+        /**
+         * Initialize the issues DataTable
+         */
+        initializeTable() {
+          const tableElement = $(CONFIG.SELECTORS.ISSUES_TABLE);
+
+          if (!tableElement.length) {
+            return;
+          }
+
+          try {
+            this.table = tableElement.DataTable({
+              responsive: true,
+              pageLength: CONFIG.DEFAULTS.TABLE_PAGE_LENGTH,
+              order: [[3, 'desc'], [4, 'desc']], // Sort by severity, then type
+              language: {
+                search: "Search issues:",
+                lengthMenu: "Show _MENU_ issues per page",
+                info: "Showing _START_ to _END_ of _TOTAL_ issues",
+                paginate: {
+                  first: "First",
+                  last: "Last",
+                  next: "Next",
+                  previous: "Previous"
+                }
+              },
+              initComplete: function() {
+                console.log('DataTable initialized successfully');
+              }
+            });
+
+            this.setupCustomFiltering();
+          } catch (error) {
+            console.error('Failed to initialize DataTable:', error);
+          }
+        },
+
+        /**
+         * Setup custom filtering functionality
+         */
+        setupCustomFiltering() {
+          $.fn.dataTable.ext.search.push((settings, data, dataIndex) => {
+            // Only apply to issues table
+            if (settings.nTable.id !== 'issuesTable') {
+              return true;
+            }
+
+            return this.applyFilters(data);
+          });
+        },
+
+        /**
+         * Apply filter logic to table row data
+         */
+        applyFilters(data) {
+          const filters = {
+            severity: $(CONFIG.SELECTORS.FILTERS.SEVERITY).val(),
+            type: $(CONFIG.SELECTORS.FILTERS.TYPE).val(),
+            status: $(CONFIG.SELECTORS.FILTERS.STATUS).val()
+          };
 
           // Check severity filter
-          if (severityFilter && severityFilter !== '') {
-            // Extract text content from HTML string and normalize whitespace
-            const severityHtml = data[3];
-            const severityText = $('<div>').html(severityHtml).text().trim().replace(/\s+/g, ' ').toUpperCase();
-            if (severityText !== severityFilter.toUpperCase()) {
-              return false;
-            }
+          if (filters.severity && !this.matchesFilter(data[3], filters.severity, true)) {
+            return false;
           }
 
           // Check type filter
-          if (typeFilter && typeFilter !== '') {
-            // Extract text content from HTML string and normalize whitespace
-            const typeHtml = data[4];
-            const typeText = $('<div>').html(typeHtml).text().trim().replace(/\s+/g, ' ');
-            if (typeText !== typeFilter) {
-              return false;
-            }
+          if (filters.type && !this.matchesFilter(data[4], filters.type, false)) {
+            return false;
           }
 
           // Check status filter
-          if (statusFilter && statusFilter !== '') {
-            // Extract text content from HTML string and normalize whitespace
-            const statusHtml = data[5];
-            const statusText = $('<div>').html(statusHtml).text().trim().replace(/\s+/g, ' ').toUpperCase();
-            if (statusText !== statusFilter.toUpperCase()) {
-              return false;
-            }
+          if (filters.status && !this.matchesFilter(data[5], filters.status, true)) {
+            return false;
           }
 
           return true;
-        });
+        },
 
-        // Add filter functionality
-        $('#severity-filter, #type-filter, #status-filter').on('change', function () {
-          table.draw();
-        });
+        /**
+         * Check if data matches filter criteria
+         */
+        matchesFilter(htmlData, filterValue, caseSensitive = false) {
+          const text = Utils.extractText(htmlData);
+          const compareText = caseSensitive ? text.toUpperCase() : text;
+          const compareFilter = caseSensitive ? filterValue.toUpperCase() : filterValue;
+
+          return compareText === compareFilter;
+        },
+
+        /**
+         * Setup filter change event listeners
+         */
+        setupFilters() {
+          const filterSelectors = Object.values(CONFIG.SELECTORS.FILTERS);
+          const debouncedRedraw = Utils.debounce(() => {
+            if (this.table) {
+              this.table.draw();
+            }
+          }, 300);
+
+          filterSelectors.forEach(selector => {
+            $(selector).on('change', debouncedRedraw);
+          });
+        }
+      };
+
+      // ============================
+      // APPLICATION INITIALIZATION
+      // ============================
+      const App = {
+        /**
+         * Initialize the entire application
+         */
+        init() {
+          try {
+            // Initialize modules
+            TabManager.init();
+            ThemeManager.init();
+            DataTableManager.init();
+
+            // Make switchTab globally available for onclick handlers
+            window.switchTab = TabManager.switchTab.bind(TabManager);
+
+            console.log('SonarQube Issues Report Dashboard initialized successfully');
+          } catch (error) {
+            console.error('Failed to initialize application:', error);
+          }
+        }
+      };
+
+      // ============================
+      // AUTO-INITIALIZATION
+      // ============================
+      // Initialize when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', App.init);
+      } else {
+        App.init();
       }
 
-      // Initialize charts
-      initializeCharts();
-    });
+    })();
   </script>
 </body>
 
