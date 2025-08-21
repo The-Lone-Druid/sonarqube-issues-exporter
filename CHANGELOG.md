@@ -2,6 +2,56 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.2.5](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/compare/v3.2.4...v3.2.5) (2025-08-20)
+
+
+### 🐛 Bug Fixes
+
+* resolve advanced filters functionality in enhanced dashboard ([fe71d0a](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/fe71d0ab883c83ed4d1fb8ae63ee312d4f36dff4))
+
+
+### 🚀 Features
+
+* comprehensive dashboard enhancements and optimizations ([d060699](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/d0606994e18b3bd3c2b4cc081edc1d63ab650dd7))
+* implement phase 3a - complete code quality metrics ([12d7bef](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/12d7bef2cda11504939e6b3133069cf5664407aa))
+* implement phase 3b - enhanced security analysis ([55615a7](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/55615a7bdd6250c9322c7c4fca721c7fc4a89590))
+* implement professional theme design system ([2e5caf9](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/2e5caf9cce4383a92fa0a5734dd17ba56488d849))
+
+### [3.2.4](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/compare/v3.2.3...v3.2.4) (2025-08-20)
+
+
+### 🚀 Features
+
+* implement phase 2 complete tabbed dashboard interface ([02c2d47](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/02c2d47792643f99279e78ac1e56f63a8ab0620d))
+
+
+### 📚 Documentation
+
+* fix readme structure and remove redundancies ([65f5b69](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/65f5b690dba3d87618df2ac81dd3d14dc2c30244))
+
+### [3.2.3](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/compare/v3.2.2...v3.2.3) (2025-08-20)
+
+
+### 📚 Documentation
+
+* improve readme user experience and value proposition ([56d191b](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/56d191b8804e25317d2239b2217119a01843f829))
+* organize documentation into structured docs/ directory ([51efe88](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/51efe885369d27c76caf33e6af00a97d3c44085c))
+* updated setup docs ([d708ad8](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/d708ad87a9f2a81c7153b509b1d6e0e8bc102d15))
+
+
+### 🚀 Features
+
+* implement enhanced dashboard improvements and dynamic year functionality ([51cbc78](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/51cbc78f28d7a104920e1687c33886f4908bb836))
+* implement phase 1 - quality gate and code quality ratings ([24dd4f7](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/24dd4f7d25597219de8b497c739a5874c4a35bca))
+* implement phase 2 visual charts integration ([7b59260](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/7b592608533b6f2e932fae77a5086b2a8e04481c))
+
+### [3.2.2](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/compare/v3.2.1...v3.2.2) (2025-08-19)
+
+
+### 🐛 Bug Fixes
+
+* generated report issue fixes ([8ecc605](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/8ecc60576e09aff69b25de37885508992872d66b))
+
 ### [3.2.1](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/compare/v3.2.0...v3.2.1) (2025-08-19)
 
 
