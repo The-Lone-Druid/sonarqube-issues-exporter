@@ -1,160 +1,58 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import { loadConfig } from './config';
-import { initLogger, getLogger } from './utils';
-import { exportSonarQubeIssues, validateSonarQubeConnection } from './index';
-import type { ExportCommandOptions, ValidateCommandOptions } from './types';
-import type { AppConfig, SonarQubeConfig, ExportConfig } from './types/config';
-import type { ExporterResult } from './types/report';
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import * as readline from 'readline';
+import { loadConfig } from './config';
+import { initLogger, logger } from './utils';
+import { exportSonarQubeIssues, validateSonarQubeConnection } from './index';
+import type {
+  AppConfig,
+  SonarQubeConfig,
+  ExportConfig,
+  ExportCommandOptions,
+  ValidateCommandOptions,
+} from './types';
 
-// Read package version
-const packageJsonPath = join(__dirname, '../package.json');
-const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+const packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8'));
 
-// Helper function to build configuration overrides for validate command
-function buildValidateConfigOverrides(
-  options: ValidateCommandOptions
-): Partial<AppConfig> | undefined {
-  const sonarQubeOverrides = buildSonarQubeOverrides(options);
-  return Object.keys(sonarQubeOverrides).length > 0
-    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      { sonarqube: sonarQubeOverrides as any }
-    : undefined;
-}
-
-// Helper function to create a safe configuration summary for logging
-function createConfigSummary(config: AppConfig): object {
-  return {
-    sonarqube: {
-      url: config.sonarqube.url,
-      projectKey: config.sonarqube.projectKey,
-      organization: config.sonarqube.organization || 'N/A',
-      tokenConfigured: !!config.sonarqube.token,
-    },
-    export: {
-      outputPath: config.export.outputPath,
-      filename: config.export.filename,
-      template: config.export.template,
-      maxIssues: config.export.maxIssues,
-      excludeStatuses: config.export.excludeStatuses.join(', '),
-      includeResolvedIssues: config.export.includeResolvedIssues,
-    },
-    logging: {
-      level: config.logging.level,
-    },
-  };
-}
-
-// Helper function to create configuration file content
-function createConfigFileContent(sonarQubeConfig: SonarQubeConfig): string {
-  return JSON.stringify(
-    {
-      sonarqube: {
-        url: sonarQubeConfig.url,
-        token: sonarQubeConfig.token,
-        projectKey: sonarQubeConfig.projectKey,
-        ...(sonarQubeConfig.organization && { organization: sonarQubeConfig.organization }),
-      },
-      export: {
-        outputPath: './reports',
-        filename: 'sonarqube-issues-report.html',
-        excludeStatuses: ['CLOSED'],
-        includeResolvedIssues: false,
-        maxIssues: 10000,
-        template: 'default',
-      },
-      logging: {
-        level: 'info',
-      },
-    },
-    null,
-    2
-  );
-}
-// Helper function to build SonarQube configuration overrides
 function buildSonarQubeOverrides(
-  options: ExportCommandOptions | ValidateCommandOptions
+  options: ExportCommandOptions | ValidateCommandOptions,
 ): Partial<SonarQubeConfig> {
-  if (!options.url && !options.token && !options.project && !options.organization) {
-    return {};
-  }
-
-  const sonarQubeOverrides: Partial<SonarQubeConfig> = {};
-  if (options.url) sonarQubeOverrides.url = options.url;
-  if (options.token) sonarQubeOverrides.token = options.token;
-  if (options.project) sonarQubeOverrides.projectKey = options.project;
-  if (options.organization) sonarQubeOverrides.organization = options.organization;
-
-  return sonarQubeOverrides;
+  const overrides: Partial<SonarQubeConfig> = {};
+  if (options.url) overrides.url = options.url;
+  if (options.token) overrides.token = options.token;
+  if (options.project) overrides.projectKey = options.project;
+  if (options.organization) overrides.organization = options.organization;
+  return overrides;
 }
 
-// Helper function to build export configuration overrides
 function buildExportOverrides(options: ExportCommandOptions): Partial<ExportConfig> {
-  const hasExportOptions =
-    options.output ||
-    options.filename ||
-    options.template ||
-    options.includeResolved !== undefined ||
-    options.excludeStatuses !== 'CLOSED' ||
-    parseInt(options.maxIssues, 10) !== 10000;
-
-  if (!hasExportOptions) {
-    return {};
-  }
-
-  const exportOverrides: Partial<ExportConfig> = {};
-  if (options.output) exportOverrides.outputPath = options.output;
-  if (options.filename) exportOverrides.filename = options.filename;
-  if (options.template) exportOverrides.template = options.template;
+  const overrides: Partial<ExportConfig> = {};
+  if (options.output) overrides.outputPath = options.output;
+  if (options.filename) overrides.filename = options.filename;
+  if (options.template) overrides.template = options.template;
   if (parseInt(options.maxIssues, 10) !== 10000) {
-    exportOverrides.maxIssues = parseInt(options.maxIssues, 10);
+    overrides.maxIssues = parseInt(options.maxIssues, 10);
   }
-  if (options.includeResolved) {
-    exportOverrides.includeResolvedIssues = options.includeResolved;
-  }
+  if (options.includeResolved) overrides.includeResolvedIssues = options.includeResolved;
   if (options.excludeStatuses !== 'CLOSED') {
-    exportOverrides.excludeStatuses = options.excludeStatuses.split(',');
+    overrides.excludeStatuses = options.excludeStatuses.split(',');
   }
-
-  return exportOverrides;
+  return overrides;
 }
 
-// Helper function to build configuration overrides
 function buildConfigOverrides(options: ExportCommandOptions): Partial<AppConfig> | undefined {
-  const sonarQubeOverrides = buildSonarQubeOverrides(options);
-  const exportOverrides = buildExportOverrides(options);
+  const sonarqube = buildSonarQubeOverrides(options);
+  const exportOv = buildExportOverrides(options);
+  const overrides: Partial<AppConfig> = {};
 
-  const configOverrides: Partial<AppConfig> = {};
+  if (Object.keys(sonarqube).length > 0) overrides.sonarqube = sonarqube as SonarQubeConfig;
+  if (Object.keys(exportOv).length > 0) overrides.export = exportOv as ExportConfig;
+  if (options.verbose) overrides.logging = { level: 'debug' as const };
 
-  if (Object.keys(sonarQubeOverrides).length > 0) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    configOverrides.sonarqube = sonarQubeOverrides as any;
-  }
-
-  if (Object.keys(exportOverrides).length > 0) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    configOverrides.export = exportOverrides as any;
-  }
-
-  if (options.verbose) {
-    configOverrides.logging = { level: 'debug' as const };
-  }
-
-  return Object.keys(configOverrides).length > 0 ? configOverrides : undefined;
-}
-
-// Helper function to log export results
-function logExportResults(logger: ReturnType<typeof getLogger>, result: ExporterResult): void {
-  if (result.success) {
-    logger.info(`✅ Report generated successfully!`);
-  } else {
-    logger.error(`❌ Failed to generate report: ${result.error}`);
-    process.exit(1);
-  }
+  return Object.keys(overrides).length > 0 ? overrides : undefined;
 }
 
 const program = new Command();
@@ -174,57 +72,43 @@ program
   .option('--organization <org>', 'SonarQube organization (for SonarCloud)')
   .option('-o, --output <path>', 'Output directory path')
   .option('-f, --filename <name>', 'Output filename')
-  .option(
-    '--template <name>',
-    'Template: "default" (classic table view) or "enhanced" (interactive dashboard with charts)',
-    'default'
-  )
+  .option('--template <name>', 'Template: "default" or "enhanced"', 'default')
   .option('--max-issues <number>', 'Maximum number of issues to fetch', '10000')
   .option('--include-resolved', 'Include resolved issues in the report')
-  .option('--exclude-statuses <statuses>', 'Comma-separated list of statuses to exclude', 'CLOSED')
+  .option('--exclude-statuses <statuses>', 'Comma-separated statuses to exclude', 'CLOSED')
   .option('-v, --verbose', 'Enable verbose logging')
   .action(async (options: ExportCommandOptions) => {
     try {
-      // Load configuration
       const configOverrides = buildConfigOverrides(options);
       const config = loadConfig({
-        configPath: options.config,
+        ...(options.config != null && { configPath: options.config }),
         ...(configOverrides && { overrides: configOverrides }),
       });
 
-      // Initialize logger
       initLogger(config.logging);
-      const logger = getLogger();
-
       logger.info('Starting SonarQube issues export...');
 
-      // Log configuration safely (without sensitive data) only in debug mode
-      if (config.logging.level === 'debug') {
-        logger.debug('Configuration (sanitized):', createConfigSummary(config));
-      }
-
-      // Progress reporting
       let lastLoggedPercentage = 0;
-      const progressCallback = (current: number, total: number) => {
-        const percentage = Math.round((current / total) * 100);
-        // Only log every 10% to reduce terminal noise
-        if (percentage >= lastLoggedPercentage + 10 || percentage === 100) {
-          logger.info(`Progress: ${current}/${total} issues (${percentage}%)`);
-          lastLoggedPercentage = percentage;
-        }
-      };
-
-      // Export issues using the library function
       const result = await exportSonarQubeIssues(config, {
-        onProgress: progressCallback,
+        onProgress: (current, total) => {
+          const pct = Math.round((current / total) * 100);
+          if (pct >= lastLoggedPercentage + 10 || pct === 100) {
+            logger.info(`Progress: ${current}/${total} issues (${pct}%)`);
+            lastLoggedPercentage = pct;
+          }
+        },
         validateConnection: true,
         logProjectInfo: true,
       });
 
-      // Log results
-      logExportResults(logger, result);
+      if (result.success) {
+        logger.info('Report generated successfully!');
+      } else {
+        logger.error(`Failed to generate report: ${result.error}`);
+        process.exit(1);
+      }
     } catch (error) {
-      console.error('❌ Export failed:', error);
+      console.error('Export failed:', error instanceof Error ? error.message : error);
       process.exit(1);
     }
   });
@@ -239,24 +123,21 @@ program
   .option('--organization <org>', 'SonarQube organization (for SonarCloud)')
   .action(async (options: ValidateCommandOptions) => {
     try {
-      const configOverrides = buildValidateConfigOverrides(options);
+      const sonarqube = buildSonarQubeOverrides(options);
+      const overrides =
+        Object.keys(sonarqube).length > 0 ? { sonarqube: sonarqube as SonarQubeConfig } : undefined;
+
       const config = loadConfig({
-        configPath: options.config,
-        ...(configOverrides && { overrides: configOverrides }),
+        ...(options.config != null && { configPath: options.config }),
+        ...(overrides && { overrides }),
       });
+
       initLogger(config.logging);
-      const logger = getLogger();
-
-      logger.info('Validating configuration...');
-
-      // Use the library function for validation
       const isValid = await validateSonarQubeConnection(config);
 
-      if (!isValid) {
-        process.exit(1);
-      }
+      if (!isValid) process.exit(1);
     } catch (error) {
-      console.error('❌ Validation failed:', error);
+      console.error('Validation failed:', error instanceof Error ? error.message : error);
       process.exit(1);
     }
   });
@@ -266,55 +147,57 @@ program
   .description('Setup configuration interactively')
   .option('--global', 'Create global configuration file')
   .action(async (options: { global?: boolean }) => {
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
-
-    function question(prompt: string): Promise<string> {
-      return new Promise((resolve) => {
-        rl.question(prompt, resolve);
-      });
-    }
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    const ask = (prompt: string): Promise<string> =>
+      new Promise((resolve) => rl.question(prompt, resolve));
 
     try {
-      console.log('\n🛠️  SonarQube Issues Exporter Setup\n');
-      console.log('This will help you create a configuration file.\n');
+      console.log('\nSonarQube Issues Exporter Setup\n');
 
-      const url = await question('SonarQube Server URL (e.g., https://sonarcloud.io): ');
-      const token = await question('SonarQube Token: ');
-      const projectKey = await question('Project Key: ');
-      const organization = await question('Organization (optional, for SonarCloud): ');
+      const url = (await ask('SonarQube Server URL (e.g., https://sonarcloud.io): ')).trim();
+      const token = (await ask('SonarQube Token: ')).trim();
+      const projectKey = (await ask('Project Key: ')).trim();
+      const organization = (await ask('Organization (optional, for SonarCloud): ')).trim();
 
-      const configContent = createConfigFileContent({
-        url: url.trim(),
-        token: token.trim(),
-        projectKey: projectKey.trim(),
-        ...(organization.trim() && { organization: organization.trim() }),
-      });
+      const configContent = JSON.stringify(
+        {
+          sonarqube: {
+            url,
+            token,
+            projectKey,
+            ...(organization && { organization }),
+          },
+          export: {
+            outputPath: './reports',
+            filename: 'sonarqube-issues-report.html',
+            excludeStatuses: ['CLOSED'],
+            includeResolvedIssues: false,
+            maxIssues: 10000,
+            template: 'default',
+          },
+          logging: { level: 'info' },
+        },
+        null,
+        2,
+      );
 
       const configPath = options.global
-        ? join(process.env.HOME || process.env.USERPROFILE || '.', '.sonarqube-exporter.json')
+        ? join(process.env['HOME'] || '.', '.sonarqube-exporter.json')
         : '.sonarqube-exporter.json';
 
       writeFileSync(configPath, configContent);
-
-      console.log(`\n✅ Configuration saved to: ${configPath}`);
+      console.log(`\nConfiguration saved to: ${configPath}`);
       console.log('\nYou can now run:');
       console.log('  sonarqube-exporter export');
       console.log('  sonarqube-exporter validate');
-      console.log(
-        '\n💡 You can also override settings using environment variables or CLI options.'
-      );
     } catch (error) {
-      console.error('❌ Setup failed:', error);
+      console.error('Setup failed:', error instanceof Error ? error.message : error);
       process.exit(1);
     } finally {
       rl.close();
     }
   });
 
-// Parse command line arguments
 if (process.argv.length === 2) {
   program.help();
 } else {

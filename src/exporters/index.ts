@@ -1,1 +1,1 @@
-export * from './html';
+export { exportToHtml } from './html';

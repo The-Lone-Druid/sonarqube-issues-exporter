@@ -1,20 +1,5 @@
-import { SonarQubeIssue, ProcessedIssue, AppConfig } from '../types';
+import type { SonarQubeIssue, ProcessedIssue, AppConfig } from '../src/types';
 
-/**
- * Mock data for testing the SonarQube Issues Exporter
- * This file contains sample data that represents what SonarQube API returns
- */
-
-// Simple test to satisfy Jest requirement
-describe('Mock Data', () => {
-  it('should provide valid mock configuration', () => {
-    expect(mockConfig).toBeDefined();
-    expect(mockConfig.sonarqube.url).toBe('http://localhost:9000');
-    expect(mockConfig.export.filename).toBe('test-report.html');
-  });
-});
-
-// Mock SonarQube issue data for testing
 export const mockSonarQubeIssue: SonarQubeIssue = {
   key: 'AYr1234567890',
   rule: 'javascript:S1234',

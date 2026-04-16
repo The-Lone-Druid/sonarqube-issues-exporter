@@ -10,7 +10,6 @@ export function escapeHtml(str: string): string {
 export function formatDate(date: string | Date): string {
   const d = typeof date === 'string' ? new Date(date) : date;
 
-  // Use proper local timezone formatting with full date and time
   return d.toLocaleString('en-US', {
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     year: 'numeric',
@@ -30,9 +29,9 @@ export function extractFilename(component: string): string {
   return filename || path || component;
 }
 
-export function calculateMetrics<T extends Record<string, any>>(
+export function calculateMetrics<T>(
   items: T[],
-  keyExtractors: Record<string, (item: T) => string>
+  keyExtractors: Record<string, (item: T) => string>,
 ): Record<string, Record<string, number>> {
   const metrics: Record<string, Record<string, number>> = {};
 
@@ -46,24 +45,4 @@ export function calculateMetrics<T extends Record<string, any>>(
   }
 
   return metrics;
-}
-
-export function createProgressBar(current: number, total: number, width = 50): string {
-  const progress = Math.floor((current / total) * width);
-  const remaining = width - progress;
-
-  return `[${'='.repeat(progress)}${' '.repeat(remaining)}] ${current}/${total}`;
-}
-
-export function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-export function validateUrl(url: string): boolean {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
 }

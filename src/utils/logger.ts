@@ -1,120 +1,46 @@
-import { createLogger, format, transports, Logger } from 'winston';
-import { AppConfig } from '../types/config';
+import type { LoggingConfig } from '../types';
 
-export class AppLogger {
-  private readonly logger: Logger;
-  private readonly MAX_META_LENGTH = 1000; // Maximum length for metadata objects
+type LogLevel = 'error' | 'warn' | 'info' | 'debug';
 
-  constructor(config: AppConfig['logging']) {
-    const logFormat = format.combine(
-      format.timestamp({
-        format: () =>
-          new Date().toLocaleString('en-US', {
-            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true,
-          }),
-      }),
-      format.errors({ stack: true }),
-      format.json(),
-      format.prettyPrint()
-    );
+const LOG_LEVELS: Record<LogLevel, number> = {
+  error: 0,
+  warn: 1,
+  info: 2,
+  debug: 3,
+};
 
-    const logTransports: any[] = [
-      new transports.Console({
-        level: config.level,
-        format: format.combine(format.colorize(), format.simple()),
-      }),
-    ];
+let currentLevel: LogLevel = 'info';
 
-    if (config.file) {
-      logTransports.push(
-        new transports.File({
-          filename: config.file,
-          level: config.level,
-          format: logFormat,
-        })
-      );
-    }
+export function initLogger(config: LoggingConfig): void {
+  currentLevel = config.level;
+}
 
-    this.logger = createLogger({
-      level: config.level,
-      format: logFormat,
-      transports: logTransports,
-      exitOnError: false,
-    });
-  }
+function shouldLog(level: LogLevel): boolean {
+  return LOG_LEVELS[level] <= LOG_LEVELS[currentLevel];
+}
 
-  private sanitizeMeta(meta: any): any {
-    if (!meta) return meta;
-
-    // If it's a string, truncate if too long
-    if (typeof meta === 'string') {
-      return meta.length > this.MAX_META_LENGTH
-        ? meta.substring(0, this.MAX_META_LENGTH) + '... [truncated]'
-        : meta;
-    }
-
-    // If it's an object, convert to string and truncate
-    if (typeof meta === 'object') {
-      try {
-        const jsonString = JSON.stringify(meta, (key, value) => {
-          // Hide sensitive data
-          if (
-            key.toLowerCase().includes('token') ||
-            key.toLowerCase().includes('password') ||
-            key.toLowerCase().includes('secret')
-          ) {
-            return '[REDACTED]';
-          }
-          return value;
-        });
-
-        if (jsonString.length > this.MAX_META_LENGTH) {
-          return jsonString.substring(0, this.MAX_META_LENGTH) + '... [truncated]';
-        }
-
-        return JSON.parse(jsonString);
-      } catch {
-        return '[Object - could not serialize]';
-      }
-    }
-
-    return meta;
-  }
-
-  info(message: string, meta?: any): void {
-    this.logger.info(message, this.sanitizeMeta(meta));
-  }
-
-  error(message: string, meta?: any): void {
-    this.logger.error(message, this.sanitizeMeta(meta));
-  }
-
-  warn(message: string, meta?: any): void {
-    this.logger.warn(message, this.sanitizeMeta(meta));
-  }
-
-  debug(message: string, meta?: any): void {
-    this.logger.debug(message, this.sanitizeMeta(meta));
+function formatMeta(meta: unknown): string {
+  if (meta === undefined || meta === null) return '';
+  if (meta instanceof Error) return ` ${meta.message}`;
+  if (typeof meta === 'string') return ` ${meta}`;
+  try {
+    return ` ${JSON.stringify(meta)}`;
+  } catch {
+    return '';
   }
 }
 
-// Default logger instance
-let defaultLogger: AppLogger;
-
-export function initLogger(config: AppConfig['logging']): void {
-  defaultLogger = new AppLogger(config);
-}
-
-export function getLogger(): AppLogger {
-  if (!defaultLogger) {
-    defaultLogger = new AppLogger({ level: 'info' });
-  }
-  return defaultLogger;
-}
+export const logger = {
+  info(message: string, meta?: unknown): void {
+    if (shouldLog('info')) console.log(`info: ${message}${formatMeta(meta)}`);
+  },
+  warn(message: string, meta?: unknown): void {
+    if (shouldLog('warn')) console.warn(`warn: ${message}${formatMeta(meta)}`);
+  },
+  error(message: string, meta?: unknown): void {
+    if (shouldLog('error')) console.error(`error: ${message}${formatMeta(meta)}`);
+  },
+  debug(message: string, meta?: unknown): void {
+    if (shouldLog('debug')) console.debug(`debug: ${message}${formatMeta(meta)}`);
+  },
+};

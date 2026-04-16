@@ -1,340 +1,277 @@
-import axios, { AxiosInstance, AxiosError } from 'axios';
-import {
+import type {
+  SonarQubeConfig,
   SonarQubeIssue,
   SonarQubeSearchResponse,
   FetchIssuesOptions,
   QualityGateStatus,
   ProjectMeasures,
   SecurityHotspotsData,
+  SecurityHotspot,
 } from '../types';
-import { AppConfig } from '../types/config';
-import { getLogger } from '../utils';
+import { logger } from '../utils/logger';
 
-export class SonarQubeService {
-  private readonly api: AxiosInstance;
-  private readonly logger = getLogger();
-  private readonly config: AppConfig['sonarqube'];
+async function apiRequest<T>(
+  config: SonarQubeConfig,
+  path: string,
+  params?: Record<string, string>,
+): Promise<T> {
+  const url = new URL(path, config.url);
+  if (params) {
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined && value !== '') url.searchParams.set(key, value);
+    }
+  }
 
-  constructor(config: AppConfig['sonarqube']) {
-    this.config = config;
-    this.api = axios.create({
-      baseURL: config.url,
-      auth: {
-        username: config.token,
-        password: '',
-      },
-      timeout: 30000,
+  const credentials = Buffer.from(`${config.token}:`).toString('base64');
+  const response = await fetch(url.toString(), {
+    headers: { Authorization: `Basic ${credentials}` },
+    signal: AbortSignal.timeout(30000),
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('Authentication failed (401) — invalid or expired token');
+    } else if (response.status === 403) {
+      throw new Error('Access forbidden (403) — insufficient permissions');
+    } else if (response.status === 404) {
+      throw new Error(`Not found (404) — project key '${config.projectKey}' may be incorrect`);
+    }
+    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+  }
+
+  return (await response.json()) as T;
+}
+
+export async function fetchAllIssues(
+  config: SonarQubeConfig,
+  options: FetchIssuesOptions = {},
+): Promise<SonarQubeIssue[]> {
+  const {
+    pageSize = 500,
+    maxIssues = 10000,
+    excludeStatuses = ['CLOSED'],
+    includeResolvedIssues = false,
+    onProgress,
+  } = options;
+
+  const allIssues: SonarQubeIssue[] = [];
+  let page = 1;
+
+  logger.info(`Fetching issues for project: ${config.projectKey}`);
+
+  while (allIssues.length < maxIssues) {
+    const data = await apiRequest<SonarQubeSearchResponse>(config, '/api/issues/search', {
+      componentKeys: config.projectKey,
+      ...(config.organization && { organization: config.organization }),
+      ps: String(Math.min(pageSize, maxIssues - allIssues.length)),
+      p: String(page),
+      ...(!includeResolvedIssues && { statuses: 'OPEN,CONFIRMED,REOPENED' }),
     });
 
-    // Add request interceptor for logging
-    this.api.interceptors.request.use(
-      (config) => {
-        // Only log URL and method, not the full config which may contain sensitive data
-        this.logger.debug(`Making ${config.method?.toUpperCase()} request to: ${config.url}`);
-        return config;
+    const filtered = data.issues.filter((issue) => !excludeStatuses.includes(issue.status));
+    allIssues.push(...filtered);
+
+    logger.debug(`Page ${page}: ${filtered.length} issues (total: ${allIssues.length})`);
+
+    if (onProgress) {
+      onProgress(allIssues.length, Math.min(data.paging.total, maxIssues));
+    }
+
+    if (page * pageSize >= data.paging.total || data.issues.length === 0) break;
+    page++;
+  }
+
+  logger.info(`Fetched ${allIssues.length} issues`);
+  return allIssues;
+}
+
+export async function validateConnection(config: SonarQubeConfig): Promise<boolean> {
+  try {
+    await apiRequest(config, '/api/system/status');
+    logger.info('SonarQube connection validated');
+    return true;
+  } catch (error) {
+    logger.error('Connection validation failed:', error instanceof Error ? error.message : error);
+    return false;
+  }
+}
+
+export async function getProjectInfo(
+  config: SonarQubeConfig,
+): Promise<{ name: string; key: string } | null> {
+  try {
+    const data = await apiRequest<{ components: Array<{ name: string; key: string }> }>(
+      config,
+      '/api/projects/search',
+      {
+        projects: config.projectKey,
+        ...(config.organization && { organization: config.organization }),
       },
-      (error) => {
-        this.logger.error('Request error:', error.message || error);
-        return Promise.reject(error instanceof Error ? error : new Error(String(error)));
-      }
     );
+    return data.components[0] ?? null;
+  } catch (error) {
+    logger.error('Failed to fetch project info:', error instanceof Error ? error.message : error);
+    return null;
+  }
+}
 
-    // Add response interceptor for error handling
-    this.api.interceptors.response.use(
-      (response) => response,
-      (error: AxiosError) => {
-        this.handleApiError(error);
-        return Promise.reject(error);
-      }
+export async function getQualityGateStatus(config: SonarQubeConfig): Promise<QualityGateStatus> {
+  try {
+    logger.info('Fetching quality gate status...');
+    const data = await apiRequest<{
+      projectStatus: {
+        status: string;
+        conditions?: Array<{
+          metricKey: string;
+          comparator: string;
+          periodValue?: string;
+          value?: string;
+          errorThreshold?: string;
+          warningThreshold?: string;
+          actualValue?: string;
+          status: string;
+        }>;
+      };
+    }>(config, '/api/qualitygates/project_status', {
+      projectKey: config.projectKey,
+      ...(config.organization && { organization: config.organization }),
+    });
+
+    return {
+      status: data.projectStatus.status as 'PASSED' | 'FAILED' | 'NONE',
+      conditions:
+        data.projectStatus.conditions?.map((c) => {
+          const value = c.periodValue || c.value;
+          return {
+            metric: c.metricKey,
+            operator: c.comparator,
+            ...(value != null && { value }),
+            ...(c.errorThreshold != null && { errorThreshold: c.errorThreshold }),
+            ...(c.warningThreshold != null && { warningThreshold: c.warningThreshold }),
+            ...(c.actualValue != null && { actualValue: c.actualValue }),
+            status: c.status as 'OK' | 'WARN' | 'ERROR',
+          };
+        }) ?? [],
+    };
+  } catch (error) {
+    logger.warn(
+      'Failed to fetch quality gate status:',
+      error instanceof Error ? error.message : error,
     );
+    return { status: 'NONE', conditions: [] };
   }
+}
 
-  private handleApiError(error: AxiosError): void {
-    if (error.response?.status === 401) {
-      this.logger.error('Authentication failed (401 Unauthorized)');
-      this.logger.error('Possible causes:');
-      this.logger.error('- Invalid or expired token');
-      this.logger.error('- Insufficient permissions');
-      this.logger.error('- Incorrect SonarQube URL');
-    } else if (error.response?.status === 403) {
-      this.logger.error('Access forbidden (403 Forbidden)');
-      this.logger.error('The token does not have sufficient permissions');
-    } else if (error.response?.status === 404) {
-      this.logger.error('Project not found (404 Not Found)');
-      this.logger.error(`Project key '${this.config.projectKey}' may be incorrect`);
-    } else {
-      this.logger.error(`API request failed: ${error.message}`);
-    }
-  }
+export async function getProjectMeasures(config: SonarQubeConfig): Promise<ProjectMeasures> {
+  try {
+    logger.info('Fetching project measures...');
+    const metrics = [
+      'coverage',
+      'duplicated_lines_density',
+      'ncloc',
+      'sqale_index',
+      'sqale_rating',
+      'reliability_rating',
+      'security_rating',
+      'complexity',
+    ];
 
-  async fetchAllIssues(options: FetchIssuesOptions = {}): Promise<SonarQubeIssue[]> {
-    const {
-      pageSize = 500,
-      maxIssues = 10000,
-      excludeStatuses = ['CLOSED'],
-      includeResolvedIssues = false,
-      onProgress,
-    } = options;
+    const data = await apiRequest<{
+      component: { measures: Array<{ metric: string; value?: string }> };
+    }>(config, '/api/measures/component', {
+      component: config.projectKey,
+      ...(config.organization && { organization: config.organization }),
+      metricKeys: metrics.join(','),
+    });
 
-    let allIssues: SonarQubeIssue[] = [];
-    let page = 1;
-    let totalFetched = 0;
-
-    this.logger.info(`Starting to fetch issues for project: ${this.config.projectKey}`);
-
-    while (totalFetched < maxIssues) {
-      try {
-        const response = await this.api.get<SonarQubeSearchResponse>('/api/issues/search', {
-          params: {
-            componentKeys: this.config.projectKey,
-            organization: this.config.organization,
-            ps: Math.min(pageSize, maxIssues - totalFetched),
-            p: page,
-            statuses: includeResolvedIssues
-              ? undefined
-              : ['OPEN', 'CONFIRMED', 'REOPENED'].join(','),
-          },
-        });
-
-        const { issues, paging } = response.data;
-
-        // Filter out excluded statuses
-        const filteredIssues = issues.filter((issue) => !excludeStatuses.includes(issue.status));
-
-        allIssues = allIssues.concat(filteredIssues);
-        totalFetched += filteredIssues.length;
-
-        this.logger.debug(
-          `Fetched page ${page}: ${filteredIssues.length} issues (total: ${totalFetched})`
-        );
-
-        if (onProgress) {
-          onProgress(totalFetched, Math.min(paging.total, maxIssues));
-        }
-
-        // Check if we've fetched all available issues
-        if (page * pageSize >= paging.total || issues.length === 0) {
+    const result: ProjectMeasures = {};
+    for (const m of data.component.measures) {
+      switch (m.metric) {
+        case 'coverage':
+          result.coverage = parseFloat(m.value || '0');
           break;
-        }
-
-        page++;
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        this.logger.error(`Failed to fetch page ${page}: ${errorMessage}`);
-        throw error;
+        case 'duplicated_lines_density':
+          result.duplicatedLinesDensity = parseFloat(m.value || '0');
+          break;
+        case 'ncloc':
+          result.linesOfCode = parseInt(m.value || '0', 10);
+          break;
+        case 'sqale_index':
+          result.technicalDebt = formatTechnicalDebt(parseInt(m.value || '0', 10));
+          break;
+        case 'sqale_rating':
+          result.maintainabilityRating = formatRating(m.value);
+          break;
+        case 'reliability_rating':
+          result.reliabilityRating = formatRating(m.value);
+          break;
+        case 'security_rating':
+          result.securityRating = formatRating(m.value);
+          break;
+        case 'complexity':
+          result.complexity = parseInt(m.value || '0', 10);
+          break;
       }
     }
-
-    this.logger.info(`Successfully fetched ${allIssues.length} issues`);
-    return allIssues;
+    return result;
+  } catch (error) {
+    logger.warn(
+      'Failed to fetch project measures:',
+      error instanceof Error ? error.message : error,
+    );
+    return {};
   }
+}
 
-  async validateConnection(): Promise<boolean> {
-    try {
-      await this.api.get('/api/system/status');
-      this.logger.info('SonarQube connection validated successfully');
-      return true;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.error('Failed to validate SonarQube connection:', errorMessage);
-      return false;
+export async function getSecurityHotspots(config: SonarQubeConfig): Promise<SecurityHotspotsData> {
+  try {
+    logger.info('Fetching security hotspots...');
+    const data = await apiRequest<{
+      hotspots: SecurityHotspot[];
+      paging?: { total: number };
+    }>(config, '/api/hotspots/search', {
+      projectKey: config.projectKey,
+      ...(config.organization && { organization: config.organization }),
+      ps: '500',
+      status: 'TO_REVIEW',
+    });
+
+    const hotspots = data.hotspots || [];
+    const total = data.paging?.total || 0;
+    const byPriority: Record<string, number> = {};
+    const byCategory: Record<string, number> = {};
+
+    for (const h of hotspots) {
+      const priority = h.vulnerabilityProbability || 'UNKNOWN';
+      const category = h.securityCategory || 'UNKNOWN';
+      byPriority[priority] = (byPriority[priority] || 0) + 1;
+      byCategory[category] = (byCategory[category] || 0) + 1;
     }
+
+    return { total, byPriority, byCategory, hotspots: hotspots.slice(0, 100) };
+  } catch (error) {
+    logger.warn(
+      'Failed to fetch security hotspots:',
+      error instanceof Error ? error.message : error,
+    );
+    return { total: 0, byPriority: {}, byCategory: {}, hotspots: [] };
   }
+}
 
-  async getProjectInfo(): Promise<any> {
-    try {
-      const response = await this.api.get('/api/projects/search', {
-        params: {
-          projects: this.config.projectKey,
-          organization: this.config.organization,
-        },
-      });
+function formatTechnicalDebt(minutes: number): string {
+  if (minutes === 0) return '0min';
+  const days = Math.floor(minutes / (8 * 60));
+  const hours = Math.floor((minutes % (8 * 60)) / 60);
+  const mins = minutes % 60;
+  const parts: string[] = [];
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (mins > 0 && days === 0) parts.push(`${mins}min`);
+  return parts.join(' ') || '0min';
+}
 
-      return response.data.components[0] || null;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.error('Failed to fetch project info:', errorMessage);
-      return null;
-    }
-  }
-
-  /**
-   * Fetch quality gate status for the project
-   */
-  async getQualityGateStatus(): Promise<QualityGateStatus> {
-    try {
-      this.logger.info('Fetching quality gate status...');
-      const response = await this.api.get('/api/qualitygates/project_status', {
-        params: {
-          projectKey: this.config.projectKey,
-          organization: this.config.organization,
-        },
-      });
-
-      const data = response.data.projectStatus;
-
-      return {
-        status: data.status as 'PASSED' | 'FAILED' | 'NONE',
-        conditions:
-          data.conditions?.map((condition: any) => ({
-            metric: condition.metricKey,
-            operator: condition.comparator,
-            value: condition.periodValue || condition.value,
-            errorThreshold: condition.errorThreshold,
-            warningThreshold: condition.warningThreshold,
-            actualValue: condition.actualValue,
-            status: condition.status,
-          })) || [],
-      };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.warn('Failed to fetch quality gate status:', errorMessage);
-      return {
-        status: 'NONE',
-        conditions: [],
-      };
-    }
-  }
-
-  /**
-   * Fetch project measures (code coverage, technical debt, etc.)
-   */
-  async getProjectMeasures(): Promise<ProjectMeasures> {
-    try {
-      this.logger.info('Fetching project measures...');
-      const metrics = [
-        'coverage',
-        'duplicated_lines_density',
-        'ncloc',
-        'sqale_index',
-        'sqale_rating',
-        'reliability_rating',
-        'security_rating',
-        'complexity',
-        'sqale_debt_ratio',
-      ];
-
-      const response = await this.api.get('/api/measures/component', {
-        params: {
-          component: this.config.projectKey,
-          organization: this.config.organization,
-          metricKeys: metrics.join(','),
-        },
-      });
-
-      const measures = response.data.component.measures;
-      const result: ProjectMeasures = {};
-
-      for (const measure of measures) {
-        switch (measure.metric) {
-          case 'coverage':
-            result.coverage = parseFloat(measure.value || '0');
-            break;
-          case 'duplicated_lines_density':
-            result.duplicatedLinesDensity = parseFloat(measure.value || '0');
-            break;
-          case 'ncloc':
-            result.linesOfCode = parseInt(measure.value || '0', 10);
-            break;
-          case 'sqale_index':
-            result.technicalDebt = this.formatTechnicalDebt(parseInt(measure.value || '0', 10));
-            break;
-          case 'sqale_rating':
-            result.maintainabilityRating = this.formatRating(measure.value);
-            break;
-          case 'reliability_rating':
-            result.reliabilityRating = this.formatRating(measure.value);
-            break;
-          case 'security_rating':
-            result.securityRating = this.formatRating(measure.value);
-            break;
-          case 'complexity':
-            result.complexity = parseInt(measure.value || '0', 10);
-            break;
-        }
-      }
-
-      return result;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.warn('Failed to fetch project measures:', errorMessage);
-      return {};
-    }
-  }
-
-  /**
-   * Fetch security hotspots data
-   */
-  async getSecurityHotspots(): Promise<SecurityHotspotsData> {
-    try {
-      this.logger.info('Fetching security hotspots...');
-      const response = await this.api.get('/api/hotspots/search', {
-        params: {
-          projectKey: this.config.projectKey,
-          organization: this.config.organization,
-          ps: 500, // Page size
-          status: 'TO_REVIEW',
-        },
-      });
-
-      const hotspots = response.data.hotspots || [];
-      const total = response.data.paging?.total || 0;
-
-      // Group by priority and category
-      const byPriority: Record<string, number> = {};
-      const byCategory: Record<string, number> = {};
-
-      for (const hotspot of hotspots) {
-        const priority = hotspot.vulnerabilityProbability || 'UNKNOWN';
-        const category = hotspot.securityCategory || 'UNKNOWN';
-
-        byPriority[priority] = (byPriority[priority] || 0) + 1;
-        byCategory[category] = (byCategory[category] || 0) + 1;
-      }
-
-      return {
-        total,
-        byPriority,
-        byCategory,
-        hotspots: hotspots.slice(0, 100), // Limit to first 100 for performance
-      };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.warn('Failed to fetch security hotspots:', errorMessage);
-      return {
-        total: 0,
-        byPriority: {},
-        byCategory: {},
-        hotspots: [],
-      };
-    }
-  }
-
-  /**
-   * Helper method to format technical debt from minutes to human readable format
-   */
-  private formatTechnicalDebt(minutes: number): string {
-    if (minutes === 0) return '0min';
-
-    const days = Math.floor(minutes / (8 * 60)); // 8 hours per day
-    const hours = Math.floor((minutes % (8 * 60)) / 60);
-    const mins = minutes % 60;
-
-    const parts = [];
-    if (days > 0) parts.push(`${days}d`);
-    if (hours > 0) parts.push(`${hours}h`);
-    if (mins > 0 && days === 0) parts.push(`${mins}min`);
-
-    return parts.join(' ') || '0min';
-  }
-
-  /**
-   * Helper method to format numeric rating to letter rating
-   */
-  private formatRating(value?: string): string {
-    if (!value) return 'N/A';
-    const numValue = parseInt(value, 10);
-    const ratings = ['A', 'B', 'C', 'D', 'E'];
-    return ratings[numValue - 1] || 'N/A';
-  }
+function formatRating(value?: string): string {
+  if (!value) return 'N/A';
+  const ratings = ['A', 'B', 'C', 'D', 'E'];
+  return ratings[parseInt(value, 10) - 1] || 'N/A';
 }
