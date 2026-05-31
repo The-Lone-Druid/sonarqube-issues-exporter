@@ -1,102 +1,134 @@
 # Changelog
 
+## 4.0.0
+
+### Major Changes
+
+- [`62884a5`](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/62884a572dd1371cbffa6aa56ae528e81b2916ce) Thanks [@The-Lone-Druid](https://github.com/The-Lone-Druid)! - v4.0 — rewrite from a static HTML exporter into a local SonarQube dashboard app.
+  - `serve`: starts a local server and opens a live React dashboard in the browser
+    (multi-project + branch/PR, quality gate, issues explorer, hotspots, measures),
+    with polling auto-refresh and client-side filtering. The SonarQube token stays
+    server-side; the server binds to localhost.
+  - `export-pdf` (and an in-app Export button): server-side PDF rendering via
+    Playwright, with a browser-print fallback when Chromium is unavailable.
+  - The token is fetched and viewed locally, removing the need to log into the
+    SonarQube dashboard or SSH to a private VM.
+
+  BREAKING CHANGES:
+  - The `export` command and static HTML output are removed (use `serve` or
+    `export-pdf`). The HTML templates and the `handlebars` dependency are gone.
+  - Node.js >= 20 is now required (was >= 18).
+  - The library surface is the framework-agnostic core; `SonarQubeConfig` is split
+    into `SonarQubeConnection` + a per-call `AnalysisTarget`, and config moves from
+    a single `projectKey` to an optional `defaultProjectKey`.
+
+  See MIGRATION.md for details.
+
+### Minor Changes
+
+- [`b65fdce`](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/b65fdceeb9a178d0b52892533fac3ba0307352ce) Thanks [@The-Lone-Druid](https://github.com/The-Lone-Druid)! - Review-&-fix cockpit: turn the dashboard into a single place to review and fix
+  issues faster.
+  - Rich issue drawer with tabs: Why (rule root cause), How to fix (remediation +
+    examples, sanitized HTML), Code (snippet with the offending line highlighted +
+    git blame), and Activity (changelog). Security hotspots get a matching risk +
+    fix drawer.
+  - Open in IDE: click a file to open it locally. Default opens with the OS
+    default app (no setup); optionally pick an editor (VS Code/Cursor/Windsurf/
+    JetBrains) to jump to the exact line. Paths resolve from the working directory
+    with a per-project `ide.projectRoots` override (`serve --editor`).
+  - New Code focus (Clean as You Code): an Overall / New code toggle that filters
+    issues and measures to the new code period.
+  - In-app triage (opt-in, `serve --allow-write`): resolve / false-positive /
+    won't-fix, assign, comment, and change hotspot status, each confirmed; the
+    server rejects writes unless enabled.
+
+### Patch Changes
+
+- [`a950884`](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/a950884a0506e29fe4e17d34605a59403fe574a6) Thanks [@The-Lone-Druid](https://github.com/The-Lone-Druid)! - Sidebar branding: show app name, live version badge, and footer links to GitHub and npm.
+
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
 ### [3.2.6](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/compare/v3.2.5...v3.2.6) (2025-08-21)
 
-
 ### ♻️ Code Refactoring
 
-* improve code structure and readability ([6fbc7f9](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/6fbc7f9e5fca9b1c262d465dfe6d5f761936b108))
+- improve code structure and readability ([6fbc7f9](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/6fbc7f9e5fca9b1c262d465dfe6d5f761936b108))
 
 ### [3.2.5](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/compare/v3.2.4...v3.2.5) (2025-08-20)
 
-
 ### 🐛 Bug Fixes
 
-* resolve advanced filters functionality in enhanced dashboard ([fe71d0a](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/fe71d0ab883c83ed4d1fb8ae63ee312d4f36dff4))
-
+- resolve advanced filters functionality in enhanced dashboard ([fe71d0a](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/fe71d0ab883c83ed4d1fb8ae63ee312d4f36dff4))
 
 ### 🚀 Features
 
-* comprehensive dashboard enhancements and optimizations ([d060699](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/d0606994e18b3bd3c2b4cc081edc1d63ab650dd7))
-* implement phase 3a - complete code quality metrics ([12d7bef](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/12d7bef2cda11504939e6b3133069cf5664407aa))
-* implement phase 3b - enhanced security analysis ([55615a7](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/55615a7bdd6250c9322c7c4fca721c7fc4a89590))
-* implement professional theme design system ([2e5caf9](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/2e5caf9cce4383a92fa0a5734dd17ba56488d849))
+- comprehensive dashboard enhancements and optimizations ([d060699](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/d0606994e18b3bd3c2b4cc081edc1d63ab650dd7))
+- implement phase 3a - complete code quality metrics ([12d7bef](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/12d7bef2cda11504939e6b3133069cf5664407aa))
+- implement phase 3b - enhanced security analysis ([55615a7](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/55615a7bdd6250c9322c7c4fca721c7fc4a89590))
+- implement professional theme design system ([2e5caf9](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/2e5caf9cce4383a92fa0a5734dd17ba56488d849))
 
 ### [3.2.4](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/compare/v3.2.3...v3.2.4) (2025-08-20)
 
-
 ### 🚀 Features
 
-* implement phase 2 complete tabbed dashboard interface ([02c2d47](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/02c2d47792643f99279e78ac1e56f63a8ab0620d))
-
+- implement phase 2 complete tabbed dashboard interface ([02c2d47](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/02c2d47792643f99279e78ac1e56f63a8ab0620d))
 
 ### 📚 Documentation
 
-* fix readme structure and remove redundancies ([65f5b69](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/65f5b690dba3d87618df2ac81dd3d14dc2c30244))
+- fix readme structure and remove redundancies ([65f5b69](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/65f5b690dba3d87618df2ac81dd3d14dc2c30244))
 
 ### [3.2.3](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/compare/v3.2.2...v3.2.3) (2025-08-20)
 
-
 ### 📚 Documentation
 
-* improve readme user experience and value proposition ([56d191b](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/56d191b8804e25317d2239b2217119a01843f829))
-* organize documentation into structured docs/ directory ([51efe88](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/51efe885369d27c76caf33e6af00a97d3c44085c))
-* updated setup docs ([d708ad8](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/d708ad87a9f2a81c7153b509b1d6e0e8bc102d15))
-
+- improve readme user experience and value proposition ([56d191b](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/56d191b8804e25317d2239b2217119a01843f829))
+- organize documentation into structured docs/ directory ([51efe88](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/51efe885369d27c76caf33e6af00a97d3c44085c))
+- updated setup docs ([d708ad8](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/d708ad87a9f2a81c7153b509b1d6e0e8bc102d15))
 
 ### 🚀 Features
 
-* implement enhanced dashboard improvements and dynamic year functionality ([51cbc78](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/51cbc78f28d7a104920e1687c33886f4908bb836))
-* implement phase 1 - quality gate and code quality ratings ([24dd4f7](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/24dd4f7d25597219de8b497c739a5874c4a35bca))
-* implement phase 2 visual charts integration ([7b59260](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/7b592608533b6f2e932fae77a5086b2a8e04481c))
+- implement enhanced dashboard improvements and dynamic year functionality ([51cbc78](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/51cbc78f28d7a104920e1687c33886f4908bb836))
+- implement phase 1 - quality gate and code quality ratings ([24dd4f7](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/24dd4f7d25597219de8b497c739a5874c4a35bca))
+- implement phase 2 visual charts integration ([7b59260](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/7b592608533b6f2e932fae77a5086b2a8e04481c))
 
 ### [3.2.2](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/compare/v3.2.1...v3.2.2) (2025-08-19)
 
-
 ### 🐛 Bug Fixes
 
-* generated report issue fixes ([8ecc605](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/8ecc60576e09aff69b25de37885508992872d66b))
+- generated report issue fixes ([8ecc605](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/8ecc60576e09aff69b25de37885508992872d66b))
 
 ### [3.2.1](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/compare/v3.2.0...v3.2.1) (2025-08-19)
 
-
 ### 🐛 Bug Fixes
 
-* resolve auto-deployment npm publishing issues ([16a3e49](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/16a3e495ae4ac21f9e7cfcf6469caab08e8b5af6))
+- resolve auto-deployment npm publishing issues ([16a3e49](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/16a3e495ae4ac21f9e7cfcf6469caab08e8b5af6))
 
 ## [3.2.0](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/compare/v3.1.0...v3.2.0) (2025-08-19)
 
-
 ### 🚀 Features
 
-* comprehensive cli enhancement for global package usage ([570223f](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/570223fa8c6174b8a4ba27d42d03f032368e1893))
+- comprehensive cli enhancement for global package usage ([570223f](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/570223fa8c6174b8a4ba27d42d03f032368e1893))
 
 ## [3.1.0](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/compare/v3.0.0...v3.1.0) (2025-08-19)
 
-
 ### 🔧 Maintenance
 
-* package identification ([fec602c](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/fec602c4bc91e057447884f76addd6ea85f878eb))
-
+- package identification ([fec602c](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/fec602c4bc91e057447884f76addd6ea85f878eb))
 
 ### 🐛 Bug Fixes
 
-* cli ([631d414](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/631d4149f76e3c67ee73f717e6dcc4fad04acc69))
-* github ci ([55d86a3](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/55d86a3f2008722bc487b862614b696bb657eb8a))
-* set environment variables before imports in test files to fix ci validation errors ([9994d92](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/9994d92e477d651bf2c624a498948c7b5ee8b556))
-
+- cli ([631d414](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/631d4149f76e3c67ee73f717e6dcc4fad04acc69))
+- github ci ([55d86a3](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/55d86a3f2008722bc487b862614b696bb657eb8a))
+- set environment variables before imports in test files to fix ci validation errors ([9994d92](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/9994d92e477d651bf2c624a498948c7b5ee8b556))
 
 ### 🚀 Features
 
-* improve auto-deployment workflow with better error handling and permissions ([a014ab4](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/a014ab46a0ad7aa4a08cb0b3ac496f7e4f11053f))
-
+- improve auto-deployment workflow with better error handling and permissions ([a014ab4](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/a014ab46a0ad7aa4a08cb0b3ac496f7e4f11053f))
 
 ### 📚 Documentation
 
-* **.md:** updated all .md files to reflect proper changes and concise documentation ([206c6eb](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/206c6eb1157887d86dc1b6e4336827660cbb38f6))
-* enhance package description to highlight dark theme feature ([887fecc](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/887fecc10e2f12e5edb57700d091072a6b293a3b))
+- **.md:** updated all .md files to reflect proper changes and concise documentation ([206c6eb](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/206c6eb1157887d86dc1b6e4336827660cbb38f6))
+- enhance package description to highlight dark theme feature ([887fecc](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/887fecc10e2f12e5edb57700d091072a6b293a3b))
 
 ## 3.0.0 (2025-08-19)
 
