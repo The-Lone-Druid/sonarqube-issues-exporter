@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import type { Hono } from 'hono';
@@ -24,10 +25,14 @@ function mimeFor(filePath: string): string {
   return MIME[extname(filePath).toLowerCase()] ?? 'application/octet-stream';
 }
 
-/** Directory containing the bundled SPA assets (`dist/web` at runtime). */
+/** Directory containing the SPA assets. */
 function resolveWebRoot(): string {
-  // The CLI/server is bundled to CJS (dist/), so __dirname points at dist/.
-  return join(__dirname, 'web');
+  // Production: the CLI/server is bundled to CJS (dist/), so the SPA is dist/web.
+  const bundled = join(__dirname, 'web');
+  if (existsSync(bundled)) return bundled;
+  // Dev (running from source via tsx): fall back to the built SPA if present.
+  // For HMR, use `pnpm dev` and open the Vite URL (:5173) instead.
+  return join(process.cwd(), 'dist', 'web');
 }
 
 /** Register static SPA serving with history-API fallback to index.html. */
