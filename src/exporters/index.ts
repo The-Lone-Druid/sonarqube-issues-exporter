@@ -1,1 +1,0 @@
-export { exportToHtml } from './html';
