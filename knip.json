@@ -3,5 +3,5 @@
   "entry": ["tests/**/*.test.ts"],
   "project": ["src/**/*.{ts,tsx}"],
   "ignore": ["src/web/vite-env.d.ts"],
-  "ignoreDependencies": ["tailwindcss", "@commitlint/types"]
+  "ignoreDependencies": ["tailwindcss", "@commitlint/types", "@changesets/changelog-github"]
 }

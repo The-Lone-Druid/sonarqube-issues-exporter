@@ -42,4 +42,4 @@ coverage/
 *.backup
 
 # Config files (should use examples)
-config.json
+/config.json
