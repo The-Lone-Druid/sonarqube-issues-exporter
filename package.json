@@ -84,21 +84,19 @@
     "@commitlint/config-conventional": "^20.5.0",
     "@tailwindcss/vite": "^4.3.0",
     "@tanstack/react-query": "^5.100.14",
-    "@tanstack/react-query-devtools": "^5.100.14",
     "@tanstack/react-table": "^8.21.3",
     "@types/node": "^22.15.0",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.7.0",
     "@vitest/coverage-v8": "^4.1.4",
-    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "concurrently": "^9.1.0",
     "eslint": "^10.2.0",
     "husky": "^9.1.7",
+    "knip": "^6.15.0",
     "lint-staged": "^16.4.0",
     "lucide-react": "^0.460.0",
-    "msw": "^2.7.0",
     "prettier": "^3.8.2",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
@@ -111,8 +109,7 @@
     "typescript": "^5.8.0",
     "typescript-eslint": "^8.58.2",
     "vite": "^6.4.2",
-    "vitest": "^4.1.4",
-    "zod": "^3.25.76"
+    "vitest": "^4.1.4"
   },
   "lint-staged": {
     "*.ts": [

@@ -16,12 +16,12 @@ export interface ChromiumLike {
   launch: (options?: { headless?: boolean }) => Promise<BrowserLike>;
 }
 
-export interface BrowserLike {
+interface BrowserLike {
   newPage: () => Promise<PageLike>;
   close: () => Promise<void>;
 }
 
-export interface PageLike {
+interface PageLike {
   goto: (url: string, opts?: { waitUntil?: string; timeout?: number }) => Promise<unknown>;
   waitForFunction: (
     fn: string | ((...args: unknown[]) => boolean),

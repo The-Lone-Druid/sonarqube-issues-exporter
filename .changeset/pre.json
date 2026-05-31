@@ -1,0 +1,8 @@
+{
+  "mode": "pre",
+  "tag": "next",
+  "initialVersions": {
+    "sonarqube-issues-exporter": "4.0.0-next.0"
+  },
+  "changesets": []
+}

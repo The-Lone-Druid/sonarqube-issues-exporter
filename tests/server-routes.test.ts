@@ -1,0 +1,104 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createApp } from '../src/server/app';
+import { createServerContext } from '../src/server/context';
+import { clearCache } from '../src/server/cache';
+import type { AppConfig } from '../src/core/types';
+
+const config: AppConfig = {
+  sonarqube: { url: 'https://sonar.example.com', token: 'tok' },
+  server: { port: 7010, host: '127.0.0.1', open: false, auth: false },
+  logging: { level: 'error' },
+};
+
+const app = createApp(createServerContext(config, { port: 7010 }));
+
+function mockUpstream(routes: Record<string, unknown>) {
+  vi.stubGlobal('fetch', async (url: string) => {
+    const path = new URL(url).pathname;
+    const json = routes[path] ?? {};
+    return { ok: true, status: 200, statusText: 'OK', json: async () => json } as Response;
+  });
+}
+
+beforeEach(() => clearCache());
+afterEach(() => vi.unstubAllGlobals());
+
+describe('GET /api/projects/:key/summary', () => {
+  it('aggregates quality gate, measures, hotspots and issue facets', async () => {
+    mockUpstream({
+      '/api/qualitygates/project_status': { projectStatus: { status: 'PASSED', conditions: [] } },
+      '/api/measures/component': {
+        component: { measures: [{ metric: 'coverage', value: '88.5' }] },
+      },
+      '/api/hotspots/search': {
+        hotspots: [{ vulnerabilityProbability: 'HIGH', securityCategory: 'xss' }],
+        paging: { total: 1 },
+      },
+      '/api/issues/search': {
+        paging: { total: 3 },
+        facets: [{ property: 'types', values: [{ val: 'BUG', count: 3 }] }],
+      },
+    });
+
+    const res = await app.request('/api/projects/demo/summary?branch=main');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      qualityGate: { status: string };
+      measures: { coverage: number };
+      hotspots: { total: number };
+      issues: { types: Record<string, number> };
+    };
+    expect(body.qualityGate.status).toBe('PASSED');
+    expect(body.measures.coverage).toBe(88.5);
+    expect(body.hotspots.total).toBe(1);
+    expect(body.issues.types).toEqual({ BUG: 3 });
+  });
+});
+
+describe('GET /api/projects/:key/branches', () => {
+  it('returns branches and pull requests together', async () => {
+    mockUpstream({
+      '/api/project_branches/list': { branches: [{ name: 'main', isMain: true, type: 'LONG' }] },
+      '/api/project_pull_requests/list': {
+        pullRequests: [{ key: '7', title: 'Fix', branch: 'fix' }],
+      },
+    });
+    const res = await app.request('/api/projects/demo/branches');
+    const body = (await res.json()) as {
+      branches: Array<{ name: string }>;
+      pullRequests: Array<{ key: string }>;
+    };
+    expect(body.branches[0]?.name).toBe('main');
+    expect(body.pullRequests[0]?.key).toBe('7');
+  });
+});
+
+describe('error mapping', () => {
+  it('maps upstream 401 to 502 with an auth discriminator', async () => {
+    vi.stubGlobal(
+      'fetch',
+      async () =>
+        ({
+          ok: false,
+          status: 401,
+          statusText: 'Unauthorized',
+          json: async () => ({}),
+        }) as Response,
+    );
+    const res = await app.request('/api/projects/demo/issues');
+    expect(res.status).toBe(502);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe('auth');
+  });
+});
+
+describe('POST /api/export/pdf validation', () => {
+  it('rejects a missing projectKey with 400', async () => {
+    const res = await app.request('/api/export/pdf', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    expect(res.status).toBe(400);
+  });
+});

@@ -8,7 +8,7 @@ interface MappedError {
 }
 
 /** Map a thrown error to a stable HTTP status + JSON body for the SPA. */
-export function mapError(error: unknown): MappedError {
+function mapError(error: unknown): MappedError {
   if (error instanceof SonarQubeApiError) {
     if (error.status === 401 || error.status === 403) {
       // Upstream auth/permission problem — this is a server-config issue, not a

@@ -2,24 +2,24 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, v4]
   push:
-    branches: [main]
+    branches: [main, v4]
 
 jobs:
-  lint-and-test:
-    name: Lint & Test
+  lint-build-test:
+    name: Lint, build & test
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18, 20, 22]
+        node-version: [20, 22]
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
 
       - uses: actions/setup-node@v4
         with:
@@ -28,5 +28,34 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
+      - run: pnpm exec knip
       - run: pnpm test:coverage
       - run: pnpm build
+
+  pack-check:
+    name: Package integrity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      # Pack the tarball and install it into a clean dir to verify the published
+      # artifact contains the bundled SPA and a runnable bin.
+      - name: Pack and smoke-test the tarball
+        run: |
+          TARBALL="$(pnpm pack | tail -1)"
+          mkdir -p /tmp/pack-test && cd /tmp/pack-test && npm init -y >/dev/null
+          npm install "$GITHUB_WORKSPACE/$TARBALL"
+          test -f node_modules/sonarqube-issues-exporter/dist/web/index.html
+          node_modules/.bin/sonarqube-exporter --help

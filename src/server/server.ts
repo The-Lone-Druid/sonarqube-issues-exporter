@@ -23,7 +23,7 @@ export interface RunningServer {
 }
 
 /** Probe for a free TCP port starting at `preferred`, scanning upward. */
-export function findFreePort(preferred: number, host: string, attempts = 50): Promise<number> {
+function findFreePort(preferred: number, host: string, attempts = 50): Promise<number> {
   return new Promise((resolvePort, rejectPort) => {
     const tryPort = (port: number, remaining: number): void => {
       const tester = createServer();

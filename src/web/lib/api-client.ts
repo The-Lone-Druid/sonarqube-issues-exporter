@@ -22,7 +22,7 @@ export interface SystemStatusInfo {
   status: string;
 }
 
-export interface IssueFacetSummary {
+interface IssueFacetSummary {
   total: number;
   severities: Record<string, number>;
   types: Record<string, number>;

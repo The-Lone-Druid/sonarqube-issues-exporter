@@ -25,7 +25,7 @@ function mimeFor(filePath: string): string {
 }
 
 /** Directory containing the bundled SPA assets (`dist/web` at runtime). */
-export function resolveWebRoot(): string {
+function resolveWebRoot(): string {
   // The CLI/server is bundled to CJS (dist/), so __dirname points at dist/.
   return join(__dirname, 'web');
 }
