@@ -1,322 +1,265 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import { loadConfig } from './config';
-import { initLogger, getLogger } from './utils';
-import { exportSonarQubeIssues, validateSonarQubeConnection } from './index';
-import type { ExportCommandOptions, ValidateCommandOptions } from './types';
-import type { AppConfig, SonarQubeConfig, ExportConfig } from './types/config';
-import type { ExporterResult } from './types/report';
-import { readFileSync, writeFileSync } from 'fs';
-import { join } from 'path';
-import * as readline from 'readline';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import * as readline from 'node:readline';
+import { loadConfig, toConnection } from './core/config';
+import { initLogger, logger } from './core/logger';
+import { getSystemStatus, listProjects } from './core/sonarqube/projects';
+import type { DeepPartial, AppConfig, EditorId } from './core/types';
+import { openBrowser, startServer } from './server/server';
+import { renderReportPdf } from './server/pdf/renderer';
+import { PdfUnavailableError } from './server/pdf/install';
 
-// Read package version
-const packageJsonPath = join(__dirname, '../package.json');
-const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+const packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8')) as {
+  version: string;
+};
 
-// Helper function to build configuration overrides for validate command
-function buildValidateConfigOverrides(
-  options: ValidateCommandOptions
-): Partial<AppConfig> | undefined {
-  const sonarQubeOverrides = buildSonarQubeOverrides(options);
-  return Object.keys(sonarQubeOverrides).length > 0
-    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      { sonarqube: sonarQubeOverrides as any }
-    : undefined;
+interface ConnectionFlags {
+  config?: string;
+  url?: string;
+  token?: string;
+  project?: string;
+  organization?: string;
+  verbose?: boolean;
 }
 
-// Helper function to create a safe configuration summary for logging
-function createConfigSummary(config: AppConfig): object {
-  return {
-    sonarqube: {
-      url: config.sonarqube.url,
-      projectKey: config.sonarqube.projectKey,
-      organization: config.sonarqube.organization || 'N/A',
-      tokenConfigured: !!config.sonarqube.token,
-    },
-    export: {
-      outputPath: config.export.outputPath,
-      filename: config.export.filename,
-      template: config.export.template,
-      maxIssues: config.export.maxIssues,
-      excludeStatuses: config.export.excludeStatuses.join(', '),
-      includeResolvedIssues: config.export.includeResolvedIssues,
-    },
-    logging: {
-      level: config.logging.level,
-    },
-  };
+function buildOverrides(flags: ConnectionFlags): DeepPartial<AppConfig> | undefined {
+  const sonarqube: DeepPartial<AppConfig['sonarqube']> = {};
+  if (flags.url) sonarqube.url = flags.url;
+  if (flags.token) sonarqube.token = flags.token;
+  if (flags.organization) sonarqube.organization = flags.organization;
+  if (flags.project) sonarqube.defaultProjectKey = flags.project;
+
+  const overrides: DeepPartial<AppConfig> = {};
+  if (Object.keys(sonarqube).length > 0) overrides.sonarqube = sonarqube;
+  if (flags.verbose) overrides.logging = { level: 'debug' };
+  return Object.keys(overrides).length > 0 ? overrides : undefined;
 }
 
-// Helper function to create configuration file content
-function createConfigFileContent(sonarQubeConfig: SonarQubeConfig): string {
-  return JSON.stringify(
-    {
-      sonarqube: {
-        url: sonarQubeConfig.url,
-        token: sonarQubeConfig.token,
-        projectKey: sonarQubeConfig.projectKey,
-        ...(sonarQubeConfig.organization && { organization: sonarQubeConfig.organization }),
-      },
-      export: {
-        outputPath: './reports',
-        filename: 'sonarqube-issues-report.html',
-        excludeStatuses: ['CLOSED'],
-        includeResolvedIssues: false,
-        maxIssues: 10000,
-        template: 'default',
-      },
-      logging: {
-        level: 'info',
-      },
-    },
-    null,
-    2
-  );
-}
-// Helper function to build SonarQube configuration overrides
-function buildSonarQubeOverrides(
-  options: ExportCommandOptions | ValidateCommandOptions
-): Partial<SonarQubeConfig> {
-  if (!options.url && !options.token && !options.project && !options.organization) {
-    return {};
-  }
-
-  const sonarQubeOverrides: Partial<SonarQubeConfig> = {};
-  if (options.url) sonarQubeOverrides.url = options.url;
-  if (options.token) sonarQubeOverrides.token = options.token;
-  if (options.project) sonarQubeOverrides.projectKey = options.project;
-  if (options.organization) sonarQubeOverrides.organization = options.organization;
-
-  return sonarQubeOverrides;
-}
-
-// Helper function to build export configuration overrides
-function buildExportOverrides(options: ExportCommandOptions): Partial<ExportConfig> {
-  const hasExportOptions =
-    options.output ||
-    options.filename ||
-    options.template ||
-    options.includeResolved !== undefined ||
-    options.excludeStatuses !== 'CLOSED' ||
-    parseInt(options.maxIssues, 10) !== 10000;
-
-  if (!hasExportOptions) {
-    return {};
-  }
-
-  const exportOverrides: Partial<ExportConfig> = {};
-  if (options.output) exportOverrides.outputPath = options.output;
-  if (options.filename) exportOverrides.filename = options.filename;
-  if (options.template) exportOverrides.template = options.template;
-  if (parseInt(options.maxIssues, 10) !== 10000) {
-    exportOverrides.maxIssues = parseInt(options.maxIssues, 10);
-  }
-  if (options.includeResolved) {
-    exportOverrides.includeResolvedIssues = options.includeResolved;
-  }
-  if (options.excludeStatuses !== 'CLOSED') {
-    exportOverrides.excludeStatuses = options.excludeStatuses.split(',');
-  }
-
-  return exportOverrides;
-}
-
-// Helper function to build configuration overrides
-function buildConfigOverrides(options: ExportCommandOptions): Partial<AppConfig> | undefined {
-  const sonarQubeOverrides = buildSonarQubeOverrides(options);
-  const exportOverrides = buildExportOverrides(options);
-
-  const configOverrides: Partial<AppConfig> = {};
-
-  if (Object.keys(sonarQubeOverrides).length > 0) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    configOverrides.sonarqube = sonarQubeOverrides as any;
-  }
-
-  if (Object.keys(exportOverrides).length > 0) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    configOverrides.export = exportOverrides as any;
-  }
-
-  if (options.verbose) {
-    configOverrides.logging = { level: 'debug' as const };
-  }
-
-  return Object.keys(configOverrides).length > 0 ? configOverrides : undefined;
-}
-
-// Helper function to log export results
-function logExportResults(logger: ReturnType<typeof getLogger>, result: ExporterResult): void {
-  if (result.success) {
-    logger.info(`✅ Report generated successfully!`);
-  } else {
-    logger.error(`❌ Failed to generate report: ${result.error}`);
-    process.exit(1);
-  }
+function resolveConfig(flags: ConnectionFlags): AppConfig {
+  const overrides = buildOverrides(flags);
+  return loadConfig({
+    ...(flags.config != null && { configPath: flags.config }),
+    ...(overrides && { overrides }),
+  });
 }
 
 const program = new Command();
 
 program
   .name('sonarqube-exporter')
-  .description('Export SonarQube issues to HTML reports')
+  .description('Run a local SonarQube dashboard and export PDF reports')
   .version(packageJson.version);
 
+interface ServeFlags extends ConnectionFlags {
+  port?: string;
+  host?: string;
+  open?: boolean;
+  auth?: boolean;
+  allowWrite?: boolean;
+  editor?: string;
+}
+
 program
-  .command('export')
-  .description('Export SonarQube issues to HTML report')
+  .command('serve', { isDefault: true })
+  .description('Start the local dashboard and open it in your browser')
   .option('-c, --config <path>', 'Path to configuration file')
   .option('--url <url>', 'SonarQube server URL')
   .option('--token <token>', 'SonarQube authentication token')
-  .option('--project <key>', 'SonarQube project key')
+  .option('--project <key>', 'Project to pre-select on startup')
   .option('--organization <org>', 'SonarQube organization (for SonarCloud)')
-  .option('-o, --output <path>', 'Output directory path')
-  .option('-f, --filename <name>', 'Output filename')
-  .option(
-    '--template <name>',
-    'Template: "default" (classic table view) or "enhanced" (interactive dashboard with charts)',
-    'default'
-  )
-  .option('--max-issues <number>', 'Maximum number of issues to fetch', '10000')
-  .option('--include-resolved', 'Include resolved issues in the report')
-  .option('--exclude-statuses <statuses>', 'Comma-separated list of statuses to exclude', 'CLOSED')
+  .option('-p, --port <number>', 'Preferred port (auto-increments if busy)')
+  .option('--host <host>', 'Host to bind (default 127.0.0.1)')
+  .option('--no-open', 'Do not open the browser automatically')
+  .option('--auth', 'Require a local token for API access (shared machines)')
+  .option('--allow-write', 'Enable in-app write actions (issue triage, hotspot status)')
+  .option('--editor <name>', 'Default editor for Open in IDE (vscode|cursor|windsurf|jetbrains)')
   .option('-v, --verbose', 'Enable verbose logging')
-  .action(async (options: ExportCommandOptions) => {
+  .action(async (flags: ServeFlags) => {
     try {
-      // Load configuration
-      const configOverrides = buildConfigOverrides(options);
-      const config = loadConfig({
-        configPath: options.config,
-        ...(configOverrides && { overrides: configOverrides }),
-      });
-
-      // Initialize logger
+      const config = resolveConfig(flags);
+      if (flags.allowWrite) config.server.allowWrite = true;
+      if (flags.editor) config.ide.editor = flags.editor as EditorId;
       initLogger(config.logging);
-      const logger = getLogger();
 
-      logger.info('Starting SonarQube issues export...');
-
-      // Log configuration safely (without sensitive data) only in debug mode
-      if (config.logging.level === 'debug') {
-        logger.debug('Configuration (sanitized):', createConfigSummary(config));
+      logger.info('Validating SonarQube connection...');
+      const status = await getSystemStatus(toConnection(config)).catch(() => null);
+      if (!status) {
+        console.error(
+          'Could not reach SonarQube. Check --url/--token or run `sonarqube-exporter setup`.',
+        );
+        process.exit(1);
       }
 
-      // Progress reporting
-      let lastLoggedPercentage = 0;
-      const progressCallback = (current: number, total: number) => {
-        const percentage = Math.round((current / total) * 100);
-        // Only log every 10% to reduce terminal noise
-        if (percentage >= lastLoggedPercentage + 10 || percentage === 100) {
-          logger.info(`Progress: ${current}/${total} issues (${percentage}%)`);
-          lastLoggedPercentage = percentage;
-        }
-      };
-
-      // Export issues using the library function
-      const result = await exportSonarQubeIssues(config, {
-        onProgress: progressCallback,
-        validateConnection: true,
-        logProjectInfo: true,
+      const running = await startServer({
+        config,
+        ...(flags.port && { port: parseInt(flags.port, 10) }),
+        ...(flags.host && { host: flags.host }),
+        ...(flags.auth && { auth: true }),
       });
 
-      // Log results
-      logExportResults(logger, result);
+      console.log('\n  ◆ SonarQube dashboard running');
+      console.log(`  ➜ Local:     ${running.url}`);
+      console.log(`  ➜ Connected: ${config.sonarqube.url}`);
+      if (running.authToken) console.log('  ➜ Auth:      local token required (see URL fragment)');
+      console.log('\n  Press Ctrl+C to stop.\n');
+
+      if (flags.open !== false) await openBrowser(running.url);
+
+      const shutdown = async (): Promise<void> => {
+        await running.close();
+        process.exit(0);
+      };
+      process.on('SIGINT', shutdown);
+      process.on('SIGTERM', shutdown);
     } catch (error) {
-      console.error('❌ Export failed:', error);
+      console.error('Failed to start server:', error instanceof Error ? error.message : error);
       process.exit(1);
     }
   });
 
 program
   .command('validate')
-  .description('Validate SonarQube connection and configuration')
+  .description('Validate the SonarQube connection and token access')
   .option('-c, --config <path>', 'Path to configuration file')
   .option('--url <url>', 'SonarQube server URL')
   .option('--token <token>', 'SonarQube authentication token')
-  .option('--project <key>', 'SonarQube project key')
   .option('--organization <org>', 'SonarQube organization (for SonarCloud)')
-  .action(async (options: ValidateCommandOptions) => {
+  .action(async (flags: ConnectionFlags) => {
     try {
-      const configOverrides = buildValidateConfigOverrides(options);
-      const config = loadConfig({
-        configPath: options.config,
-        ...(configOverrides && { overrides: configOverrides }),
-      });
+      const config = resolveConfig(flags);
       initLogger(config.logging);
-      const logger = getLogger();
+      const conn = toConnection(config);
 
-      logger.info('Validating configuration...');
+      const status = await getSystemStatus(conn);
+      logger.info(`Connected to SonarQube ${status.version ?? ''} (${status.status})`);
 
-      // Use the library function for validation
-      const isValid = await validateSonarQubeConnection(config);
-
-      if (!isValid) {
-        process.exit(1);
+      const { projects } = await listProjects(conn, { pageSize: 5 });
+      logger.info(
+        `Token can access ${projects.length > 0 ? `${projects.length}+` : '0'} project(s)`,
+      );
+      if (projects.length === 0) {
+        logger.warn('No projects visible — check token permissions or organization.');
       }
     } catch (error) {
-      console.error('❌ Validation failed:', error);
+      console.error('Validation failed:', error instanceof Error ? error.message : error);
       process.exit(1);
     }
   });
 
 program
   .command('setup')
-  .description('Setup configuration interactively')
-  .option('--global', 'Create global configuration file')
+  .description('Create a configuration file interactively')
+  .option('--global', 'Write to ~/.sonarqube-exporter.json')
   .action(async (options: { global?: boolean }) => {
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
-
-    function question(prompt: string): Promise<string> {
-      return new Promise((resolve) => {
-        rl.question(prompt, resolve);
-      });
-    }
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    const ask = (prompt: string): Promise<string> =>
+      new Promise((resolve) => rl.question(prompt, resolve));
 
     try {
-      console.log('\n🛠️  SonarQube Issues Exporter Setup\n');
-      console.log('This will help you create a configuration file.\n');
+      console.log('\nSonarQube Dashboard — Setup\n');
+      const url = (await ask('SonarQube Server URL (e.g. https://sonarcloud.io): ')).trim();
+      const token = (await ask('SonarQube Token: ')).trim();
+      const organization = (await ask('Organization (optional, SonarCloud): ')).trim();
+      const defaultProjectKey = (await ask('Default project key (optional): ')).trim();
 
-      const url = await question('SonarQube Server URL (e.g., https://sonarcloud.io): ');
-      const token = await question('SonarQube Token: ');
-      const projectKey = await question('Project Key: ');
-      const organization = await question('Organization (optional, for SonarCloud): ');
-
-      const configContent = createConfigFileContent({
-        url: url.trim(),
-        token: token.trim(),
-        projectKey: projectKey.trim(),
-        ...(organization.trim() && { organization: organization.trim() }),
-      });
+      const config = {
+        sonarqube: {
+          url,
+          token,
+          ...(organization && { organization }),
+          ...(defaultProjectKey && { defaultProjectKey }),
+        },
+        server: { port: 7010, host: '127.0.0.1', open: true, auth: false, allowWrite: false },
+        // editor omitted → files open with the OS default; set it for exact-line jumps.
+        ide: { projectRoots: {} },
+        logging: { level: 'info' },
+      };
 
       const configPath = options.global
-        ? join(process.env.HOME || process.env.USERPROFILE || '.', '.sonarqube-exporter.json')
+        ? join(process.env['HOME'] || '.', '.sonarqube-exporter.json')
         : '.sonarqube-exporter.json';
 
-      writeFileSync(configPath, configContent);
-
-      console.log(`\n✅ Configuration saved to: ${configPath}`);
-      console.log('\nYou can now run:');
-      console.log('  sonarqube-exporter export');
-      console.log('  sonarqube-exporter validate');
-      console.log(
-        '\n💡 You can also override settings using environment variables or CLI options.'
-      );
+      writeFileSync(configPath, JSON.stringify(config, null, 2));
+      console.log(`\nConfiguration saved to: ${configPath}`);
+      console.log('\nNext: run `sonarqube-exporter serve`');
     } catch (error) {
-      console.error('❌ Setup failed:', error);
+      console.error('Setup failed:', error instanceof Error ? error.message : error);
       process.exit(1);
     } finally {
       rl.close();
     }
   });
 
-// Parse command line arguments
-if (process.argv.length === 2) {
-  program.help();
-} else {
-  program.parse();
+interface ExportPdfFlags extends ConnectionFlags {
+  project: string;
+  branch?: string;
+  pullRequest?: string;
+  output?: string;
 }
+
+program
+  .command('export-pdf')
+  .description('Render a project report to a PDF file (headless — for CI)')
+  .requiredOption('--project <key>', 'Project key')
+  .option('--branch <name>', 'Branch name')
+  .option('--pull-request <key>', 'Pull request key')
+  .option('-o, --output <file>', 'Output PDF path')
+  .option('-c, --config <path>', 'Path to configuration file')
+  .option('--url <url>', 'SonarQube server URL')
+  .option('--token <token>', 'SonarQube authentication token')
+  .option('--organization <org>', 'SonarQube organization (for SonarCloud)')
+  .option('-v, --verbose', 'Enable verbose logging')
+  .action(async (flags: ExportPdfFlags) => {
+    let running: Awaited<ReturnType<typeof startServer>> | null = null;
+    try {
+      const config = resolveConfig(flags);
+      initLogger(config.logging);
+
+      const status = await getSystemStatus(toConnection(config)).catch(() => null);
+      if (!status) {
+        console.error('Could not reach SonarQube. Check --url/--token.');
+        process.exit(1);
+      }
+
+      running = await startServer({ config });
+      const pdf = await renderReportPdf({
+        port: running.port,
+        host: running.host,
+        projectKey: flags.project,
+        ...(flags.branch && { branch: flags.branch }),
+        ...(flags.pullRequest && { pullRequest: flags.pullRequest }),
+      });
+
+      const output = flags.output ?? `${flags.project}-report.pdf`;
+      writeFileSync(output, pdf);
+      console.log(`PDF written to ${output}`);
+    } catch (error) {
+      if (error instanceof PdfUnavailableError) {
+        console.error(error.message);
+      } else {
+        console.error('PDF export failed:', error instanceof Error ? error.message : error);
+      }
+      process.exitCode = 1;
+    } finally {
+      if (running) await running.close();
+    }
+  });
+
+// The v3 `export` command was removed in v4 — guide users to the new workflow.
+program
+  .command('export', { hidden: true })
+  .allowUnknownOption(true)
+  .action(() => {
+    console.error(
+      'The `export` command was removed in v4.\n' +
+        '  • For an interactive dashboard:  sonarqube-exporter serve\n' +
+        '  • For a PDF report (CI/headless): sonarqube-exporter export-pdf --project <key>\n' +
+        'See MIGRATION.md for details.',
+    );
+    process.exit(1);
+  });
+
+program.parse();

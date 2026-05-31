@@ -1,92 +1,61 @@
-name: 🔍 CI
+name: CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, v4]
   push:
-    branches: [main]
+    branches: [main, v4]
 
 jobs:
-  lint-and-test:
-    name: 🧪 Lint & Test
+  lint-build-test:
+    name: Lint, build & test
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
-        node-version: [18, 20]
+        node-version: [20, 22]
 
     steps:
-      - name: 🛎️ Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: 🟢 Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          cache: pnpm
 
-      - name: 📦 Install dependencies
-        run: npm ci
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm exec knip
+      - run: pnpm test:coverage
+      - run: pnpm build
 
-      - name: 🔍 Lint code
-        run: npm run lint
-
-      - name: 🧪 Run tests
-        run: npm run test:coverage
-
-      - name: 🏗️ Build project
-        run: npm run build
-
-      - name: 📊 Upload coverage reports
-        if: matrix.node-version == 18
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./coverage/lcov.info
-          flags: unittests
-          name: codecov-umbrella
-
-  commit-lint:
-    name: 📝 Commit Lint
+  pack-check:
+    name: Package integrity
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-
     steps:
-      - name: 🛎️ Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
         with:
-          fetch-depth: 0
+          version: 10
 
-      - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: 20
+          cache: pnpm
 
-      - name: 📦 Install dependencies
-        run: npm ci
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
 
-      - name: 📝 Validate commit messages
-        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
-
-  security:
-    name: 🔒 Security Audit
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: 🛎️ Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: 📦 Install dependencies
-        run: npm ci
-
-      - name: 🔒 Run security audit
-        run: npm audit --audit-level moderate
-
-      - name: 🔍 Check for known vulnerabilities
-        run: npx audit-ci --moderate
+      # Pack the tarball and install it into a clean dir to verify the published
+      # artifact contains the bundled SPA and a runnable bin.
+      - name: Pack and smoke-test the tarball
+        run: |
+          TARBALL="$(pnpm pack | tail -1)"
+          mkdir -p /tmp/pack-test && cd /tmp/pack-test && npm init -y >/dev/null
+          npm install "$GITHUB_WORKSPACE/$TARBALL"
+          test -f node_modules/sonarqube-issues-exporter/dist/web/index.html
+          node_modules/.bin/sonarqube-exporter --help

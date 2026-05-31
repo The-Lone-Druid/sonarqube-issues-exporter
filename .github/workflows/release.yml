@@ -1,118 +1,41 @@
-name: 🚀 Release & Publish
+name: Release
 
+# Pushes to `main` or `v4` open/update a "Version Packages" PR.
+# Publishing to npm is handled manually via `pnpm release`.
 on:
   push:
-    branches:
-      - main
-    paths-ignore:
-      - 'README.md'
-      - 'docs/**'
-      - '*.md'
+    branches: [main, v4]
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  # First job: Run CI tests
-  test:
-    name: 🧪 Test & Validate
-    runs-on: ubuntu-latest
-    steps:
-      - name: 🛎️ Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: 📦 Install dependencies
-        run: npm ci
-
-      - name: 🧪 Run tests
-        run: npm run test:coverage
-
-      - name: 🏗️ Build project
-        run: npm run build
-
-  # Second job: Create release and publish
   release:
-    name: 📦 Create Release & Publish
+    name: Release
     runs-on: ubuntu-latest
-    needs: test
-    if: "!contains(github.event.head_commit.message, 'chore(release)')"
     permissions:
       contents: write
-      id-token: write
+      pull-requests: write
 
     steps:
-      - name: 🛎️ Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
         with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          version: 10
 
-      - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: 20
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
 
-      - name: 📦 Install dependencies
-        run: npm ci
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
 
-      - name: 🔧 Configure NPM authentication
-        run: |
-          echo "//registry.npmjs.org/:_authToken=\${NODE_AUTH_TOKEN}" > ~/.npmrc
-          echo "registry=https://registry.npmjs.org/" >> ~/.npmrc
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: 🏗️ Build project
-        run: npm run build
-
-      - name: 🔍 Check for changes
-        id: check-changes
-        run: |
-          if git diff --quiet HEAD~1 HEAD -- src/ package.json; then
-            echo "changes=false" >> $GITHUB_OUTPUT
-          else
-            echo "changes=true" >> $GITHUB_OUTPUT
-          fi
-
-      - name: 🏷️ Generate release and push
-        if: steps.check-changes.outputs.changes == 'true'
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          npm run release
-
-      - name: 📢 Create GitHub Release
-        if: steps.check-changes.outputs.changes == 'true'
+      - name: Create Release Pull Request
+        uses: changesets/action@v1
+        with:
+          title: 'chore: version packages'
+          commit: 'chore: version packages'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Get the latest tag
-          LATEST_TAG=$(git describe --tags --abbrev=0)
-
-          # Extract changelog for this version (with fallback)
-          if [ -f "CHANGELOG.md" ]; then
-            CHANGELOG_CONTENT=$(sed -n "/## \[$(echo $LATEST_TAG | sed 's/v//')\]/,/## \[/{/## \[$(echo $LATEST_TAG | sed 's/v//')\]/!{/## \[/q};p}" CHANGELOG.md | head -n -1 || echo "Release $LATEST_TAG")
-          else
-            CHANGELOG_CONTENT="Release $LATEST_TAG"
-          fi
-
-          # Create GitHub release
-          gh release create $LATEST_TAG \
-            --title "Release $LATEST_TAG" \
-            --notes "$CHANGELOG_CONTENT" \
-            --latest
-
-      - name: 📦 Publish to NPM
-        if: steps.check-changes.outputs.changes == 'true'
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          # Verify npm is authenticated
-          npm whoami
-          # Publish with explicit registry and access
-          npm publish --access public --registry https://registry.npmjs.org/

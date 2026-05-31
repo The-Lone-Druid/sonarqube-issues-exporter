@@ -13,7 +13,7 @@ dist/
 
 # Reports
 reports/
-*.html
+/*.html
 sonarqube_issues.html
 
 # Logs
@@ -42,4 +42,4 @@ coverage/
 *.backup
 
 # Config files (should use examples)
-config.json
+/config.json

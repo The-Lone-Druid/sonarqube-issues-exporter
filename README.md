@@ -1,572 +1,228 @@
-# SonarQube Issues Exporter
+# sonarqube-issues-exporter
 
 [![npm version](https://badge.fury.io/js/sonarqube-issues-exporter.svg)](https://badge.fury.io/js/sonarqube-issues-exporter)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.2+-blue.svg)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
-[![Downloads](https://img.shields.io/npm/dm/sonarqube-issues-exporter.svg)](https://npmjs.org/package/sonarqube-issues-exporter)
 
-**Transform your SonarQube code quality data into beautiful, shareable HTML reports.**
+> Run a local SonarQube dashboard on your own machine. View live issues, the
+> quality gate, security hotspots, and coverage across projects, branches, and
+> pull requests — then export a PDF for stakeholders. No more logging into the
+> SonarQube dashboard or SSHing to a private VM for every check.
 
-Perfect for team leads, project managers, and developers who need to share code quality insights with stakeholders, clients, or team members who don't have direct SonarQube access.
+The tool starts a small local server that talks to your SonarQube/SonarCloud
+server (your token stays on your machine) and opens a fast React dashboard in
+your browser.
 
-> 🚀 **Ready to use in 2 minutes:** `npm install -g sonarqube-issues-exporter`
+> **Upgrading from v3?** v3 generated a static HTML file via `export`.
+> v4 is a live local app (`serve`) plus a headless `export-pdf`. See
+> [MIGRATION.md](./MIGRATION.md).
 
-## 🤔 Why Use This Tool?
+---
 
-### **The Problem**
-
-SonarQube's built-in interface is great for developers, but:
-
-- ❌ Hard to share with non-technical stakeholders
-- ❌ No offline access to reports
-- ❌ Limited customization for presentations
-- ❌ Difficult to integrate into documentation workflows
-- ❌ Requires SonarQube access for every viewer
-
-### **The Solution**
-
-Transform your SonarQube data into:
-
-- ✅ Beautiful, shareable HTML reports
-- ✅ Mobile-friendly presentations for any device
-- ✅ Offline-accessible documentation
-- ✅ Client-ready deliverables
-- ✅ Professional reports for executives and stakeholders
-
-## 👥 Who This Is For
-
-### 🏢 **Team Leads & Project Managers**
-
-- Generate executive-friendly reports for stakeholders
-- Track code quality metrics across sprints
-- Share progress with non-technical team members
-- Create compliance documentation for audits
-
-### 👨‍💻 **DevOps Engineers**
-
-- Integrate quality reports into CI/CD pipelines
-- Create automated quality gates documentation
-- Generate reports for deployment approvals
-- Archive quality metrics for historical tracking
-
-### 🔍 **QA Engineers & Security Teams**
-
-- Export security vulnerabilities for detailed analysis
-- Create comprehensive bug tracking reports
-- Generate compliance documentation for audits
-- Share security findings with external teams
-
-### 📊 **Development Teams**
-
-- Share code review insights with external teams
-- Create beautiful reports for client presentations
-- Export issues for offline analysis and planning
-- Document technical debt for stakeholders
-
-## 👀 What You'll Get
-
-### **Before: SonarQube Interface**
-
-- Technical dashboard requiring SonarQube access
-- Complex interface overwhelming for non-developers
-- Difficult to share or present to stakeholders
-- No offline access or archival capabilities
-
-### **After: Professional Reports**
-
-- 🎨 Clean, professional layout suitable for any audience
-- 📱 Mobile-responsive design works on any device
-- 🌙 Dark/light theme support for user preference
-- 📧 Easy sharing via email, Slack, or presentations
-- 💾 Offline access - no SonarQube login required
-- 📊 Executive-friendly summaries and visualizations
-
-## ✨ Key Benefits
-
-- 🎯 **Stakeholder-Friendly**: Transform technical data into executive-ready presentations
-- ⚡ **Quick Setup**: Get your first report in under 2 minutes
-- 🔧 **Flexible Configuration**: Works with any SonarQube setup (Cloud, Server, Enterprise)
-- **Secure & Private**: Your data stays in your environment
-- 📈 **Real-time Progress**: Live feedback during report generation
-- � **Smart Filtering**: Focus on what matters most (severity, type, status)
-- � **Multiple Formats**: Support for different report templates and outputs
-
-## 📋 Prerequisites
-
-- Node.js 18.0.0 or higher
-- npm 8.0.0 or higher
-- Access to a SonarQube server (version 7.9+)
-- SonarQube user token with appropriate permissions
-
-## ⚡ 2-Minute Quick Start
-
-Get your first report in just 2 minutes:
+## Quick start
 
 ```bash
-# 1. Install globally
+# No install needed — run it with npx:
+npx sonarqube-issues-exporter serve \
+  --url "https://your-sonarqube.example.com" \
+  --token "YOUR_TOKEN"
+```
+
+This finds a free port, starts the dashboard on `http://127.0.0.1:7010`, and
+opens it in your browser. Pick a project from the switcher and you're in.
+
+Prefer a global install:
+
+```bash
 npm install -g sonarqube-issues-exporter
-
-# 2. Generate your first report
-sq-exporter export \
-  --url "https://your-sonarqube.com" \
-  --token "your-token" \
-  --project "your-project-key"
-
-# 3. Open the generated report
-# Report saved to: ./reports/sonarqube-issues-report.html
+sonarqube-exporter serve          # or the short alias: sq-exporter serve
 ```
 
-**That's it!** 🎉 Your professional SonarQube report is ready to share.
-
-> 💡 **Pro Tip**: Use `sq-exporter setup` for an interactive configuration wizard that saves your settings for future use.
-
-## 🚀 Installation & Setup
-
-### Installation Options
-
-#### 🌟 Global Installation (Recommended)
+Save your connection once, then just run `serve`:
 
 ```bash
-# Install once, use anywhere
-npm install -g sonarqube-issues-exporter
-```
-
-After installation, use from any directory:
-
-```bash
-sonarqube-exporter --help
-# or use the short alias
-sq-exporter --help
-```
-
-#### 📦 Project-Specific Installation
-
-```bash
-# Install in your project
-npm install sonarqube-issues-exporter
-
-# Use with npx (no global installation needed)
-npx sonarqube-exporter --help
-```
-
-### ⚙️ Configuration
-
-Choose the setup method that works best for you:
-
-#### 🎯 Method 1: Interactive Setup (Easiest)
-
-**Perfect for first-time users:**
-
-```bash
-sq-exporter setup
-```
-
-This wizard will:
-
-- ✅ Guide you through all required settings
-- ✅ Test your SonarQube connection
-- ✅ Save configuration for future use
-- ✅ Generate your first report immediately
-
-#### ⚡ Method 2: Direct CLI (Fastest)
-
-**Perfect for one-time exports:**
-
-```bash
-sq-exporter export \
-  --url "https://sonarqube.company.com" \
-  --token "your-sonarqube-token" \
-  --project "your-project-key"
-```
-
-#### 📁 Method 3: Configuration File (Most Flexible)
-
-**Perfect for team sharing and automation:**
-
-Create `.sonarqube-exporter.json` in your project:
-
-```json
-{
-  "sonarqube": {
-    "url": "https://sonarqube.company.com",
-    "token": "your-sonarqube-token",
-    "projectKey": "your-project-key"
-  },
-  "export": {
-    "outputPath": "./reports",
-    "filename": "quality-report.html"
-  }
-}
-```
-
-Then simply run:
-
-```bash
-sq-exporter export
-```
-
-#### 🌍 Environment Variables
-
-| Variable                  | Description                         | Default                        |
-| ------------------------- | ----------------------------------- | ------------------------------ |
-| `SONARQUBE_URL`           | SonarQube server URL                | `http://localhost:9000`        |
-| `SONARQUBE_TOKEN`         | User token for authentication       | **Required**                   |
-| `SONARQUBE_PROJECT_KEY`   | Project key to export               | **Required**                   |
-| `SONARQUBE_ORGANIZATION`  | Organization key (SonarCloud)       | Optional                       |
-| `EXPORT_OUTPUT_PATH`      | Output directory for reports        | `./reports`                    |
-| `EXPORT_FILENAME`         | Output filename                     | `sonarqube-issues-report.html` |
-| `EXPORT_EXCLUDE_STATUSES` | Comma-separated statuses to exclude | `CLOSED`                       |
-| `EXPORT_INCLUDE_RESOLVED` | Include resolved issues             | `false`                        |
-| `EXPORT_MAX_ISSUES`       | Maximum issues to fetch             | `10000`                        |
-| `EXPORT_TEMPLATE`         | Template name for reports           | `default`                      |
-| `LOG_LEVEL`               | Logging level                       | `info`                         |
-
-**Example environment setup:**
-
-```bash
-export SONARQUBE_URL="https://sonarcloud.io"
-export SONARQUBE_TOKEN="your-token-here"
-export SONARQUBE_PROJECT_KEY="your-project-key"
-export SONARQUBE_ORGANIZATION="your-organization"
-sonarqube-exporter export
-```
-
-#### ⚡ CLI Options
-
-All configuration can be overridden via command-line options:
-
-```bash
-# Basic usage with CLI options
-sonarqube-exporter export \
-  --url "https://sonarqube.company.com" \
-  --token "your-token" \
-  --project "your-project-key" \
-  --output "./reports" \
-  --filename "custom-report.html"
-
-# Using short options
-sq-exporter export \
-  -c "./config.json" \
-  -o "./custom-reports" \
-  -f "weekly-report.html" \
-  -v
-
-# Validate configuration
-sonarqube-exporter validate \
-  --url "https://sonarqube.company.com" \
-  --token "your-token" \
-  --project "your-project-key"
-```
-
-## 📖 Real-World Usage Examples
-
-### 🚀 Getting Started Examples
-
-#### First-Time Setup
-
-```bash
-# Let the wizard guide you through setup
-sq-exporter setup
-```
-
-#### Quick One-Off Report
-
-```bash
-# Generate a report immediately
-sq-exporter export --url "https://sonarqube.company.com" --token "your-token" --project "your-project"
-```
-
-#### Validate Your Setup
-
-```bash
-# Check if your configuration works
-sq-exporter validate
-```
-
-### 📊 Team & Management Scenarios
-
-#### Sprint Review Report
-
-```bash
-# Clean report for retrospectives
-sq-exporter export --project "mobile-app" --filename "sprint-42-review.html"
-```
-
-#### Executive Dashboard
-
-```bash
-# Management-friendly weekly report
-sq-exporter export \
-  --project "main-product" \
-  --filename "weekly-quality-$(date +%Y-W%V).html" \
-  --exclude-statuses "CLOSED"
-```
-
-#### Client Presentation
-
-```bash
-# Professional report for client meetings
-sq-exporter export \
-  --project "client-portal" \
-  --filename "quality-demo-$(date +%Y%m%d).html"
-```
-
-### 🔒 Security & Compliance Scenarios
-
-#### Security Audit Report
-
-```bash
-# Focus on security vulnerabilities only
-sq-exporter export \
-  --project "banking-api" \
-  --filename "security-audit-$(date +%Y%m%d).html" \
-  --exclude-statuses "CLOSED,RESOLVED"
-```
-
-#### Compliance Documentation
-
-```bash
-# Comprehensive report for auditors
-sq-exporter export \
-  --project "healthcare-app" \
-  --include-resolved \
-  --filename "compliance-report.html"
-```
-
-### ⚙️ DevOps & Automation Scenarios
-
-#### CI/CD Pipeline Integration
-
-```bash
-# Automated reports for every build
-sq-exporter export \
-  --project "$CI_PROJECT_NAME" \
-  --output "$CI_ARTIFACTS_DIR" \
-  --filename "quality-report-$CI_PIPELINE_ID.html"
-```
-
-#### Daily Quality Monitoring
-
-```bash
-# Automated daily reports
-sq-exporter export \
-  --project "microservice-api" \
-  --filename "daily-quality-$(date +%Y%m%d).html" \
-  --max-issues 5000
-```
-
-#### Multi-Project Dashboard
-
-```bash
-# Generate reports for multiple projects
-for project in "frontend" "backend" "mobile"; do
-  sq-exporter export --project "$project" --filename "${project}-quality.html"
-done
-```
-
-### 🐳 Docker & Containerized Environments
-
-#### Quick Docker Run
-
-```bash
-# One-command report generation
-docker run --rm \
-  -e SONARQUBE_URL="https://sonarqube.company.com" \
-  -e SONARQUBE_TOKEN="your-token" \
-  -e SONARQUBE_PROJECT_KEY="your-project" \
-  -v $(pwd)/reports:/app/reports \
-  sonarqube-issues-exporter
-```
-
-#### Docker with Configuration File
-
-```bash
-# Using saved configuration
-docker run --rm \
-  -v $(pwd)/.sonarqube-exporter.json:/app/.sonarqube-exporter.json \
-  -v $(pwd)/reports:/app/reports \
-  sonarqube-issues-exporter
-```
-
-#### Kubernetes Job Example
-
-```yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: sonarqube-report
-spec:
-  template:
-    spec:
-      containers:
-        - name: exporter
-          image: sonarqube-issues-exporter
-          env:
-            - name: SONARQUBE_URL
-              value: 'https://sonarqube.company.com'
-            - name: SONARQUBE_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: sonarqube-secret
-                  key: token
-            - name: SONARQUBE_PROJECT_KEY
-              value: 'my-project'
-          volumeMounts:
-            - name: reports
-              mountPath: /app/reports
-      restartPolicy: Never
-      volumes:
-        - name: reports
-          persistentVolumeClaim:
-            claimName: reports-pvc
+sonarqube-exporter setup          # interactive: writes .sonarqube-exporter.json
+sonarqube-exporter serve
 ```
 
 ---
 
-## ⚙️ CLI Commands Reference
+## Features
 
-### Available Commands
+- **Live dashboard** — quality gate status with failing conditions, headline
+  metric cards (bugs, vulnerabilities, code smells, hotspots, coverage, debt,
+  ratings), and severity/type/status charts. Auto-refreshes on a poll.
+- **Issues explorer** — sortable, searchable, faceted table (severity, type,
+  status, tags) with a tabbed detail drawer: **Why** (rule root cause),
+  **How to fix** (remediation + examples), **Code** (snippet with the offending
+  line highlighted + git blame), and **Activity** (changelog).
+- **Open in IDE** — click a file to open it locally. By default the file opens
+  with your OS default app (no setup); pick an editor (VS Code/Cursor/Windsurf/
+  JetBrains) to jump to the exact line instead. Copy path is always available.
+- **New Code focus** — an Overall / New code toggle (Clean as You Code) that
+  filters issues and measures to the new code period.
+- **In-app triage** _(opt-in)_ — resolve / false-positive / won't-fix, assign,
+  comment, and change hotspot status without leaving the dashboard.
+- **Security hotspots & measures** — priority/category breakdowns with a risk +
+  fix drawer; coverage, duplication, LOC, technical debt, and A–E ratings.
+- **Multi-project + branch/PR** — switch projects and branches/pull requests
+  from the top bar; the selection lives in the URL so views are shareable.
+- **PDF export** — a print-optimised report for PMs/SREs, rendered server-side
+  via headless Chromium, with a browser-print fallback.
+- **Token stays local** — the server holds the token and proxies the SonarQube
+  API; it is never sent to the browser. Binds to `127.0.0.1` by default.
 
-#### `export` - Export SonarQube Issues
+---
+
+## Commands
+
+| Command                      | Description                                                       |
+| ---------------------------- | ----------------------------------------------------------------- |
+| `serve`                      | Start the dashboard and open it in the browser (default command). |
+| `validate`                   | Check the connection and that the token can see projects.         |
+| `setup`                      | Interactively write a config file.                                |
+| `export-pdf --project <key>` | Render a project report to a PDF (headless — for CI).             |
+
+### `serve` options
+
+```
+-c, --config <path>     Path to configuration file
+--url <url>             SonarQube server URL
+--token <token>         SonarQube authentication token
+--project <key>         Project to pre-select on startup
+--organization <org>    SonarQube organization (for SonarCloud)
+-p, --port <number>     Preferred port (auto-increments if busy; default 7010)
+--host <host>           Host to bind (default 127.0.0.1)
+--no-open               Do not open the browser automatically
+--auth                  Require a local token for API access (shared machines)
+--allow-write           Enable in-app triage (issue transitions, hotspot status)
+--editor <name>         Open files in a specific editor at the exact line
+                        (vscode|cursor|windsurf|jetbrains). Omit for OS default.
+-v, --verbose           Verbose logging
+```
+
+### Open in IDE
+
+Clicking a file resolves it to a local path and opens it. **By default it opens
+with your operating system's default application** — no configuration. The local
+server runs the OS opener; a `file://` link from the browser would be blocked,
+which is why this goes through the server.
+
+To **jump to the exact line**, choose an editor (VS Code/Cursor/Windsurf/
+JetBrains) from the top-bar picker or via `--editor` / config — that uses the
+editor's URL handler (JetBrains uses its built-in `localhost:63342` REST server;
+enable _Settings → Build, Execution, Deployment → Debugger → "Allow unsigned
+requests"_ if needed). OS-default open cannot position the cursor at a line.
+
+Paths resolve against the directory you ran `serve` from. For multi-repo setups,
+map project keys to absolute paths:
+
+```json
+{
+  "ide": {
+    "projectRoots": {
+      "my_project_key": "/Users/me/code/my-project"
+    }
+  }
+}
+```
+
+### In-app triage (write actions)
+
+`serve --allow-write` enables resolving/assigning/commenting on issues and
+changing hotspot status from the drawer (each action is confirmed). Writes are
+rejected by the server unless this flag is set, and your token must have the
+relevant SonarQube permissions.
+
+---
+
+## Configuration
+
+Settings are resolved from CLI flags → config file → environment variables →
+defaults. A config file (`.sonarqube-exporter.json` in the project or your home
+directory) looks like:
+
+```json
+{
+  "sonarqube": {
+    "url": "https://sonarcloud.io",
+    "token": "YOUR_TOKEN",
+    "organization": "your-org",
+    "defaultProjectKey": "your_project_key"
+  },
+  "server": { "port": 7010, "host": "127.0.0.1", "open": true, "auth": false, "allowWrite": false },
+  "ide": { "projectRoots": {} }
+}
+```
+
+Environment variables: `SONARQUBE_URL`, `SONARQUBE_TOKEN`,
+`SONARQUBE_ORGANIZATION`, `SONARQUBE_PROJECT_KEY`, `SQ_PORT`, `SQ_HOST`,
+`LOG_LEVEL`. A local `.env` file is loaded automatically.
+
+> **Never commit your token.** Keep it in `.env` or a config file that is
+> gitignored.
+
+---
+
+## PDF export in CI
+
+`export-pdf` boots the server on an ephemeral port, renders the report with
+headless Chromium, writes the file, and exits:
 
 ```bash
-sonarqube-exporter export [options]
-
-Options:
-  -c, --config <path>              Path to configuration file
-  --url <url>                      SonarQube server URL
-  --token <token>                  SonarQube authentication token
-  --project <key>                  SonarQube project key
-  --organization <org>             SonarQube organization (for SonarCloud)
-  -o, --output <path>              Output directory path
-  -f, --filename <name>            Output filename
-  --template <name>                Template name to use (default: 'default')
-  --max-issues <number>            Maximum number of issues to fetch (default: '10000')
-  --include-resolved               Include resolved issues in the report
-  --exclude-statuses <statuses>    Comma-separated list of statuses to exclude (default: 'CLOSED')
-  -v, --verbose                    Enable verbose logging
-  -h, --help                       Display help for command
+sonarqube-exporter export-pdf --project my_project -o report.pdf
 ```
 
-#### `validate` - Validate Configuration
+Chromium isn't bundled (to keep installs lean). On first use it is downloaded
+once (~150 MB) via the optional `playwright-core` dependency. In CI, pre-install
+it or point at a system browser:
 
 ```bash
-sonarqube-exporter validate [options]
-
-Options:
-  -c, --config <path>              Path to configuration file
-  --url <url>                      SonarQube server URL
-  --token <token>                  SonarQube authentication token
-  --project <key>                  SonarQube project key
-  --organization <org>             SonarQube organization (for SonarCloud)
-  -h, --help                       Display help for command
+npx playwright-core install chromium      # pre-install in your pipeline
+# or disable auto-install and rely on the in-app browser-print fallback:
+SQ_AUTO_INSTALL_BROWSER=false sonarqube-exporter serve
 ```
 
-#### `setup` - Interactive Configuration Setup
+`PLAYWRIGHT_BROWSERS_PATH` and `PLAYWRIGHT_DOWNLOAD_HOST` are respected for
+shared caches and corporate proxies.
+
+---
+
+## Using it as a library
+
+The package still exports a framework-agnostic SonarQube client:
+
+```ts
+import { loadConfig, toConnection, listProjects, fetchAllIssues } from 'sonarqube-issues-exporter';
+
+const config = loadConfig();
+const conn = toConnection(config);
+const { projects } = await listProjects(conn);
+const issues = await fetchAllIssues(conn, { projectKey: projects[0].key });
+```
+
+---
+
+## Architecture
+
+Single npm package, three layers (one published artifact):
+
+- `src/core` — framework-agnostic SonarQube client, config, types, formatting,
+  and the public library entry.
+- `src/server` — Hono server: REST proxy with a TTL cache (single-flight +
+  stale-while-revalidate), static SPA serving, and the Playwright PDF renderer.
+- `src/web` — React 19 + Vite + Tailwind + TanStack Query/Table + Recharts SPA,
+  built into `dist/web` and served by the server.
 
 ```bash
-sonarqube-exporter setup [options]
-
-Options:
-  --global                         Create global configuration file
-  -h, --help                       Display help for command
+pnpm install
+pnpm dev          # Vite on :5173 proxying /api to the Hono server on :7010
+pnpm build        # builds the SPA + bundles the server/CLI into dist/
+pnpm test         # vitest
+pnpm lint         # tsc (core + web) + eslint
 ```
 
-### NPX Usage (Local Installation)
+Requires **Node.js ≥ 20**.
 
-```bash
-# Export issues using npx
-npx sonarqube-exporter export --help
+## License
 
-# Export with configuration
-npx sonarqube-exporter export --config ./config.json
-```
-
-## ‍💻 Development
-
-### Setup Development Environment
-
-```bash
-# Clone the repository
-git clone https://github.com/The-Lone-Druid/sonarqube-issues-exporter.git
-cd sonarqube-issues-exporter
-
-# Install dependencies
-npm install
-
-# Build the project
-npm run build
-
-# Start development mode (CLI interface)
-npm run dev
-
-# Run library development mode with demo export
-npm run dev:lib
-
-# Watch for TypeScript changes
-npm run watch
-
-# Development with auto-restart
-npm run dev:watch
-
-# Run tests
-npm test
-
-# Run linting
-npm run lint
-```
-
-### Development Usage
-
-```bash
-# Export issues using npm scripts (for development)
-npm run export
-
-# Export with custom configuration
-npm run export -- --config ./config.json
-
-# Export with CLI options
-npm run export -- --output ./my-reports --filename my-report.html --verbose
-```
-
-### Project Structure
-
-```
-src/
-├── config/          # Configuration management
-├── services/        # Business logic services
-├── exporters/       # Export functionality
-├── types/          # TypeScript type definitions
-├── utils/          # Utility functions
-├── templates/      # HTML templates
-├── cli.ts          # CLI interface
-└── index.ts        # Main entry point
-```
-
-## 📚 Documentation
-
-Comprehensive documentation is available in the [`docs/`](./docs/) directory:
-
-### 🎯 For Users
-
-- **[NPM Guide](./docs/user-guide/npm-guide.md)** - Complete installation and usage guide
-- **[Migration Guide](./docs/user-guide/migration.md)** - Upgrading from previous versions
-- **[Security Guide](./docs/user-guide/security.md)** - Security best practices
-
-### 👨‍💻 For Developers
-
-- **[Contributing Guide](./docs/development/contributing.md)** - How to contribute
-- **[Commit Guidelines](./docs/development/commit-guidelines.md)** - Conventional commits
-- **[Publishing Guide](./docs/development/publishing.md)** - Release process
-- **[Versioning Guide](./docs/development/versioning.md)** - Version management
-
-### 📋 Project Resources
-
-- **[Enhancement Plan](./docs/project/enhancement-plan.md)** - Development roadmap
-- **[Changelog](./CHANGELOG.md)** - Release history
-- **[Documentation Overview](./docs/README.md)** - Full documentation index
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT

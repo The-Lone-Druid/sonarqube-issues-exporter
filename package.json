@@ -1,136 +1,125 @@
 {
   "name": "sonarqube-issues-exporter",
-  "version": "3.2.6",
-  "description": "Enterprise-level SonarQube issues exporter with TypeScript support for generating comprehensive HTML reports with dark theme",
+  "version": "4.0.0",
+  "description": "Run a local SonarQube dashboard on your machine — live issues, quality gate, hotspots, coverage across projects/branches, with PDF export. No more logging into the dashboard or SSHing to the VM.",
   "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
   "bin": {
     "sonarqube-exporter": "dist/cli.js",
     "sq-exporter": "dist/cli.js"
   },
   "files": [
-    "dist/",
-    "README.md",
+    "dist",
     "LICENSE",
-    "CHANGELOG.md",
-    "docs/"
+    "README.md",
+    "MIGRATION.md"
   ],
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
-  },
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "ts-node src/cli.ts",
-    "dev:lib": "ts-node src/index.ts",
-    "watch": "tsc --watch",
-    "dev:watch": "nodemon --exec ts-node src/cli.ts",
-    "export": "ts-node src/cli.ts",
-    "export:prod": "node dist/cli.js",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix",
-    "format": "prettier --write src/**/*.ts",
-    "format:check": "prettier --check src/**/*.ts",
-    "format:all": "prettier --write .",
-    "linefix": "npm run format:all && npm run lint:fix",
-    "prepare": "husky install",
-    "prepublishOnly": "npm run build && npm test",
-    "prepack": "npm run build",
-    "clean": "rimraf dist",
-    "prebuild": "npm run clean",
-    "postbuild": "npm run copy-templates",
-    "copy-templates": "node -e \"const fs=require('fs-extra'); fs.copySync('src/templates', 'dist/templates'); fs.copySync('src/assets', 'dist/assets');\" || echo 'Templates and assets copied'",
-    "commit": "cz",
-    "commit:lint": "commitlint --edit",
-    "release": "standard-version --release-as patch",
-    "release:minor": "standard-version --release-as minor",
-    "release:major": "standard-version --release-as major",
-    "release:patch": "standard-version --release-as patch",
-    "release:first": "standard-version --first-release",
-    "release:dry": "standard-version --dry-run",
-    "postrelease": "git push --follow-tags origin main"
+    "build": "pnpm clean && pnpm build:web && pnpm build:server",
+    "clean": "rm -rf dist",
+    "build:web": "vite build",
+    "build:server": "tsup",
+    "dev": "concurrently -n web,server -c cyan,magenta \"pnpm dev:web\" \"pnpm dev:server\"",
+    "dev:web": "vite --open",
+    "dev:server": "tsx watch src/cli.ts serve --no-open --verbose",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "tsc --noEmit && tsc -p tsconfig.web.json --noEmit && eslint src tests",
+    "lint:eslint": "eslint src tests",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky",
+    "changeset": "changeset",
+    "release": "pnpm build && changeset publish",
+    "prepublishOnly": "pnpm lint && pnpm test && node scripts/check-dist.mjs"
   },
   "keywords": [
     "sonarqube",
-    "issues",
-    "exporter",
-    "html",
-    "report",
-    "typescript",
-    "enterprise",
-    "cli",
+    "sonarcloud",
+    "dashboard",
     "code-quality",
     "static-analysis",
-    "vulnerability",
-    "bugs",
-    "code-smell",
-    "dashboard",
-    "npm-package"
+    "quality-gate",
+    "security-hotspots",
+    "coverage",
+    "pdf-report",
+    "cli",
+    "local",
+    "typescript"
   ],
-  "author": "The-Lone-Druid <your.email@example.com>",
+  "author": "The-Lone-Druid (https://github.com/The-Lone-Druid)",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/The-Lone-Druid/sonarqube-issues-exporter.git"
+    "url": "https://github.com/The-Lone-Druid/sonarqube-issues-exporter.git"
   },
   "bugs": {
     "url": "https://github.com/The-Lone-Druid/sonarqube-issues-exporter/issues"
   },
   "homepage": "https://github.com/The-Lone-Druid/sonarqube-issues-exporter#readme",
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org/"
+  "engines": {
+    "node": ">=20"
   },
   "dependencies": {
-    "axios": "^1.11.0",
-    "chart.js": "^4.5.0",
+    "@hono/node-server": "^1.13.0",
     "commander": "^12.1.0",
-    "dotenv": "^16.3.1",
-    "handlebars": "^4.7.8",
-    "winston": "^3.11.0",
-    "zod": "^3.25.76"
+    "hono": "^4.6.0",
+    "open": "^10.1.0"
+  },
+  "optionalDependencies": {
+    "playwright-core": "^1.49.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "^19.8.1",
-    "@commitlint/config-conventional": "^19.8.1",
-    "@types/fs-extra": "^11.0.4",
-    "@types/handlebars": "^4.0.40",
-    "@types/jest": "^29.5.8",
-    "@types/node": "^20.9.0",
-    "@typescript-eslint/eslint-plugin": "^6.12.0",
-    "@typescript-eslint/parser": "^6.12.0",
-    "commitizen": "^4.3.1",
-    "cz-conventional-changelog": "^3.3.0",
-    "eslint": "^8.54.0",
-    "eslint-config-prettier": "^9.0.0",
-    "eslint-plugin-prettier": "^5.0.1",
-    "fs-extra": "^11.3.1",
-    "husky": "^8.0.3",
-    "jest": "^29.7.0",
-    "lint-staged": "^15.1.0",
-    "nodemon": "^3.0.1",
-    "prettier": "^3.1.0",
-    "rimraf": "^5.0.5",
-    "standard-version": "^9.5.0",
-    "ts-jest": "^29.1.1",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.2.2"
+    "@changesets/changelog-github": "^0.6.0",
+    "@changesets/cli": "^2.30.0",
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
+    "@tailwindcss/vite": "^4.3.0",
+    "@tanstack/react-query": "^5.100.14",
+    "@tanstack/react-table": "^8.21.3",
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.2.15",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^4.7.0",
+    "@vitest/coverage-v8": "^4.1.4",
+    "clsx": "^2.1.1",
+    "concurrently": "^9.1.0",
+    "dompurify": "^3.4.7",
+    "eslint": "^10.2.0",
+    "husky": "^9.1.7",
+    "knip": "^6.15.0",
+    "lint-staged": "^16.4.0",
+    "lucide-react": "^0.460.0",
+    "prettier": "^3.8.2",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "react-router-dom": "^7.16.0",
+    "recharts": "^2.15.4",
+    "tailwind-merge": "^3.6.0",
+    "tailwindcss": "^4.3.0",
+    "tsup": "^8.5.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0",
+    "typescript-eslint": "^8.58.2",
+    "vite": "^6.4.2",
+    "vitest": "^4.1.4"
   },
   "lint-staged": {
-    "*.{ts,js,json,md,yml,yaml}": [
+    "*.ts": [
+      "eslint --fix",
       "prettier --write"
     ],
-    "*.ts": [
-      "eslint --fix"
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
     ]
-  },
-  "config": {
-    "commitizen": {
-      "path": "cz-conventional-changelog"
-    }
   }
 }
