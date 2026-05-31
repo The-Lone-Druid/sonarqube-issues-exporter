@@ -42,21 +42,21 @@ export function registerStatic(app: Hono, webRoot = resolveWebRoot()): void {
     if (!candidate.startsWith(root)) return c.notFound();
 
     const file = await tryReadFile(candidate);
-    if (file) return new Response(file, { headers: { 'Content-Type': mimeFor(candidate) } });
+    if (file) return new Response(file.data, { headers: { 'Content-Type': mimeFor(file.path) } });
 
     // SPA fallback: serve index.html for client-side routes.
     const index = await tryReadFile(join(root, 'index.html'));
-    if (index) return new Response(index, { headers: { 'Content-Type': MIME['.html']! } });
+    if (index) return new Response(index.data, { headers: { 'Content-Type': MIME['.html']! } });
 
     return c.text('Web assets not found. Run `pnpm build` (or `pnpm dev` for development).', 503);
   });
 }
 
-async function tryReadFile(path: string): Promise<Buffer | null> {
+async function tryReadFile(path: string): Promise<{ data: Buffer; path: string } | null> {
   try {
     const s = await stat(path);
-    if (s.isDirectory()) return await readFile(join(path, 'index.html'));
-    return await readFile(path);
+    const target = s.isDirectory() ? join(path, 'index.html') : path;
+    return { data: await readFile(target), path: target };
   } catch {
     return null;
   }
