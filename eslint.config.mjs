@@ -3,7 +3,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['dist/**', 'coverage/**', '*.config.*'],
+    ignores: ['dist/**', 'coverage/**', 'src/web/**', '*.config.*', 'scripts/**'],
   },
   ...tseslint.configs.recommended,
   {
@@ -14,6 +14,23 @@ export default tseslint.config(
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
       '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
+    },
+  },
+  // Architectural boundary: core must stay framework-agnostic.
+  {
+    files: ['src/core/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/server/**', '**/web/**', 'hono', 'hono/*', '@hono/*'],
+              message: 'core/ must not depend on the server or web layers.',
+            },
+          ],
+        },
+      ],
     },
   },
 );

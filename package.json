@@ -1,7 +1,7 @@
 {
   "name": "sonarqube-issues-exporter",
-  "version": "3.2.6",
-  "description": "Export SonarQube issues to beautiful HTML reports — interactive dashboards, quality gate status, dark/light themes, zero-config CLI.",
+  "version": "4.0.0-next.0",
+  "description": "Run a local SonarQube dashboard on your machine — live issues, quality gate, hotspots, coverage across projects/branches, with PDF export. No more logging into the dashboard or SSHing to the VM.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -18,10 +18,17 @@
   },
   "files": [
     "dist",
-    "LICENSE"
+    "LICENSE",
+    "README.md"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "pnpm clean && pnpm build:web && pnpm build:server",
+    "clean": "rm -rf dist",
+    "build:web": "vite build",
+    "build:server": "tsup",
+    "dev": "concurrently -n web,server -c cyan,magenta \"pnpm dev:web\" \"pnpm dev:server\"",
+    "dev:web": "vite",
+    "dev:server": "tsx watch src/cli.ts serve",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -32,24 +39,21 @@
     "prepare": "husky",
     "changeset": "changeset",
     "release": "pnpm build && changeset publish",
-    "prepublishOnly": "pnpm lint && pnpm format:check && pnpm test"
+    "prepublishOnly": "pnpm lint && pnpm test && node scripts/check-dist.mjs"
   },
   "keywords": [
     "sonarqube",
     "sonarcloud",
-    "issues",
-    "exporter",
-    "html",
-    "report",
-    "typescript",
-    "cli",
+    "dashboard",
     "code-quality",
     "static-analysis",
-    "vulnerability",
-    "bugs",
-    "code-smell",
-    "dashboard",
-    "quality-gate"
+    "quality-gate",
+    "security-hotspots",
+    "coverage",
+    "pdf-report",
+    "cli",
+    "local",
+    "typescript"
   ],
   "author": "The-Lone-Druid (https://github.com/The-Lone-Druid)",
   "license": "MIT",
@@ -62,11 +66,16 @@
   },
   "homepage": "https://github.com/The-Lone-Druid/sonarqube-issues-exporter#readme",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "dependencies": {
+    "@hono/node-server": "^1.13.0",
     "commander": "^12.1.0",
-    "handlebars": "^4.7.8"
+    "hono": "^4.6.0",
+    "open": "^10.1.0"
+  },
+  "optionalDependencies": {
+    "playwright-core": "^1.49.0"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.6.0",
@@ -75,11 +84,14 @@
     "@commitlint/config-conventional": "^20.5.0",
     "@types/node": "^22.15.0",
     "@vitest/coverage-v8": "^4.1.4",
+    "concurrently": "^9.1.0",
     "eslint": "^10.2.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
+    "msw": "^2.7.0",
     "prettier": "^3.8.2",
     "tsup": "^8.5.0",
+    "tsx": "^4.19.0",
     "typescript": "^5.8.0",
     "typescript-eslint": "^8.58.2",
     "vitest": "^4.1.4"

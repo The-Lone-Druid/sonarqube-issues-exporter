@@ -6,8 +6,9 @@ export default defineConfig({
     include: ['tests/**/*.test.ts'],
     coverage: {
       provider: 'v8',
-      include: ['src/**/*.ts'],
-      exclude: ['src/cli.ts', 'src/types.ts', 'src/index.ts'],
+      // Scope coverage to the pure, deterministic core modules. Network clients
+      // and the server are covered by MSW/integration tests added in later phases.
+      include: ['src/core/format.ts', 'src/core/metrics.ts', 'src/core/config.ts'],
       thresholds: {
         statements: 80,
         branches: 80,

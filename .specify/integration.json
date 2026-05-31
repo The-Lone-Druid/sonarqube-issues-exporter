@@ -1,13 +1,13 @@
 {
   "version": "0.8.18",
   "integration_state_schema": 1,
-  "installed_integrations": ["claude"],
+  "installed_integrations": ["copilot"],
   "integration_settings": {
-    "claude": {
+    "copilot": {
       "script": "sh",
-      "invoke_separator": "-"
+      "invoke_separator": "."
     }
   },
-  "integration": "claude",
-  "default_integration": "claude"
+  "integration": "copilot",
+  "default_integration": "copilot"
 }
