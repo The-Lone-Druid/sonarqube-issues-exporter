@@ -5,14 +5,14 @@ import { api, ApiError, reportUrl } from '../../lib/api-client';
 import { useSelection } from '../../hooks/use-selection';
 
 export function ExportPdfButton() {
-  const { project, ref } = useSelection();
+  const { project, ref, newCode } = useSelection();
   const [busy, setBusy] = useState(false);
 
   const onClick = async (): Promise<void> => {
     if (!project) return;
     setBusy(true);
     try {
-      const blob = await api.exportPdf(project, ref);
+      const blob = await api.exportPdf(project, ref, newCode);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

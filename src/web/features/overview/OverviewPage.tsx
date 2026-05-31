@@ -12,8 +12,8 @@ import { SEVERITY_COLORS, STATUS_COLORS, TYPE_COLORS } from '../../lib/colors';
 import { formatNumber, formatPercent } from '../../lib/format';
 
 export function OverviewPage() {
-  const { project, ref } = useSelection();
-  const { data, isLoading, isError, error, refetch } = useSummary(project, ref);
+  const { project, ref, newCode } = useSelection();
+  const { data, isLoading, isError, error, refetch } = useSummary(project, ref, newCode);
 
   if (!project) return <SelectPrompt />;
   if (isLoading && !data) return <OverviewSkeleton />;

@@ -1,5 +1,7 @@
 import type {
+  AnalysisTarget,
   Branch,
+  NewCodePeriod,
   Project,
   ProjectsPage,
   PullRequest,
@@ -8,6 +10,33 @@ import type {
 } from '../types';
 import { logger } from '../logger';
 import { apiRequest } from './client';
+
+/** The new code period definition for a project/branch (Clean as You Code). */
+export async function getNewCodePeriod(
+  conn: SonarQubeConnection,
+  target: Pick<AnalysisTarget, 'projectKey' | 'branch'>,
+): Promise<NewCodePeriod | null> {
+  try {
+    const data = await apiRequest<{
+      projectKey?: string;
+      type?: string;
+      value?: string;
+      effectiveValue?: string;
+    }>(conn, '/api/new_code_periods/show', {
+      project: target.projectKey,
+      ...(conn.organization ? { organization: conn.organization } : {}),
+      ...(target.branch ? { branch: target.branch } : {}),
+    });
+    return {
+      ...(data.type && { type: data.type }),
+      ...(data.value && { value: data.value }),
+      ...(data.effectiveValue && { effectiveValue: data.effectiveValue }),
+    };
+  } catch (error) {
+    logger.warn('Failed to fetch new code period:', error instanceof Error ? error.message : error);
+    return null;
+  }
+}
 
 /** Fetch the SonarQube/SonarCloud server status + version. */
 export async function getSystemStatus(conn: SonarQubeConnection): Promise<SystemStatus> {

@@ -11,7 +11,7 @@ import {
 import { ArrowUpDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import type { SonarQubeIssue } from '../../../core/types';
 import { useSelection } from '../../hooks/use-selection';
-import { useIssues } from '../../hooks/use-queries';
+import { useConfig, useIssueFacets, useIssues } from '../../hooks/use-queries';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Skeleton } from '../../components/ui/skeleton';
@@ -27,15 +27,20 @@ const TYPES = ['BUG', 'VULNERABILITY', 'CODE_SMELL'];
 const STATUSES = ['OPEN', 'CONFIRMED', 'REOPENED', 'RESOLVED'];
 
 export function IssuesPage() {
-  const { project, ref } = useSelection();
-  const { data, isLoading, isError, error, refetch } = useIssues(project, ref);
+  const { project, ref, newCode } = useSelection();
+  const { data: config } = useConfig();
+  const { data, isLoading, isError, error, refetch } = useIssues(project, ref, newCode);
 
   const [search, setSearch] = useState('');
   const [sev, setSev] = useState<string[]>([]);
   const [types, setTypes] = useState<string[]>([]);
   const [statuses, setStatuses] = useState<string[]>([]);
+  const [tagSel, setTagSel] = useState<string[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [active, setActive] = useState<SonarQubeIssue | null>(null);
+
+  const facets = useIssueFacets(project, ref);
+  const tagOptions = facets.data?.tags ?? [];
 
   const issues = useMemo(() => data?.issues ?? [], [data]);
 
@@ -45,10 +50,11 @@ export function IssuesPage() {
       if (sev.length && !sev.includes(i.severity)) return false;
       if (types.length && !types.includes(i.type)) return false;
       if (statuses.length && !statuses.includes(i.status)) return false;
+      if (tagSel.length && !(i.tags ?? []).some((t) => tagSel.includes(t))) return false;
       if (q && !`${i.message} ${i.component} ${i.rule}`.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [issues, search, sev, types, statuses]);
+  }, [issues, search, sev, types, statuses, tagSel]);
 
   const columns = useMemo<ColumnDef<SonarQubeIssue>[]>(
     () => [
@@ -128,6 +134,14 @@ export function IssuesPage() {
         <FilterChips label="Severity" options={SEVERITIES} selected={sev} onChange={setSev} />
         <FilterChips label="Type" options={TYPES} selected={types} onChange={setTypes} />
         <FilterChips label="Status" options={STATUSES} selected={statuses} onChange={setStatuses} />
+        {tagOptions.length > 0 && (
+          <FilterChips
+            label="Tags"
+            options={tagOptions.slice(0, 12)}
+            selected={tagSel}
+            onChange={setTagSel}
+          />
+        )}
       </div>
 
       {filtered.length === 0 ? (
@@ -198,7 +212,15 @@ export function IssuesPage() {
         </Card>
       )}
 
-      <IssueDetailSheet issue={active} onClose={() => setActive(null)} />
+      {project && (
+        <IssueDetailSheet
+          issue={active}
+          project={project}
+          refSel={ref}
+          allowWrite={Boolean(config?.allowWrite)}
+          onClose={() => setActive(null)}
+        />
+      )}
     </div>
   );
 }

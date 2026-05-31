@@ -5,10 +5,13 @@ import {
   getIssueFacets,
   getProjectMeasures,
   getQualityGateStatus,
+  getScmBlame,
   getSecurityHotspots,
   getSourceLines,
   SonarQubeApiError,
+  transitionIssue,
 } from '../src/core/sonarqube/client';
+import { getRule } from '../src/core/sonarqube/rules';
 import { listBranches, listProjects } from '../src/core/sonarqube/projects';
 import type { SonarQubeConnection } from '../src/core/types';
 
@@ -229,6 +232,75 @@ describe('getSourceLines', () => {
   it('returns [] on error', async () => {
     handler = () => ({ status: 404, json: {} });
     expect(await getSourceLines(conn, {}, 'c', 1, 2)).toEqual([]);
+  });
+});
+
+describe('getProjectMeasures (new code)', () => {
+  it('reads new-code metric values from the measure period', async () => {
+    handler = () => ({
+      json: {
+        component: {
+          measures: [
+            { metric: 'new_coverage', period: { value: '64.2' } },
+            { metric: 'new_lines', periods: [{ value: '320' }] },
+          ],
+        },
+      },
+    });
+    const m = await getProjectMeasures(conn, { projectKey: 'p' }, { newCode: true });
+    expect(m.coverage).toBe(64.2);
+    expect(m.linesOfCode).toBe(320);
+    expect(new URL(lastUrl).searchParams.get('metricKeys')).toContain('new_coverage');
+  });
+});
+
+describe('getScmBlame', () => {
+  it('maps the scm tuples to objects', async () => {
+    handler = () => ({
+      json: { scm: [[42, 'alice', '2026-01-02T00:00:00+0000', 'abcdef1']] },
+    });
+    const blame = await getScmBlame(conn, {}, 'proj:a.ts', 42, 42);
+    expect(blame[0]).toEqual({
+      line: 42,
+      author: 'alice',
+      date: '2026-01-02T00:00:00+0000',
+      revision: 'abcdef1',
+    });
+  });
+});
+
+describe('getRule', () => {
+  it('maps descriptionSections and tags', async () => {
+    handler = () => ({
+      json: {
+        rule: {
+          key: 'java:S100',
+          name: 'Rule',
+          tags: ['a'],
+          sysTags: ['b'],
+          descriptionSections: [{ key: 'how_to_fix', content: '<p>fix</p>' }],
+        },
+      },
+    });
+    const rule = await getRule(conn, 'java:S100');
+    expect(rule?.tags).toEqual(['a', 'b']);
+    expect(rule?.descriptionSections[0]?.key).toBe('how_to_fix');
+  });
+
+  it('returns null on error', async () => {
+    handler = () => ({ status: 404, json: {} });
+    expect(await getRule(conn, 'x')).toBeNull();
+  });
+});
+
+describe('write actions', () => {
+  it('transitionIssue resolves on 2xx and throws on 403', async () => {
+    handler = () => ({ json: {} });
+    await expect(transitionIssue(conn, 'K', 'resolve')).resolves.toBeUndefined();
+    expect(new URL(lastUrl).pathname).toBe('/api/issues/do_transition');
+
+    handler = () => ({ status: 403, json: {} });
+    await expect(transitionIssue(conn, 'K', 'resolve')).rejects.toBeInstanceOf(SonarQubeApiError);
   });
 });
 

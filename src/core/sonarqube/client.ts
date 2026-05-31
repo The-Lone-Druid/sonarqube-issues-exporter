@@ -1,10 +1,12 @@
 import type {
   AnalysisTarget,
   FetchAllIssuesOptions,
+  IssueChangelogEntry,
   IssueFilters,
   IssueQuery,
   ProjectMeasures,
   QualityGateStatus,
+  ScmBlameLine,
   SecurityHotspot,
   SecurityHotspotsData,
   SonarQubeConnection,
@@ -99,7 +101,9 @@ function filterParams(filters?: IssueFilters): QueryParams {
   if (filters.tags?.length) params['tags'] = filters.tags.join(',');
   if (filters.rules?.length) params['rules'] = filters.rules.join(',');
   if (filters.assignees?.length) params['assignees'] = filters.assignees.join(',');
+  if (filters.resolutions?.length) params['resolutions'] = filters.resolutions.join(',');
   if (filters.resolved !== undefined) params['resolved'] = String(filters.resolved);
+  if (filters.inNewCodePeriod) params['inNewCodePeriod'] = 'true';
   if (filters.q) params['s'] = 'FILE_LINE'; // keep deterministic ordering; q applied below
   if (filters.q) params['q'] = filters.q;
   return params;
@@ -228,46 +232,75 @@ const MEASURE_METRICS = [
   'complexity',
 ] as const;
 
+// New-code (Clean as You Code) metric variants; values live in the measure period.
+const NEW_MEASURE_METRICS = [
+  'new_coverage',
+  'new_duplicated_lines_density',
+  'new_lines',
+  'new_technical_debt',
+] as const;
+
 export async function getProjectMeasures(
   conn: SonarQubeConnection,
   target: AnalysisTarget,
+  options: { newCode?: boolean } = {},
 ): Promise<ProjectMeasures> {
   try {
+    const metricKeys = options.newCode ? NEW_MEASURE_METRICS : MEASURE_METRICS;
     const data = await apiRequest<{
-      component: { measures: Array<{ metric: string; value?: string }> };
+      component: {
+        measures: Array<{
+          metric: string;
+          value?: string;
+          period?: { value?: string };
+          periods?: Array<{ value?: string }>;
+        }>;
+      };
     }>(conn, '/api/measures/component', {
       component: target.projectKey,
       ...orgParam(conn),
       ...refParams(target),
-      metricKeys: MEASURE_METRICS.join(','),
+      metricKeys: metricKeys.join(','),
     });
+
+    // New-code measures carry their value in `period.value` / `periods[0].value`.
+    const valueOf = (m: {
+      value?: string;
+      period?: { value?: string };
+      periods?: Array<{ value?: string }>;
+    }): string => m.value ?? m.period?.value ?? m.periods?.[0]?.value ?? '0';
 
     const result: ProjectMeasures = {};
     for (const m of data.component.measures) {
+      const v = valueOf(m);
       switch (m.metric) {
         case 'coverage':
-          result.coverage = parseFloat(m.value || '0');
+        case 'new_coverage':
+          result.coverage = parseFloat(v);
           break;
         case 'duplicated_lines_density':
-          result.duplicatedLinesDensity = parseFloat(m.value || '0');
+        case 'new_duplicated_lines_density':
+          result.duplicatedLinesDensity = parseFloat(v);
           break;
         case 'ncloc':
-          result.linesOfCode = parseInt(m.value || '0', 10);
+        case 'new_lines':
+          result.linesOfCode = parseInt(v, 10);
           break;
         case 'sqale_index':
-          result.technicalDebt = formatTechnicalDebt(parseInt(m.value || '0', 10));
+        case 'new_technical_debt':
+          result.technicalDebt = formatTechnicalDebt(parseInt(v, 10));
           break;
         case 'sqale_rating':
-          result.maintainabilityRating = formatRating(m.value);
+          result.maintainabilityRating = formatRating(v);
           break;
         case 'reliability_rating':
-          result.reliabilityRating = formatRating(m.value);
+          result.reliabilityRating = formatRating(v);
           break;
         case 'security_rating':
-          result.securityRating = formatRating(m.value);
+          result.securityRating = formatRating(v);
           break;
         case 'complexity':
-          result.complexity = parseInt(m.value || '0', 10);
+          result.complexity = parseInt(v, 10);
           break;
       }
     }
@@ -324,7 +357,7 @@ export interface IssueFacetSummary {
 export async function getIssueFacets(
   conn: SonarQubeConnection,
   target: AnalysisTarget,
-  options: { includeResolvedIssues?: boolean } = {},
+  options: { includeResolvedIssues?: boolean; inNewCodePeriod?: boolean } = {},
 ): Promise<IssueFacetSummary> {
   const data = await apiRequest<{
     paging: { total: number };
@@ -335,6 +368,7 @@ export async function getIssueFacets(
     ...refParams(target),
     ps: '1',
     facets: 'severities,types,statuses',
+    ...(options.inNewCodePeriod && { inNewCodePeriod: 'true' }),
     ...(!options.includeResolvedIssues && { statuses: 'OPEN,CONFIRMED,REOPENED' }),
   });
 
@@ -382,6 +416,181 @@ export async function getSourceLines(
     return [];
   }
 }
+
+/** Git blame for a line range, used by the issue drawer. */
+export async function getScmBlame(
+  conn: SonarQubeConnection,
+  target: Pick<AnalysisTarget, 'branch' | 'pullRequest'>,
+  component: string,
+  from: number,
+  to: number,
+): Promise<ScmBlameLine[]> {
+  try {
+    // /api/sources/scm returns { scm: [[line, author, datetime, revision], ...] }
+    const data = await apiRequest<{ scm: Array<[number, string, string, string]> }>(
+      conn,
+      '/api/sources/scm',
+      {
+        key: component,
+        ...orgParam(conn),
+        ...refParams(target),
+        from: String(Math.max(1, from)),
+        to: String(to),
+      },
+    );
+    return (data.scm ?? []).map(([line, author, date, revision]) => ({
+      line,
+      author,
+      date,
+      revision,
+    }));
+  } catch (error) {
+    logger.warn('Failed to fetch SCM blame:', toMessage(error));
+    return [];
+  }
+}
+
+/** Issue activity/changelog timeline. */
+export async function getIssueChangelog(
+  conn: SonarQubeConnection,
+  issueKey: string,
+): Promise<IssueChangelogEntry[]> {
+  try {
+    const data = await apiRequest<{
+      changelog: Array<{
+        user?: string;
+        userName?: string;
+        creationDate?: string;
+        diffs?: Array<{ key: string; oldValue?: string; newValue?: string }>;
+      }>;
+    }>(conn, '/api/issues/changelog', { issue: issueKey });
+    return (data.changelog ?? []).map((c) => ({
+      ...(c.userName || c.user ? { user: c.userName ?? c.user } : {}),
+      ...(c.creationDate ? { creationDate: c.creationDate } : {}),
+      diffs: c.diffs ?? [],
+    }));
+  } catch (error) {
+    logger.warn('Failed to fetch issue changelog:', toMessage(error));
+    return [];
+  }
+}
+
+export interface IssueFilterFacets {
+  tags: string[];
+  rules: string[];
+  assignees: string[];
+}
+
+/** Available facet values to populate the issues filter controls. */
+export async function getIssueFilterFacets(
+  conn: SonarQubeConnection,
+  target: AnalysisTarget,
+): Promise<IssueFilterFacets> {
+  try {
+    const data = await apiRequest<{
+      facets?: Array<{ property: string; values: Array<{ val: string; count: number }> }>;
+    }>(conn, '/api/issues/search', {
+      componentKeys: target.projectKey,
+      ...orgParam(conn),
+      ...refParams(target),
+      ps: '1',
+      facets: 'tags,rules,assignees',
+    });
+    const vals = (property: string): string[] =>
+      (data.facets?.find((f) => f.property === property)?.values ?? [])
+        .filter((v) => v.val)
+        .map((v) => v.val);
+    return { tags: vals('tags'), rules: vals('rules'), assignees: vals('assignees') };
+  } catch (error) {
+    logger.warn('Failed to fetch issue filter facets:', toMessage(error));
+    return { tags: [], rules: [], assignees: [] };
+  }
+}
+
+/** POST a form-encoded write request (SonarQube write APIs use urlencoded bodies). */
+export async function postForm(
+  conn: SonarQubeConnection,
+  path: string,
+  body: Record<string, string | undefined>,
+): Promise<void> {
+  const form = new URLSearchParams();
+  for (const [k, v] of Object.entries(body)) {
+    if (v !== undefined && v !== '') form.set(k, v);
+  }
+  const credentials = Buffer.from(`${conn.token}:`).toString('base64');
+  const response = await fetch(new URL(path, conn.url).toString(), {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${credentials}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: form.toString(),
+    signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
+  });
+  if (!response.ok) {
+    const status = response.status;
+    const message =
+      status === 401 || status === 403
+        ? 'Write rejected — token lacks permission for this action'
+        : `Write failed: ${status} ${response.statusText}`;
+    throw new SonarQubeApiError(message, status, response.statusText);
+  }
+}
+
+// ── Write actions (require a token with the relevant permissions) ─────────────
+
+export type IssueTransition =
+  | 'confirm'
+  | 'unconfirm'
+  | 'reopen'
+  | 'resolve'
+  | 'falsepositive'
+  | 'wontfix'
+  | 'accept';
+
+export const transitionIssue = (
+  conn: SonarQubeConnection,
+  issue: string,
+  transition: IssueTransition,
+): Promise<void> => postForm(conn, '/api/issues/do_transition', { issue, transition });
+
+export const assignIssue = (
+  conn: SonarQubeConnection,
+  issue: string,
+  assignee?: string,
+): Promise<void> => postForm(conn, '/api/issues/assign', { issue, ...(assignee && { assignee }) });
+
+export const commentIssue = (
+  conn: SonarQubeConnection,
+  issue: string,
+  text: string,
+): Promise<void> => postForm(conn, '/api/issues/add_comment', { issue, text });
+
+export const setIssueSeverity = (
+  conn: SonarQubeConnection,
+  issue: string,
+  severity: string,
+): Promise<void> => postForm(conn, '/api/issues/set_severity', { issue, severity });
+
+export const setIssueTags = (
+  conn: SonarQubeConnection,
+  issue: string,
+  tags: string[],
+): Promise<void> => postForm(conn, '/api/issues/set_tags', { issue, tags: tags.join(',') });
+
+export const changeHotspotStatus = (
+  conn: SonarQubeConnection,
+  hotspot: string,
+  status: string,
+  resolution?: string,
+  comment?: string,
+): Promise<void> =>
+  postForm(conn, '/api/hotspots/change_status', {
+    hotspot,
+    status,
+    ...(resolution && { resolution }),
+    ...(comment && { comment }),
+  });
 
 function stripHtml(html: string): string {
   return html

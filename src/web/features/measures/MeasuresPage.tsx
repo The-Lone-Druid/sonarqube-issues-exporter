@@ -7,8 +7,8 @@ import { RatingBadge } from '../../components/shared/badges';
 import { formatNumber, formatPercent } from '../../lib/format';
 
 export function MeasuresPage() {
-  const { project, ref } = useSelection();
-  const { data, isLoading, isError, error, refetch } = useMeasures(project, ref);
+  const { project, ref, newCode } = useSelection();
+  const { data, isLoading, isError, error, refetch } = useMeasures(project, ref, newCode);
 
   if (!project) {
     return (

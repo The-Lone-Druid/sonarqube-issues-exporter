@@ -12,10 +12,10 @@ import { fileName, formatDate, formatNumber, formatPercent } from '../../lib/for
  * `data-report-ready` / window.__REPORT_READY__ once data has settled.
  */
 export function ReportView() {
-  const { project, ref } = useSelection();
+  const { project, ref, newCode } = useSelection();
   const config = useConfig();
-  const summary = useSummary(project, ref);
-  const issues = useIssues(project, ref);
+  const summary = useSummary(project, ref, newCode);
+  const issues = useIssues(project, ref, newCode);
 
   const settled =
     !!project &&

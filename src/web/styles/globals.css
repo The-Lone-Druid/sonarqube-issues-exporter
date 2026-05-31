@@ -74,6 +74,45 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Rendered SonarQube rule/hotspot HTML. */
+.sq-rule h2,
+.sq-rule h3 {
+  font-weight: 600;
+  margin: 0.75rem 0 0.25rem;
+}
+.sq-rule p {
+  margin: 0.5rem 0;
+}
+.sq-rule ul,
+.sq-rule ol {
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
+  list-style: revert;
+}
+.sq-rule code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--muted);
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+}
+.sq-rule pre {
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  overflow-x: auto;
+  margin: 0.5rem 0;
+}
+.sq-rule pre code {
+  background: transparent;
+  padding: 0;
+}
+.sq-rule a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
 /* Print-optimised report route. */
 @media print {
   .no-print {

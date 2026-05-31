@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { ShieldCheck } from 'lucide-react';
 import { useSelection } from '../../hooks/use-selection';
-import { useHotspots } from '../../hooks/use-queries';
+import { useConfig, useHotspots } from '../../hooks/use-queries';
+import { HotspotDetailSheet } from './HotspotDetailSheet';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Skeleton } from '../../components/ui/skeleton';
 import { EmptyState, ErrorState } from '../../components/shared/states';
@@ -11,7 +13,9 @@ import { fileName } from '../../lib/format';
 
 export function HotspotsPage() {
   const { project, ref } = useSelection();
+  const { data: config } = useConfig();
   const { data, isLoading, isError, error, refetch } = useHotspots(project, ref);
+  const [activeKey, setActiveKey] = useState<string | null>(null);
 
   if (!project) {
     return (
@@ -69,7 +73,11 @@ export function HotspotsPage() {
             </thead>
             <tbody>
               {data.hotspots.map((h) => (
-                <tr key={h.key} className="border-t border-border">
+                <tr
+                  key={h.key}
+                  className="cursor-pointer border-t border-border hover:bg-accent/50"
+                  onClick={() => setActiveKey(h.key)}
+                >
                   <td className="px-4 py-2">
                     <PriorityBadge value={h.vulnerabilityProbability} />
                   </td>
@@ -85,6 +93,16 @@ export function HotspotsPage() {
           </table>
         </div>
       </Card>
+
+      {project && (
+        <HotspotDetailSheet
+          hotspotKey={activeKey}
+          project={project}
+          refSel={ref}
+          allowWrite={Boolean(config?.allowWrite)}
+          onClose={() => setActiveKey(null)}
+        />
+      )}
     </div>
   );
 }

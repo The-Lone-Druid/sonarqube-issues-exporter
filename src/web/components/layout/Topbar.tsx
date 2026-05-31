@@ -6,18 +6,21 @@ import { useRefresh, useSummary } from '../../hooks/use-queries';
 import { formatRelative } from '../../lib/format';
 import { BranchPrSelector, ProjectSwitcher } from './selectors';
 import { ExportPdfButton } from './ExportPdfButton';
+import { NewCodeToggle } from './NewCodeToggle';
+import { EditorPicker } from './EditorPicker';
 import { cn } from '../../lib/utils';
 
 export function Topbar() {
   const { resolved, toggle } = useTheme();
-  const { project, ref } = useSelection();
+  const { project, ref, newCode } = useSelection();
   const refresh = useRefresh(project);
-  const summary = useSummary(project, ref);
+  const summary = useSummary(project, ref, newCode);
 
   return (
     <header className="no-print sticky top-0 z-10 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur">
       <ProjectSwitcher />
       <BranchPrSelector />
+      <NewCodeToggle />
 
       <div className="ml-auto flex items-center gap-2">
         {summary.dataUpdatedAt > 0 && (
@@ -25,6 +28,7 @@ export function Topbar() {
             Updated {formatRelative(new Date(summary.dataUpdatedAt).toISOString())}
           </span>
         )}
+        <EditorPicker />
         <ExportPdfButton />
         <Button
           variant="outline"

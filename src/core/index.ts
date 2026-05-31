@@ -15,18 +15,35 @@ export { calculateMetrics, computeIssueMetrics } from './metrics';
 
 export {
   apiRequest,
+  assignIssue,
+  changeHotspotStatus,
+  commentIssue,
   fetchIssues,
   fetchAllIssues,
+  getIssueChangelog,
+  getIssueFacets,
+  getIssueFilterFacets,
   getProjectMeasures,
   getQualityGateStatus,
-  getIssueFacets,
+  getScmBlame,
   getSecurityHotspots,
   getSourceLines,
+  postForm,
+  setIssueSeverity,
+  setIssueTags,
+  transitionIssue,
   SonarQubeApiError,
 } from './sonarqube/client';
-export type { IssueFacetSummary, SourceLine } from './sonarqube/client';
+export type {
+  IssueFacetSummary,
+  IssueFilterFacets,
+  IssueTransition,
+  SourceLine,
+} from './sonarqube/client';
+export { getHotspotDetail, getRule } from './sonarqube/rules';
 
 export {
+  getNewCodePeriod,
   getProjectInfo,
   getSystemStatus,
   listBranches,

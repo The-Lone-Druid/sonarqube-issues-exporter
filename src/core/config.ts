@@ -47,6 +47,10 @@ function getDefaultConfig(): AppConfig {
       host: process.env['SQ_HOST'] || '127.0.0.1',
       open: process.env['SQ_NO_OPEN'] !== 'true',
       auth: process.env['SQ_AUTH'] === 'true',
+      allowWrite: process.env['SQ_ALLOW_WRITE'] === 'true',
+    },
+    ide: {
+      editor: (process.env['SQ_EDITOR'] as AppConfig['ide']['editor']) || 'vscode',
     },
     logging: {
       level: (process.env['LOG_LEVEL'] as AppConfig['logging']['level']) || 'info',
@@ -58,6 +62,7 @@ function getDefaultConfig(): AppConfig {
 interface LegacyConfigShape {
   sonarqube?: { url?: string; token?: string; organization?: string; projectKey?: string };
   server?: Partial<AppConfig['server']>;
+  ide?: Partial<AppConfig['ide']>;
   logging?: Partial<AppConfig['logging']>;
 }
 
@@ -71,6 +76,7 @@ function mergeFileConfig(base: AppConfig, file: LegacyConfigShape): AppConfig {
       ...(file.sonarqube?.projectKey != null && { defaultProjectKey: file.sonarqube.projectKey }),
     },
     server: { ...base.server, ...file.server },
+    ide: { ...base.ide, ...file.ide },
     logging: { ...base.logging, ...file.logging },
   };
 }
@@ -79,6 +85,7 @@ function mergeOverrides(base: AppConfig, overrides: DeepPartial<AppConfig>): App
   return {
     sonarqube: { ...base.sonarqube, ...overrides.sonarqube },
     server: { ...base.server, ...overrides.server },
+    ide: { ...base.ide, ...overrides.ide },
     logging: { ...base.logging, ...overrides.logging },
   };
 }

@@ -1,13 +1,27 @@
+import { join } from 'node:path';
 import { Hono } from 'hono';
-import type { IssueFilters } from '../../core/types';
+import type { Context } from 'hono';
+import type { IdeResolution, IssueFilters } from '../../core/types';
+import { extractPath } from '../../core/format';
 import {
+  assignIssue,
+  changeHotspotStatus,
+  commentIssue,
   fetchIssues,
+  getIssueChangelog,
   getIssueFacets,
+  getIssueFilterFacets,
   getProjectMeasures,
   getQualityGateStatus,
+  getScmBlame,
   getSecurityHotspots,
   getSourceLines,
+  setIssueSeverity,
+  setIssueTags,
+  transitionIssue,
+  type IssueTransition,
 } from '../../core/sonarqube/client';
+import { getHotspotDetail, getRule } from '../../core/sonarqube/rules';
 import {
   getSystemStatus,
   listBranches,
@@ -16,7 +30,7 @@ import {
 } from '../../core/sonarqube/projects';
 import type { ServerContext } from '../context';
 import { buildTarget } from '../context';
-import { cached, TTL } from '../cache';
+import { cached, clearCache, TTL } from '../cache';
 import { handle } from '../errors';
 import { renderReportPdf } from '../pdf/renderer';
 import { PdfUnavailableError } from '../pdf/install';
@@ -45,6 +59,12 @@ export function createApiRoutes(ctx: ServerContext): Hono {
   const isForced = (c: { req: { header: (k: string) => string | undefined } }): boolean =>
     (c.req.header('cache-control') ?? '').includes('no-cache');
 
+  // "New code" (Clean as You Code) focus toggle.
+  const isNewCode = (c: { req: { query: (k: string) => string | undefined } }): boolean => {
+    const v = c.req.query('newCode');
+    return v === '1' || v === 'true';
+  };
+
   api.get('/system/status', (c) =>
     handle(c, async () => {
       const status = await cached('status', TTL.status, () => getSystemStatus(conn), {
@@ -69,6 +89,13 @@ export function createApiRoutes(ctx: ServerContext): Hono {
       ...(ctx.config.sonarqube.defaultProjectKey && {
         defaultProjectKey: ctx.config.sonarqube.defaultProjectKey,
       }),
+      allowWrite: ctx.config.server.allowWrite,
+      ide: {
+        editor: ctx.config.ide.editor,
+        hasProjectRoots: Boolean(
+          ctx.config.ide.projectRoots && Object.keys(ctx.config.ide.projectRoots).length > 0,
+        ),
+      },
     }),
   );
 
@@ -116,12 +143,19 @@ export function createApiRoutes(ctx: ServerContext): Hono {
       const tags = parseList(c.req.query('tags'));
       const q = c.req.query('q');
       const resolved = c.req.query('resolved');
+      const rules = parseList(c.req.query('rules'));
+      const assignees = parseList(c.req.query('assignees'));
+      const resolutions = parseList(c.req.query('resolutions'));
       if (types) filters.types = types;
       if (severities) filters.severities = severities;
       if (statuses) filters.statuses = statuses;
       if (tags) filters.tags = tags;
+      if (rules) filters.rules = rules;
+      if (assignees) filters.assignees = assignees;
+      if (resolutions) filters.resolutions = resolutions;
       if (q) filters.q = q;
       if (resolved != null) filters.resolved = resolved === 'true';
+      if (isNewCode(c)) filters.inNewCodePeriod = true;
       const target = buildTarget(key, branch, pullRequest);
       const cacheKey = `issues:${key}:${refKey(branch, pullRequest)}:${page}:${pageSize}:${JSON.stringify(filters)}`;
       return cached(
@@ -152,10 +186,11 @@ export function createApiRoutes(ctx: ServerContext): Hono {
       const key = c.req.param('key');
       const branch = c.req.query('branch');
       const pullRequest = c.req.query('pullRequest');
+      const newCode = isNewCode(c);
       return cached(
-        `measures:${key}:${refKey(branch, pullRequest)}`,
+        `measures:${key}:${refKey(branch, pullRequest)}:${newCode ? 'new' : 'all'}`,
         TTL.measures,
-        () => getProjectMeasures(conn, buildTarget(key, branch, pullRequest)),
+        () => getProjectMeasures(conn, buildTarget(key, branch, pullRequest), { newCode }),
         { force: isForced(c) },
       );
     }),
@@ -184,21 +219,31 @@ export function createApiRoutes(ctx: ServerContext): Hono {
       const target = buildTarget(key, branch, pullRequest);
       const ref = refKey(branch, pullRequest);
       const force = isForced(c);
+      const newCode = isNewCode(c);
+      const suffix = newCode ? 'new' : 'all';
 
       const [qualityGate, measures, hotspots, issues] = await Promise.all([
         cached(`qg:${key}:${ref}`, TTL.qualityGate, () => getQualityGateStatus(conn, target), {
           force,
         }),
-        cached(`measures:${key}:${ref}`, TTL.measures, () => getProjectMeasures(conn, target), {
-          force,
-        }),
+        cached(
+          `measures:${key}:${ref}:${suffix}`,
+          TTL.measures,
+          () => getProjectMeasures(conn, target, { newCode }),
+          { force },
+        ),
         cached(`hotspots:${key}:${ref}`, TTL.hotspots, () => getSecurityHotspots(conn, target), {
           force,
         }),
-        cached(`facets:${key}:${ref}`, TTL.issues, () => getIssueFacets(conn, target), { force }),
+        cached(
+          `facets:${key}:${ref}:${suffix}`,
+          TTL.issues,
+          () => getIssueFacets(conn, target, { inNewCodePeriod: newCode }),
+          { force },
+        ),
       ]);
 
-      return { projectKey: key, qualityGate, measures, hotspots, issues };
+      return { projectKey: key, qualityGate, measures, hotspots, issues, newCode };
     }),
   );
 
@@ -224,6 +269,93 @@ export function createApiRoutes(ctx: ServerContext): Hono {
       );
     }),
   );
+
+  api.get('/scm', (c) =>
+    handle(c, () => {
+      const component = c.req.query('component');
+      if (!component) throw new Error('Missing required query param: component');
+      const branch = c.req.query('branch');
+      const pullRequest = c.req.query('pullRequest');
+      const from = Number(c.req.query('from') ?? '1');
+      const to = Number(c.req.query('to') ?? String(from + 10));
+      return cached(
+        `scm:${component}:${refKey(branch, pullRequest)}:${from}:${to}`,
+        TTL.sources,
+        () =>
+          getScmBlame(
+            conn,
+            { ...(branch && { branch }), ...(pullRequest && { pullRequest }) },
+            component,
+            from,
+            to,
+          ),
+      );
+    }),
+  );
+
+  // Rule definition + "how to fix" guidance (rarely changes → long TTL).
+  api.get('/rules/:key{.+}', (c) =>
+    handle(c, () => {
+      const key = c.req.param('key');
+      return cached(`rule:${key}`, TTL.projects, () => getRule(conn, key));
+    }),
+  );
+
+  api.get('/issues/:key/changelog', (c) =>
+    handle(c, () => {
+      const key = c.req.param('key');
+      return cached(`changelog:${key}`, TTL.issues, () => getIssueChangelog(conn, key));
+    }),
+  );
+
+  api.get('/hotspots/:key', (c) =>
+    handle(c, () => {
+      const key = c.req.param('key');
+      return cached(`hotspot:${key}`, TTL.hotspots, () => getHotspotDetail(conn, key));
+    }),
+  );
+
+  // Facet values to populate the issues filter controls.
+  api.get('/projects/:key/issue-facets', (c) =>
+    handle(c, () => {
+      const key = c.req.param('key');
+      const branch = c.req.query('branch');
+      const pullRequest = c.req.query('pullRequest');
+      return cached(`issue-facets:${key}:${refKey(branch, pullRequest)}`, TTL.issues, () =>
+        getIssueFilterFacets(conn, buildTarget(key, branch, pullRequest)),
+      );
+    }),
+  );
+
+  // Resolve a SonarQube component to a local file + editor deep-links.
+  api.get('/ide/resolve', (c) =>
+    handle(c, async () => {
+      const project = c.req.query('project');
+      const component = c.req.query('component');
+      if (!component) throw new Error('Missing required query param: component');
+      const line = Math.max(1, Number(c.req.query('line') ?? '1'));
+
+      const roots = ctx.config.ide.projectRoots ?? {};
+      const root = (project && roots[project]) || process.cwd();
+      const absPath = join(root, extractPath(component));
+      const fileEnc = encodeURIComponent(absPath);
+
+      const resolution: IdeResolution = {
+        absPath,
+        line,
+        urls: {
+          vscode: `vscode://file/${absPath}:${line}:1`,
+          cursor: `cursor://file/${absPath}:${line}:1`,
+          windsurf: `windsurf://file/${absPath}:${line}:1`,
+          idea: `idea://open?file=${fileEnc}&line=${line}`,
+        },
+        jetbrainsRest: `http://localhost:63342/api/file?file=${fileEnc}&line=${line}`,
+      };
+      return resolution;
+    }),
+  );
+
+  registerWriteRoutes(api, ctx);
 
   // Render the current view to a PDF via headless Chromium (lazy-installed).
   api.post('/export/pdf', async (c) => {
@@ -263,4 +395,150 @@ export function createApiRoutes(ctx: ServerContext): Hono {
   });
 
   return api;
+}
+
+const VALID_TRANSITIONS: IssueTransition[] = [
+  'confirm',
+  'unconfirm',
+  'reopen',
+  'resolve',
+  'falsepositive',
+  'wontfix',
+  'accept',
+];
+
+/** Guarded write actions — only allowed when `serve --allow-write` is set. */
+function registerWriteRoutes(api: Hono, ctx: ServerContext): void {
+  const { conn } = ctx;
+
+  // Returns a 403 response when writes are disabled, else null to proceed.
+  const denyIfReadOnly = (c: Context): Response | null =>
+    ctx.config.server.allowWrite
+      ? null
+      : c.json(
+          {
+            error: 'write_disabled',
+            message: 'Write actions are disabled. Start with --allow-write.',
+          },
+          403,
+        );
+
+  const body = async (c: Context): Promise<Record<string, unknown>> => {
+    try {
+      return (await c.req.json()) as Record<string, unknown>;
+    } catch {
+      return {};
+    }
+  };
+
+  const fail = (c: Context, error: unknown): Response => {
+    const message = error instanceof Error ? error.message : String(error);
+    return c.json({ error: 'write_failed', message }, 502);
+  };
+
+  api.post('/issues/:key/transition', async (c) => {
+    const denied = denyIfReadOnly(c);
+    if (denied) return denied;
+    const key = c.req.param('key');
+    const { transition } = await body(c);
+    if (
+      typeof transition !== 'string' ||
+      !VALID_TRANSITIONS.includes(transition as IssueTransition)
+    ) {
+      return c.json({ error: 'bad_request', message: 'Invalid transition' }, 400);
+    }
+    try {
+      await transitionIssue(conn, key, transition as IssueTransition);
+      clearCache();
+      return c.json({ ok: true });
+    } catch (e) {
+      return fail(c, e);
+    }
+  });
+
+  api.post('/issues/:key/assign', async (c) => {
+    const denied = denyIfReadOnly(c);
+    if (denied) return denied;
+    const key = c.req.param('key');
+    const { assignee } = await body(c);
+    try {
+      await assignIssue(conn, key, typeof assignee === 'string' ? assignee : undefined);
+      clearCache();
+      return c.json({ ok: true });
+    } catch (e) {
+      return fail(c, e);
+    }
+  });
+
+  api.post('/issues/:key/comment', async (c) => {
+    const denied = denyIfReadOnly(c);
+    if (denied) return denied;
+    const key = c.req.param('key');
+    const { text } = await body(c);
+    if (typeof text !== 'string' || !text.trim()) {
+      return c.json({ error: 'bad_request', message: 'Comment text is required' }, 400);
+    }
+    try {
+      await commentIssue(conn, key, text);
+      clearCache();
+      return c.json({ ok: true });
+    } catch (e) {
+      return fail(c, e);
+    }
+  });
+
+  api.post('/issues/:key/severity', async (c) => {
+    const denied = denyIfReadOnly(c);
+    if (denied) return denied;
+    const key = c.req.param('key');
+    const { severity } = await body(c);
+    if (typeof severity !== 'string') {
+      return c.json({ error: 'bad_request', message: 'severity is required' }, 400);
+    }
+    try {
+      await setIssueSeverity(conn, key, severity);
+      clearCache();
+      return c.json({ ok: true });
+    } catch (e) {
+      return fail(c, e);
+    }
+  });
+
+  api.post('/issues/:key/tags', async (c) => {
+    const denied = denyIfReadOnly(c);
+    if (denied) return denied;
+    const key = c.req.param('key');
+    const { tags } = await body(c);
+    const list = Array.isArray(tags) ? tags.filter((t): t is string => typeof t === 'string') : [];
+    try {
+      await setIssueTags(conn, key, list);
+      clearCache();
+      return c.json({ ok: true });
+    } catch (e) {
+      return fail(c, e);
+    }
+  });
+
+  api.post('/hotspots/:key/status', async (c) => {
+    const denied = denyIfReadOnly(c);
+    if (denied) return denied;
+    const key = c.req.param('key');
+    const { status, resolution, comment } = await body(c);
+    if (typeof status !== 'string') {
+      return c.json({ error: 'bad_request', message: 'status is required' }, 400);
+    }
+    try {
+      await changeHotspotStatus(
+        conn,
+        key,
+        status,
+        typeof resolution === 'string' ? resolution : undefined,
+        typeof comment === 'string' ? comment : undefined,
+      );
+      clearCache();
+      return c.json({ ok: true });
+    } catch (e) {
+      return fail(c, e);
+    }
+  });
 }

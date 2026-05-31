@@ -195,10 +195,13 @@ export interface IssueFilters {
   types?: string[];
   severities?: string[];
   statuses?: string[];
+  resolutions?: string[];
   tags?: string[];
   rules?: string[];
   assignees?: string[];
   resolved?: boolean;
+  /** Restrict to issues on new code (Clean as You Code). */
+  inNewCodePeriod?: boolean;
   /** Free-text query passed to SonarQube. */
   q?: string;
 }
@@ -218,6 +221,75 @@ export interface FetchAllIssuesOptions {
   onProgress?: (current: number, total: number) => void;
 }
 
+// ── Rule detail / fix guidance ───────────────────────────────────────────────
+
+export interface RuleDescriptionSection {
+  key: string;
+  content: string;
+}
+
+export interface RuleDetail {
+  key: string;
+  name: string;
+  severity?: string;
+  type?: string;
+  language?: string;
+  tags: string[];
+  /** Structured sections (root_cause, how_to_fix, resources, …) when available. */
+  descriptionSections: RuleDescriptionSection[];
+  /** Legacy single HTML blob, used when descriptionSections is empty. */
+  htmlDescription?: string;
+  remediationEffort?: string;
+}
+
+export interface ScmBlameLine {
+  line: number;
+  author?: string;
+  date?: string;
+  revision?: string;
+}
+
+export interface IssueChangelogEntry {
+  user?: string;
+  creationDate?: string;
+  diffs: Array<{ key: string; oldValue?: string; newValue?: string }>;
+}
+
+export interface HotspotDetail {
+  key: string;
+  message: string;
+  component: string;
+  line?: number;
+  status: string;
+  resolution?: string;
+  securityCategory?: string;
+  vulnerabilityProbability?: string;
+  ruleKey?: string;
+  assignee?: string;
+  creationDate?: string;
+  textRange?: TextRange;
+  /** SonarQube splits hotspot rule guidance into these HTML sections. */
+  riskDescription?: string;
+  vulnerabilityDescription?: string;
+  fixRecommendations?: string;
+  changelog: IssueChangelogEntry[];
+}
+
+export interface NewCodePeriod {
+  type?: string;
+  value?: string;
+  effectiveValue?: string;
+}
+
+// ── IDE deep-linking ─────────────────────────────────────────────────────────
+
+export interface IdeResolution {
+  absPath: string;
+  line: number;
+  urls: { vscode: string; cursor: string; windsurf: string; idea: string };
+  jetbrainsRest: string;
+}
+
 // ── Computed metrics (UI/report) ─────────────────────────────────────────────
 
 export interface IssueMetrics {
@@ -234,7 +306,17 @@ export interface IssueMetrics {
 export interface AppConfig {
   sonarqube: SonarQubeSettings;
   server: ServerConfig;
+  ide: IdeConfig;
   logging: LoggingConfig;
+}
+
+export type EditorId = 'vscode' | 'cursor' | 'windsurf' | 'jetbrains';
+
+export interface IdeConfig {
+  /** Default editor for "Open in IDE"; the UI can override per-user. */
+  editor: EditorId;
+  /** Optional per-project absolute local repo roots (project key → path). */
+  projectRoots?: Record<string, string>;
 }
 
 export interface SonarQubeSettings {
@@ -250,6 +332,8 @@ export interface ServerConfig {
   host: string;
   open: boolean;
   auth: boolean;
+  /** Allow in-app write actions (issue transitions, assign, comment, etc.). */
+  allowWrite: boolean;
 }
 
 export interface LoggingConfig {

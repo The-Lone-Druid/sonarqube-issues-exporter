@@ -58,6 +58,8 @@ interface ServeFlags extends ConnectionFlags {
   host?: string;
   open?: boolean;
   auth?: boolean;
+  allowWrite?: boolean;
+  editor?: string;
 }
 
 program
@@ -72,10 +74,14 @@ program
   .option('--host <host>', 'Host to bind (default 127.0.0.1)')
   .option('--no-open', 'Do not open the browser automatically')
   .option('--auth', 'Require a local token for API access (shared machines)')
+  .option('--allow-write', 'Enable in-app write actions (issue triage, hotspot status)')
+  .option('--editor <name>', 'Default editor for Open in IDE (vscode|cursor|windsurf|jetbrains)')
   .option('-v, --verbose', 'Enable verbose logging')
   .action(async (flags: ServeFlags) => {
     try {
       const config = resolveConfig(flags);
+      if (flags.allowWrite) config.server.allowWrite = true;
+      if (flags.editor) config.ide.editor = flags.editor as AppConfig['ide']['editor'];
       initLogger(config.logging);
 
       logger.info('Validating SonarQube connection...');
@@ -166,7 +172,8 @@ program
           ...(organization && { organization }),
           ...(defaultProjectKey && { defaultProjectKey }),
         },
-        server: { port: 7010, host: '127.0.0.1', open: true, auth: false },
+        server: { port: 7010, host: '127.0.0.1', open: true, auth: false, allowWrite: false },
+        ide: { editor: 'vscode', projectRoots: {} },
         logging: { level: 'info' },
       };
 
