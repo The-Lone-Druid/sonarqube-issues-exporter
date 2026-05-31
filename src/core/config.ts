@@ -1,6 +1,12 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import type { AppConfig, ConfigLoadOptions, DeepPartial, SonarQubeConnection } from './types';
+import type {
+  AppConfig,
+  ConfigLoadOptions,
+  DeepPartial,
+  EditorId,
+  SonarQubeConnection,
+} from './types';
 
 const CONFIG_FILE_NAMES = ['.sonarqube-exporter.json', 'sonarqube-exporter.config.json'];
 
@@ -50,7 +56,10 @@ function getDefaultConfig(): AppConfig {
       allowWrite: process.env['SQ_ALLOW_WRITE'] === 'true',
     },
     ide: {
-      editor: (process.env['SQ_EDITOR'] as AppConfig['ide']['editor']) || 'vscode',
+      // No default editor → OS-default open; set SQ_EDITOR for exact-line jumps.
+      ...(process.env['SQ_EDITOR'] && {
+        editor: process.env['SQ_EDITOR'] as EditorId,
+      }),
     },
     logging: {
       level: (process.env['LOG_LEVEL'] as AppConfig['logging']['level']) || 'info',

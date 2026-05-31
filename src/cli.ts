@@ -7,7 +7,7 @@ import * as readline from 'node:readline';
 import { loadConfig, toConnection } from './core/config';
 import { initLogger, logger } from './core/logger';
 import { getSystemStatus, listProjects } from './core/sonarqube/projects';
-import type { DeepPartial, AppConfig } from './core/types';
+import type { DeepPartial, AppConfig, EditorId } from './core/types';
 import { openBrowser, startServer } from './server/server';
 import { renderReportPdf } from './server/pdf/renderer';
 import { PdfUnavailableError } from './server/pdf/install';
@@ -81,7 +81,7 @@ program
     try {
       const config = resolveConfig(flags);
       if (flags.allowWrite) config.server.allowWrite = true;
-      if (flags.editor) config.ide.editor = flags.editor as AppConfig['ide']['editor'];
+      if (flags.editor) config.ide.editor = flags.editor as EditorId;
       initLogger(config.logging);
 
       logger.info('Validating SonarQube connection...');
@@ -173,7 +173,8 @@ program
           ...(defaultProjectKey && { defaultProjectKey }),
         },
         server: { port: 7010, host: '127.0.0.1', open: true, auth: false, allowWrite: false },
-        ide: { editor: 'vscode', projectRoots: {} },
+        // editor omitted → files open with the OS default; set it for exact-line jumps.
+        ide: { projectRoots: {} },
         logging: { level: 'info' },
       };
 

@@ -1,15 +1,18 @@
 import { useSyncExternalStore } from 'react';
 import type { EditorId } from '../../core/types';
 
+/** 'default' = open with the OS default app; an EditorId = exact-line deep link. */
+export type EditorChoice = EditorId | 'default';
+
 const KEY = 'sq-editor';
 const listeners = new Set<() => void>();
 
-function read(): EditorId | null {
-  return (localStorage.getItem(KEY) as EditorId | null) ?? null;
+function read(): EditorChoice | null {
+  return (localStorage.getItem(KEY) as EditorChoice | null) ?? null;
 }
 
-export function setEditorPref(editor: EditorId): void {
-  localStorage.setItem(KEY, editor);
+export function setEditorPref(choice: EditorChoice): void {
+  localStorage.setItem(KEY, choice);
   listeners.forEach((l) => l());
 }
 
@@ -19,6 +22,6 @@ function subscribe(l: () => void): () => void {
 }
 
 /** User-chosen editor override (localStorage), or null to use the server default. */
-export function useEditorPref(): EditorId | null {
+export function useEditorPref(): EditorChoice | null {
   return useSyncExternalStore(subscribe, read, () => null);
 }

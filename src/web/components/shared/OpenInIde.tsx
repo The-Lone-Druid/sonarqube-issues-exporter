@@ -21,22 +21,28 @@ export function OpenInIde({ project, component, ref, line = 1, label, className 
   const { data: config } = useConfig();
   const pref = useEditorPref();
   const [copied, setCopied] = useState(false);
-  const editor = pref ?? config?.ide.editor ?? 'vscode';
+  // 'default' (or unset with no server default) → OS-open; an editor → exact line.
+  const choice = pref ?? config?.ide.editor ?? 'default';
 
   const open = async (e: React.MouseEvent): Promise<void> => {
     e.stopPropagation();
     try {
+      if (choice === 'default') {
+        // OS default application — no editor configuration, no line positioning.
+        await api.ideOpen(project, component);
+        return;
+      }
       const r = await api.ideResolve(project, component, ref, line);
-      if (editor === 'jetbrains') {
+      if (choice === 'jetbrains') {
         // Fire-and-forget to the IDE's built-in REST server; fall back to scheme.
         fetch(r.jetbrainsRest, { mode: 'no-cors' }).catch(() => {
           window.location.href = r.urls.idea;
         });
       } else {
-        window.location.href = r.urls[editor];
+        window.location.href = r.urls[choice];
       }
     } catch {
-      /* resolution failed — user can use Copy path instead */
+      /* open failed — user can use Copy path instead */
     }
   };
 
@@ -57,7 +63,7 @@ export function OpenInIde({ project, component, ref, line = 1, label, className 
       <button
         type="button"
         onClick={open}
-        title={`Open in ${editor}`}
+        title={choice === 'default' ? 'Open with default app' : `Open in ${choice}`}
         className="inline-flex items-center gap-1 font-mono text-xs text-primary hover:underline"
       >
         {label ?? <ExternalLink className="h-3.5 w-3.5" />}

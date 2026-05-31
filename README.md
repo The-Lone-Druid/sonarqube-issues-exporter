@@ -55,8 +55,9 @@ sonarqube-exporter serve
   status, tags) with a tabbed detail drawer: **Why** (rule root cause),
   **How to fix** (remediation + examples), **Code** (snippet with the offending
   line highlighted + git blame), and **Activity** (changelog).
-- **Open in IDE** — click a file:line to jump straight to the exact spot in
-  VS Code, Cursor, Windsurf, or JetBrains (or copy the local path).
+- **Open in IDE** — click a file to open it locally. By default the file opens
+  with your OS default app (no setup); pick an editor (VS Code/Cursor/Windsurf/
+  JetBrains) to jump to the exact line instead. Copy path is always available.
 - **New Code focus** — an Overall / New code toggle (Clean as You Code) that
   filters issues and measures to the new code period.
 - **In-app triage** _(opt-in)_ — resolve / false-positive / won't-fix, assign,
@@ -94,30 +95,36 @@ sonarqube-exporter serve
 --no-open               Do not open the browser automatically
 --auth                  Require a local token for API access (shared machines)
 --allow-write           Enable in-app triage (issue transitions, hotspot status)
---editor <name>         Default editor for Open in IDE (vscode|cursor|windsurf|jetbrains)
+--editor <name>         Open files in a specific editor at the exact line
+                        (vscode|cursor|windsurf|jetbrains). Omit for OS default.
 -v, --verbose           Verbose logging
 ```
 
 ### Open in IDE
 
-The dashboard resolves a SonarQube component to a local file. By default it
-assumes you run `serve` from the repo root (uses the working directory). For
-multi-repo setups, map project keys to absolute paths in the config file:
+Clicking a file resolves it to a local path and opens it. **By default it opens
+with your operating system's default application** — no configuration. The local
+server runs the OS opener; a `file://` link from the browser would be blocked,
+which is why this goes through the server.
+
+To **jump to the exact line**, choose an editor (VS Code/Cursor/Windsurf/
+JetBrains) from the top-bar picker or via `--editor` / config — that uses the
+editor's URL handler (JetBrains uses its built-in `localhost:63342` REST server;
+enable _Settings → Build, Execution, Deployment → Debugger → "Allow unsigned
+requests"_ if needed). OS-default open cannot position the cursor at a line.
+
+Paths resolve against the directory you ran `serve` from. For multi-repo setups,
+map project keys to absolute paths:
 
 ```json
 {
   "ide": {
-    "editor": "vscode",
     "projectRoots": {
       "my_project_key": "/Users/me/code/my-project"
     }
   }
 }
 ```
-
-JetBrains IDEs are opened via their built-in REST server (enable _Settings →
-Build, Execution, Deployment → Debugger → "Allow unsigned requests"_ if needed);
-VS Code/Cursor/Windsurf use their URL handlers.
 
 ### In-app triage (write actions)
 
@@ -143,7 +150,7 @@ directory) looks like:
     "defaultProjectKey": "your_project_key"
   },
   "server": { "port": 7010, "host": "127.0.0.1", "open": true, "auth": false, "allowWrite": false },
-  "ide": { "editor": "vscode", "projectRoots": {} }
+  "ide": { "projectRoots": {} }
 }
 ```
 

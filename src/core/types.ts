@@ -313,8 +313,11 @@ export interface AppConfig {
 export type EditorId = 'vscode' | 'cursor' | 'windsurf' | 'jetbrains';
 
 export interface IdeConfig {
-  /** Default editor for "Open in IDE"; the UI can override per-user. */
-  editor: EditorId;
+  /**
+   * Optional preferred editor for exact-line "Open in IDE". When unset, files
+   * open with the OS default application (no line positioning).
+   */
+  editor?: EditorId;
   /** Optional per-project absolute local repo roots (project key → path). */
   projectRoots?: Record<string, string>;
 }
