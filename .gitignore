@@ -13,7 +13,7 @@ dist/
 
 # Reports
 reports/
-*.html
+/*.html
 sonarqube_issues.html
 
 # Logs
