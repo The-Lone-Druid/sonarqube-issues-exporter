@@ -18,6 +18,8 @@ import type { ServerContext } from '../context';
 import { buildTarget } from '../context';
 import { cached, TTL } from '../cache';
 import { handle } from '../errors';
+import { renderReportPdf } from '../pdf/renderer';
+import { PdfUnavailableError } from '../pdf/install';
 
 function parseList(value: string | undefined): string[] | undefined {
   if (!value) return undefined;
@@ -222,6 +224,43 @@ export function createApiRoutes(ctx: ServerContext): Hono {
       );
     }),
   );
+
+  // Render the current view to a PDF via headless Chromium (lazy-installed).
+  api.post('/export/pdf', async (c) => {
+    let body: { projectKey?: string; branch?: string; pullRequest?: string } = {};
+    try {
+      body = await c.req.json();
+    } catch {
+      /* empty body */
+    }
+    if (!body.projectKey) {
+      return c.json({ error: 'bad_request', message: 'projectKey is required' }, 400);
+    }
+    try {
+      const pdf = await renderReportPdf({
+        port: ctx.port,
+        host: ctx.config.server.host,
+        projectKey: body.projectKey,
+        ...(body.branch && { branch: body.branch }),
+        ...(body.pullRequest && { pullRequest: body.pullRequest }),
+        ...(ctx.authToken && { authToken: ctx.authToken }),
+      });
+      return new Response(pdf, {
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="${body.projectKey}-report.pdf"`,
+        },
+      });
+    } catch (error) {
+      if (error instanceof PdfUnavailableError) {
+        return c.json({ error: 'pdf_unavailable', message: error.message }, 422);
+      }
+      return c.json(
+        { error: 'pdf_failed', message: error instanceof Error ? error.message : String(error) },
+        500,
+      );
+    }
+  });
 
   return api;
 }

@@ -154,7 +154,38 @@ export const api = {
       params: refParams(ref),
       ...(force && { force }),
     }),
+
+  /** Request a server-rendered PDF; returns the binary blob. */
+  exportPdf: async (projectKey: string, ref: Ref): Promise<Blob> => {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const token = localToken();
+    if (token) headers['x-sq-local-token'] = token;
+    const res = await fetch('/api/export/pdf', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ projectKey, ...refParams(ref) }),
+    });
+    if (!res.ok) {
+      let code = 'error';
+      let message = `PDF export failed (${res.status})`;
+      try {
+        const body = (await res.json()) as { error?: string; message?: string };
+        code = body.error ?? code;
+        message = body.message ?? message;
+      } catch {
+        /* non-JSON */
+      }
+      throw new ApiError(res.status, code, message);
+    }
+    return res.blob();
+  },
 };
+
+/** Build the print-route URL (used as a fallback when server PDF is unavailable). */
+export function reportUrl(projectKey: string, ref: Ref): string {
+  const params = new URLSearchParams({ project: projectKey, ...refParams(ref) });
+  return `${window.location.origin}/report?${params.toString()}${window.location.hash}`;
+}
 
 /** Serialise a Ref into a stable cache-key fragment. */
 export function refKey(ref: Ref): string {

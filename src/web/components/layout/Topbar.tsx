@@ -5,6 +5,7 @@ import { useSelection } from '../../hooks/use-selection';
 import { useRefresh, useSummary } from '../../hooks/use-queries';
 import { formatRelative } from '../../lib/format';
 import { BranchPrSelector, ProjectSwitcher } from './selectors';
+import { ExportPdfButton } from './ExportPdfButton';
 import { cn } from '../../lib/utils';
 
 export function Topbar() {
@@ -24,6 +25,7 @@ export function Topbar() {
             Updated {formatRelative(new Date(summary.dataUpdatedAt).toISOString())}
           </span>
         )}
+        <ExportPdfButton />
         <Button
           variant="outline"
           size="icon"

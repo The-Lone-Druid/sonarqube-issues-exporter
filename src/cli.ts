@@ -9,6 +9,8 @@ import { initLogger, logger } from './core/logger';
 import { getSystemStatus, listProjects } from './core/sonarqube/projects';
 import type { DeepPartial, AppConfig } from './core/types';
 import { openBrowser, startServer } from './server/server';
+import { renderReportPdf } from './server/pdf/renderer';
+import { PdfUnavailableError } from './server/pdf/install';
 
 const packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8')) as {
   version: string;
@@ -180,6 +182,61 @@ program
       process.exit(1);
     } finally {
       rl.close();
+    }
+  });
+
+interface ExportPdfFlags extends ConnectionFlags {
+  project: string;
+  branch?: string;
+  pullRequest?: string;
+  output?: string;
+}
+
+program
+  .command('export-pdf')
+  .description('Render a project report to a PDF file (headless — for CI)')
+  .requiredOption('--project <key>', 'Project key')
+  .option('--branch <name>', 'Branch name')
+  .option('--pull-request <key>', 'Pull request key')
+  .option('-o, --output <file>', 'Output PDF path')
+  .option('-c, --config <path>', 'Path to configuration file')
+  .option('--url <url>', 'SonarQube server URL')
+  .option('--token <token>', 'SonarQube authentication token')
+  .option('--organization <org>', 'SonarQube organization (for SonarCloud)')
+  .option('-v, --verbose', 'Enable verbose logging')
+  .action(async (flags: ExportPdfFlags) => {
+    let running: Awaited<ReturnType<typeof startServer>> | null = null;
+    try {
+      const config = resolveConfig(flags);
+      initLogger(config.logging);
+
+      const status = await getSystemStatus(toConnection(config)).catch(() => null);
+      if (!status) {
+        console.error('Could not reach SonarQube. Check --url/--token.');
+        process.exit(1);
+      }
+
+      running = await startServer({ config });
+      const pdf = await renderReportPdf({
+        port: running.port,
+        host: running.host,
+        projectKey: flags.project,
+        ...(flags.branch && { branch: flags.branch }),
+        ...(flags.pullRequest && { pullRequest: flags.pullRequest }),
+      });
+
+      const output = flags.output ?? `${flags.project}-report.pdf`;
+      writeFileSync(output, pdf);
+      console.log(`PDF written to ${output}`);
+    } catch (error) {
+      if (error instanceof PdfUnavailableError) {
+        console.error(error.message);
+      } else {
+        console.error('PDF export failed:', error instanceof Error ? error.message : error);
+      }
+      process.exitCode = 1;
+    } finally {
+      if (running) await running.close();
     }
   });
 
