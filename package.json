@@ -19,7 +19,8 @@
   "files": [
     "dist",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "MIGRATION.md"
   ],
   "scripts": {
     "build": "pnpm clean && pnpm build:web && pnpm build:server",
