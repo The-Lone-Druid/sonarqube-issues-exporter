@@ -52,9 +52,17 @@ sonarqube-exporter serve
   metric cards (bugs, vulnerabilities, code smells, hotspots, coverage, debt,
   ratings), and severity/type/status charts. Auto-refreshes on a poll.
 - **Issues explorer** — sortable, searchable, faceted table (severity, type,
-  status) with a detail drawer showing rule, location, tags, and data flow.
-- **Security hotspots & measures** — priority/category breakdowns; coverage,
-  duplication, LOC, technical debt, and A–E ratings.
+  status, tags) with a tabbed detail drawer: **Why** (rule root cause),
+  **How to fix** (remediation + examples), **Code** (snippet with the offending
+  line highlighted + git blame), and **Activity** (changelog).
+- **Open in IDE** — click a file:line to jump straight to the exact spot in
+  VS Code, Cursor, Windsurf, or JetBrains (or copy the local path).
+- **New Code focus** — an Overall / New code toggle (Clean as You Code) that
+  filters issues and measures to the new code period.
+- **In-app triage** _(opt-in)_ — resolve / false-positive / won't-fix, assign,
+  comment, and change hotspot status without leaving the dashboard.
+- **Security hotspots & measures** — priority/category breakdowns with a risk +
+  fix drawer; coverage, duplication, LOC, technical debt, and A–E ratings.
 - **Multi-project + branch/PR** — switch projects and branches/pull requests
   from the top bar; the selection lives in the URL so views are shareable.
 - **PDF export** — a print-optimised report for PMs/SREs, rendered server-side
@@ -85,8 +93,38 @@ sonarqube-exporter serve
 --host <host>           Host to bind (default 127.0.0.1)
 --no-open               Do not open the browser automatically
 --auth                  Require a local token for API access (shared machines)
+--allow-write           Enable in-app triage (issue transitions, hotspot status)
+--editor <name>         Default editor for Open in IDE (vscode|cursor|windsurf|jetbrains)
 -v, --verbose           Verbose logging
 ```
+
+### Open in IDE
+
+The dashboard resolves a SonarQube component to a local file. By default it
+assumes you run `serve` from the repo root (uses the working directory). For
+multi-repo setups, map project keys to absolute paths in the config file:
+
+```json
+{
+  "ide": {
+    "editor": "vscode",
+    "projectRoots": {
+      "my_project_key": "/Users/me/code/my-project"
+    }
+  }
+}
+```
+
+JetBrains IDEs are opened via their built-in REST server (enable _Settings →
+Build, Execution, Deployment → Debugger → "Allow unsigned requests"_ if needed);
+VS Code/Cursor/Windsurf use their URL handlers.
+
+### In-app triage (write actions)
+
+`serve --allow-write` enables resolving/assigning/commenting on issues and
+changing hotspot status from the drawer (each action is confirmed). Writes are
+rejected by the server unless this flag is set, and your token must have the
+relevant SonarQube permissions.
 
 ---
 
@@ -104,7 +142,8 @@ directory) looks like:
     "organization": "your-org",
     "defaultProjectKey": "your_project_key"
   },
-  "server": { "port": 7010, "host": "127.0.0.1", "open": true, "auth": false }
+  "server": { "port": 7010, "host": "127.0.0.1", "open": true, "auth": false, "allowWrite": false },
+  "ide": { "editor": "vscode", "projectRoots": {} }
 }
 ```
 
