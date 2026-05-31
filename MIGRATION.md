@@ -91,12 +91,10 @@ If you imported the package programmatically:
 + - run: npx sonarqube-issues-exporter export-pdf --project my_project -o report.pdf
 ```
 
-## Trying the beta
+## Installing v4
 
-During the 4.0 pre-release the package publishes to the `@next` dist-tag:
+v4.0.0 is the stable release on the `@latest` dist-tag:
 
 ```bash
-npm install -g sonarqube-issues-exporter@next
+npm install -g sonarqube-issues-exporter
 ```
-
-`@latest` continues to serve v3 until 4.0 is generally available.

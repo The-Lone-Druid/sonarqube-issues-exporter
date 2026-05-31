@@ -12,7 +12,7 @@ The tool starts a small local server that talks to your SonarQube/SonarCloud
 server (your token stays on your machine) and opens a fast React dashboard in
 your browser.
 
-> **v4 is a complete rewrite.** v3 generated a static HTML file via `export`.
+> **Upgrading from v3?** v3 generated a static HTML file via `export`.
 > v4 is a live local app (`serve`) plus a headless `export-pdf`. See
 > [MIGRATION.md](./MIGRATION.md).
 
@@ -21,8 +21,8 @@ your browser.
 ## Quick start
 
 ```bash
-# No install needed — run it with npx (beta channel during 4.0 pre-release):
-npx sonarqube-issues-exporter@next serve \
+# No install needed — run it with npx:
+npx sonarqube-issues-exporter serve \
   --url "https://your-sonarqube.example.com" \
   --token "YOUR_TOKEN"
 ```
@@ -33,7 +33,7 @@ opens it in your browser. Pick a project from the switcher and you're in.
 Prefer a global install:
 
 ```bash
-npm install -g sonarqube-issues-exporter@next
+npm install -g sonarqube-issues-exporter
 sonarqube-exporter serve          # or the short alias: sq-exporter serve
 ```
 
