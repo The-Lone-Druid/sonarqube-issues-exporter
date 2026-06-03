@@ -1,31 +1,19 @@
 <!--
 Sync Impact Report
 ==================
-Version change: (uninitialized template) → 1.0.0
-Rationale: First ratified constitution for the project (MAJOR baseline).
+Version change: 1.0.0 → 1.1.0
+Rationale: MINOR — expanded Principle I with exact CI command sequence; updated
+Engineering Constraints (Recharts → ECharts); updated Principle III to reflect
+credentials-file approach; added Principle I local verification checklist.
 
-Principles defined (7):
-  I.   Quality Gates Are Law
-  II.  Layered Architecture & Boundaries
-  III. Secret Safety & Local-First
-  IV.  Test-Backed & Verified
-  V.   Human-in-the-Loop for Consequential Actions
-  VI.  Simplicity, Reuse & Lean Dependencies
-  VII. Compatibility & Semantic Versioning
-
-Sections added:
-  - Engineering Constraints
-  - AI Agent Workflow & Human-in-the-Loop
-  - Governance
+Changes:
+  - Principle I: explicit ordered CI commands matching .github/workflows/ci.yml
+  - Principle III: token storage updated to ~/.sonarqube-exporter.env approach
+  - Engineering Constraints: Recharts replaced with ECharts
+  - Commitlint allowed types listed explicitly
 
 Templates reviewed:
-  ✅ .specify/templates/plan-template.md   — "Constitution Check" reads gates dynamically; no edit needed
-  ✅ .specify/templates/spec-template.md   — scope/requirements compatible; no edit needed
-  ✅ .specify/templates/tasks-template.md  — task categories compatible (testing/versioning covered); no edit needed
-  ✅ .specify/templates/checklist-template.md — compatible; no edit needed
-  ✅ commands (*.md) — generic, no agent-name leakage requiring change
-
-Deferred TODOs: none
+  ✅ All templates — no structural changes needed
 -->
 
 # sonarqube-issues-exporter Constitution
@@ -39,12 +27,23 @@ effortlessly while humans stay in control of consequential decisions.
 
 ### I. Quality Gates Are Law
 
-Every change MUST leave the repository green. Before any commit the following MUST pass:
-`tsc --noEmit` for both the Node project and the web project, ESLint, the test suite,
-`knip` (zero findings), and a successful `pnpm build`. Commits MUST follow Conventional
-Commits (enforced by commitlint) and pass `lint-staged`. A change that breaks a gate is not
-"done" — it is in progress. Gates are never disabled or downgraded to make a change pass;
-they are fixed.
+Every change MUST leave the repository green. The CI pipeline (`ci.yml`) is the authority;
+the exact commands that must pass locally before every commit are:
+
+```
+pnpm lint          # tsc --noEmit (Node + web tsconfigs) + eslint src tests
+pnpm exec knip     # zero findings — unused exports/deps are a hard failure
+pnpm test:coverage # vitest run --coverage — coverage thresholds in vitest.config.mts must hold
+pnpm build         # pnpm clean && pnpm build:web && pnpm build:server
+```
+
+Run them **in that order** (lint first catches type errors before the slower build).
+A change that breaks any gate is not "done" — it is in progress.
+Gates are never disabled or downgraded to make a change pass; they are fixed.
+
+Commits MUST follow **Conventional Commits** enforced by commitlint. Allowed types:
+`build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `revert`, `style`, `test`.
+The `lint-staged` hook (ESLint + Prettier) also runs on every commit.
 
 Rationale: deterministic, automated gates are what let agents move fast without humans
 re-checking every line. The gates are the contract.
@@ -70,9 +69,14 @@ server code, and make it obvious where any given change belongs.
 
 The SonarQube token MUST stay server-side: it is held by the local server and used only to
 proxy the SonarQube API; it MUST NOT be sent to the browser or appear in any `/api` response.
-The server binds to `127.0.0.1` by default. Secrets MUST NOT be committed — tokens live in
-`.env` or a gitignored config file. Sending project data to any external service is an
-outward-facing action subject to Principle V.
+The server binds to `127.0.0.1` by default.
+
+Secrets MUST NOT appear in JSON config files or be committed to version control. The
+`sonarqube-exporter setup` command writes `SONARQUBE_TOKEN` (and `SONARQUBE_URL`) to
+`~/.sonarqube-exporter.env` (chmod 600, home directory, never in a project folder) and omits
+the token from the JSON config entirely. `loadConfig()` automatically loads this file before
+any JSON config. The token input during `setup` is hidden (raw-mode stdin). Sending project
+data to any external service is an outward-facing action subject to Principle V.
 
 Rationale: the whole point of the tool is to view results locally without exposing
 credentials; security here is a feature, not an afterthought.
@@ -132,7 +136,7 @@ package.
 - **Language**: TypeScript in strict mode (including `exactOptionalPropertyTypes` and
   `noUncheckedIndexedAccess` for the Node project).
 - **Package manager**: pnpm. **Build**: Vite (SPA) + tsup (library/server/CLI) into `dist/`.
-- **Server**: Hono (localhost). **Web**: React 19 + Tailwind + TanStack Query/Table + Recharts.
+- **Server**: Hono (localhost). **Web**: React 19 + Tailwind + TanStack Query/Table + ECharts (via echarts-for-react).
 - **PDF**: `playwright-core` as an optional dependency, browser installed lazily on first use,
   with a browser-print fallback.
 - **CI**: lint + knip + tests (Node 20 & 22) and a pack-check that installs the tarball and
@@ -169,4 +173,4 @@ reviewers (human or agent) MUST confirm compliance before work is considered com
 deliberate deviation MUST be justified in writing in the relevant plan or PR. Day-to-day
 runtime guidance for contributors lives in `README.md` and `MIGRATION.md`.
 
-**Version**: 1.0.0 | **Ratified**: 2026-05-31 | **Last Amended**: 2026-05-31
+**Version**: 1.1.0 | **Ratified**: 2026-05-31 | **Last Amended**: 2026-06-03
