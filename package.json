@@ -1,6 +1,6 @@
 {
   "name": "sonarqube-issues-exporter",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "description": "Run a local SonarQube dashboard on your machine — live issues, quality gate, hotspots, coverage across projects/branches, with PDF export. No more logging into the dashboard or SSHing to the VM.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
