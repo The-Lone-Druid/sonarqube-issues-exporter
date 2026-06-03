@@ -38,8 +38,8 @@ Enhancement suggestions are tracked as GitHub issues. When creating an enhanceme
 2. **Install**: Follow the development installation guide
 3. **Branch**: Create a feature branch: `git checkout -b feature/my-feature`
 4. **Develop**: Make your changes following our coding standards
-5. **Test**: Ensure all tests pass: `npm test`
-6. **Commit**: Use conventional commits: `npm run commit`
+5. **Test**: Ensure all tests pass: `pnpm test`
+6. **Commit**: Use conventional commits: `git commit -m "type(scope): description"`
 7. **Push**: Push to your fork and submit a pull request
 
 ### Code Quality Standards
@@ -55,10 +55,6 @@ Enhancement suggestions are tracked as GitHub issues. When creating an enhanceme
 We use conventional commits for automated versioning:
 
 ```bash
-# Use the interactive commit tool
-npm run commit
-
-# Or follow the format manually
 git commit -m "feat: add new export format"
 git commit -m "fix: resolve memory leak in large reports"
 git commit -m "docs: update installation guide"
@@ -68,8 +64,8 @@ git commit -m "docs: update installation guide"
 
 ### Prerequisites
 
-- Node.js v18.0.0 or higher
-- npm v8.0.0 or higher
+- Node.js v20.0.0 or higher
+- pnpm v9.0.0 or higher (`npm install -g pnpm` or `corepack enable`)
 - Git
 
 ### Setup Steps
@@ -84,56 +80,55 @@ git commit -m "docs: update installation guide"
 2. **Install dependencies**
 
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. **Set up configuration**
 
-   ```bash
-   cp .env.example .env
-   # Edit .env with your SonarQube settings
-   ```
+   If you have a SonarQube instance available, set `SONARQUBE_URL` and `SONARQUBE_TOKEN` in a `.env` file for manual testing.
 
 4. **Build the project**
 
    ```bash
-   npm run build
+   pnpm build
    ```
 
 5. **Run development version**
    ```bash
-   npm run dev
+   pnpm dev
    ```
 
 ### Development Commands
 
 ```bash
 # Development with hot reload
-npm run dev
+pnpm dev
 
 # Build for production
-npm run build
+pnpm build
 
 # Run tests
-npm test
+pnpm test
 
 # Run tests in watch mode
-npm run test:watch
+pnpm test:watch
 
 # Lint code
-npm run lint
-
-# Fix linting issues
-npm run lint:fix
+pnpm lint
 
 # Format code
-npm run format
-
-# Interactive commit (recommended)
-npm run commit
+pnpm format
 
 # Create a release (maintainers only)
-npm run release
+pnpm release
+```
+
+### CI gates
+
+Before opening a pull request, ensure all of the following pass locally:
+
+```bash
+pnpm lint && pnpm exec knip && pnpm test:coverage && pnpm build
 ```
 
 ## Getting Help

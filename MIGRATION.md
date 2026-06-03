@@ -1,3 +1,69 @@
+# Migrating from v4 to v5
+
+v5 removes IDE integration, adds CSV export, switches the chart library from Recharts to ECharts, and adds a disk-based API cache.
+
+## TL;DR
+
+| v4                                           | v5                                           |
+| -------------------------------------------- | -------------------------------------------- |
+| `--editor <name>` flag on `serve`            | Flag removed — Open in IDE feature is gone   |
+| `ide.projectRoots` config block              | Config key removed — delete from config file |
+| Recharts charts                              | ECharts charts (no user action needed)       |
+| In-memory API cache (lost on server restart) | Disk cache at `~/.sq-exporter/cache/`        |
+| No CSV export                                | Export CSV button in the dashboard toolbar   |
+| No `scan` command                            | `sonarqube-exporter scan` added              |
+
+## Breaking changes
+
+### IDE integration removed
+
+The `--editor` flag and the `ide` config block no longer exist.
+
+```diff
+- sonarqube-exporter serve --editor vscode
++ sonarqube-exporter serve
+```
+
+Remove the `ide` key from `.sonarqube-exporter.json` if present:
+
+```diff
+  {
+    "sonarqube": { ... },
+    "server": { ... },
+-   "ide": { "projectRoots": { "my_project": "/Users/me/code/my-project" } }
+  }
+```
+
+No other config keys changed.
+
+## New features
+
+### CSV export
+
+Click **Export CSV** in the Issues or Security Hotspots toolbar to download the currently filtered results. No CLI flag or configuration needed.
+
+### `scan` command
+
+```bash
+sonarqube-exporter scan
+```
+
+Runs a SonarQube scan in the current directory using `sonarqube-scanner`, streams the log, and waits for the analysis to complete. Accepts `--project <key>`, `--branch <name>`, and standard connection flags.
+
+### Disk-based cache
+
+The server writes API responses to `~/.sq-exporter/cache/` and pre-loads them on startup. Dashboards open instantly after a server restart without re-fetching everything.
+
+## Installing v5
+
+```bash
+npm install -g sonarqube-issues-exporter   # pulls @latest = 5.x
+# or
+npx sonarqube-issues-exporter serve
+```
+
+---
+
 # Migrating from v3 to v4
 
 v4 is a ground-up rewrite. v3 was a one-shot CLI that wrote a **static HTML

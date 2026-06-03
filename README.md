@@ -12,9 +12,10 @@ The tool starts a small local server that talks to your SonarQube/SonarCloud
 server (your token stays on your machine) and opens a fast React dashboard in
 your browser.
 
-> **Upgrading from v3?** v3 generated a static HTML file via `export`.
-> v4 is a live local app (`serve`) plus a headless `export-pdf`. See
-> [MIGRATION.md](./MIGRATION.md).
+> **Upgrading?**
+>
+> - **v4 → v5**: IDE integration (`--editor`, `ide.projectRoots` config) was removed. CSV export, ECharts charts, and disk-based cache were added. See [MIGRATION.md](./MIGRATION.md).
+> - **v3 → v4**: `export` (static HTML) was replaced by `serve` (live dashboard) + `export-pdf`. See [MIGRATION.md](./MIGRATION.md).
 
 ---
 
@@ -55,9 +56,12 @@ sonarqube-exporter serve
   status, tags) with a tabbed detail drawer: **Why** (rule root cause),
   **How to fix** (remediation + examples), **Code** (snippet with the offending
   line highlighted + git blame), and **Activity** (changelog).
-- **Open in IDE** — click a file to open it locally. By default the file opens
-  with your OS default app (no setup); pick an editor (VS Code/Cursor/Windsurf/
-  JetBrains) to jump to the exact line instead. Copy path is always available.
+- **CSV export** — download the current filtered issue list or hotspot list as a
+  CSV from the dashboard toolbar (RFC 4180, all fields included).
+- **ECharts visualisations** — interactive severity, type, and status distribution
+  charts powered by Apache ECharts with full dark-mode support.
+- **Disk-based cache** — API responses are persisted to `~/.sq-exporter/cache/`
+  so the dashboard loads instantly after a server restart.
 - **New Code focus** — an Overall / New code toggle (Clean as You Code) that
   filters issues and measures to the new code period.
 - **In-app triage** _(opt-in)_ — resolve / false-positive / won't-fix, assign,
@@ -81,10 +85,11 @@ sonarqube-exporter serve
 | `validate`                   | Check the connection and that the token can see projects.         |
 | `setup`                      | Interactively write a config file.                                |
 | `export-pdf --project <key>` | Render a project report to a PDF (headless — for CI).             |
+| `scan`                       | Run a SonarQube scan on the current directory and stream the log. |
 
 ### `serve` options
 
-```
+```text
 -c, --config <path>     Path to configuration file
 --url <url>             SonarQube server URL
 --token <token>         SonarQube authentication token
@@ -95,35 +100,7 @@ sonarqube-exporter serve
 --no-open               Do not open the browser automatically
 --auth                  Require a local token for API access (shared machines)
 --allow-write           Enable in-app triage (issue transitions, hotspot status)
---editor <name>         Open files in a specific editor at the exact line
-                        (vscode|cursor|windsurf|jetbrains). Omit for OS default.
 -v, --verbose           Verbose logging
-```
-
-### Open in IDE
-
-Clicking a file resolves it to a local path and opens it. **By default it opens
-with your operating system's default application** — no configuration. The local
-server runs the OS opener; a `file://` link from the browser would be blocked,
-which is why this goes through the server.
-
-To **jump to the exact line**, choose an editor (VS Code/Cursor/Windsurf/
-JetBrains) from the top-bar picker or via `--editor` / config — that uses the
-editor's URL handler (JetBrains uses its built-in `localhost:63342` REST server;
-enable _Settings → Build, Execution, Deployment → Debugger → "Allow unsigned
-requests"_ if needed). OS-default open cannot position the cursor at a line.
-
-Paths resolve against the directory you ran `serve` from. For multi-repo setups,
-map project keys to absolute paths:
-
-```json
-{
-  "ide": {
-    "projectRoots": {
-      "my_project_key": "/Users/me/code/my-project"
-    }
-  }
-}
 ```
 
 ### In-app triage (write actions)
@@ -149,8 +126,7 @@ directory) looks like:
     "organization": "your-org",
     "defaultProjectKey": "your_project_key"
   },
-  "server": { "port": 7010, "host": "127.0.0.1", "open": true, "auth": false, "allowWrite": false },
-  "ide": { "projectRoots": {} }
+  "server": { "port": 7010, "host": "127.0.0.1", "open": true, "auth": false, "allowWrite": false }
 }
 ```
 
@@ -210,7 +186,7 @@ Single npm package, three layers (one published artifact):
   and the public library entry.
 - `src/server` — Hono server: REST proxy with a TTL cache (single-flight +
   stale-while-revalidate), static SPA serving, and the Playwright PDF renderer.
-- `src/web` — React 19 + Vite + Tailwind + TanStack Query/Table + Recharts SPA,
+- `src/web` — React 19 + Vite + Tailwind + TanStack Query/Table + ECharts SPA,
   built into `dist/web` and served by the server.
 
 ```bash

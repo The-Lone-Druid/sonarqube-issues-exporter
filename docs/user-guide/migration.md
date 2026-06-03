@@ -1,3 +1,50 @@
+# Migration Guide
+
+> Most recent migrations are listed first. Jump to the section that matches your upgrade path.
+
+---
+
+## v4 → v5
+
+v5 removes IDE integration and adds CSV export, ECharts charts, and a disk-based cache.
+
+### Breaking changes
+
+**IDE integration removed** — the `--editor` flag and `ide.projectRoots` config block no longer exist.
+
+```diff
+- sonarqube-exporter serve --editor vscode
++ sonarqube-exporter serve
+```
+
+Remove the `ide` key from `.sonarqube-exporter.json`:
+
+```diff
+  {
+    "sonarqube": { ... },
+    "server": { ... },
+-   "ide": { "projectRoots": { "my_project": "/path/to/project" } }
+  }
+```
+
+### New in v5
+
+- **CSV export** — Export CSV button in the Issues and Hotspots toolbar
+- **`scan` command** — `sonarqube-exporter scan` runs a SonarQube scan and streams the log
+- **Disk cache** — API responses persist to `~/.sq-exporter/cache/` across restarts
+
+See the full [MIGRATION.md](../../MIGRATION.md) at the repository root for complete details.
+
+---
+
+## v3 → v4
+
+v3 generated a static HTML file (`export`). v4 replaced it with a live local dashboard (`serve`) and a headless PDF renderer (`export-pdf`). Node.js ≥ 20 is required. The library API signature changed.
+
+See the full [MIGRATION.md](../../MIGRATION.md) at the repository root for the complete v3→v4 guide including CLI migration, config changes, and library API diffs.
+
+---
+
 # Migration Guide: v1.x/v2.x to v3.0.0
 
 This guide helps you migrate from the JavaScript-based v1.x or the early TypeScript v2.x to the new npm package-based v3.0.0.

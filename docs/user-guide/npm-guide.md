@@ -1,417 +1,261 @@
-# NPM Package Installation & Usage Guide
+# Using sonarqube-issues-exporter
 
-## 📦 Installation
+## Installation
 
-### Global Installation (Recommended)
+### Global install (recommended)
 
 ```bash
 npm install -g sonarqube-issues-exporter
-```
-
-After global installation, you can use the CLI from anywhere:
-
-```bash
 sonarqube-exporter --help
 # or the short alias
 sq-exporter --help
 ```
 
-### Local Installation
+### No-install via npx
 
 ```bash
-npm install sonarqube-issues-exporter
+npx sonarqube-issues-exporter serve --url "https://your-sonarqube.example.com" --token "YOUR_TOKEN"
 ```
 
-Then use with npx:
+Requires Node.js ≥ 20.
+
+---
+
+## Quick start
 
 ```bash
-npx sonarqube-exporter --help
+npx sonarqube-issues-exporter serve \
+  --url "https://your-sonarqube.example.com" \
+  --token "YOUR_TOKEN"
 ```
 
-## 🚀 Quick Start
+This finds a free port, starts the dashboard on `http://127.0.0.1:7010`, and opens it in your browser. Pick a project from the switcher and you're in.
 
-### Method 1: Interactive Setup (New!)
+Or save your connection once with the setup wizard:
 
 ```bash
-# Interactive configuration wizard
 sonarqube-exporter setup
-
-# For global configuration
-sonarqube-exporter setup --global
+sonarqube-exporter serve
 ```
 
-### Method 2: Environment Variables
+---
 
-```bash
-# Set required environment variables
-export SONARQUBE_URL="https://your-sonarqube-server.com"
-export SONARQUBE_TOKEN="your_sonarqube_token"
-export SONARQUBE_PROJECT_KEY="your_project_key"
+## Commands
 
-# Export issues
-sonarqube-exporter export
+| Command                      | Description                                                       |
+| ---------------------------- | ----------------------------------------------------------------- |
+| `serve`                      | Start the live dashboard and open it in the browser (default).    |
+| `validate`                   | Check the connection and that the token can see projects.         |
+| `setup`                      | Interactively write a config file and store credentials.          |
+| `export-pdf --project <key>` | Render a project report to a PDF (headless — for CI).             |
+| `scan`                       | Run a SonarQube scan on the current directory and stream the log. |
+
+---
+
+## `serve` options
+
+```
+-c, --config <path>     Path to configuration file
+--url <url>             SonarQube server URL
+--token <token>         SonarQube authentication token
+--project <key>         Project to pre-select on startup
+--organization <org>    SonarQube organization (for SonarCloud)
+-p, --port <number>     Preferred port (auto-increments if busy; default 7010)
+--host <host>           Host to bind (default 127.0.0.1)
+--no-open               Do not open the browser automatically
+--auth                  Require a local token for API access (shared machines)
+--allow-write           Enable in-app triage (issue transitions, hotspot status)
+-v, --verbose           Verbose logging
 ```
 
-### Method 3: Configuration File
+---
 
-Create a `sonarqube.config.json` file:
+## Configuration
+
+Settings are resolved from CLI flags → config file → environment variables → defaults.
+
+### Config file
+
+Create `.sonarqube-exporter.json` in your project directory or home directory:
 
 ```json
 {
   "sonarqube": {
-    "url": "https://your-sonarqube-server.com",
-    "token": "your_sonarqube_token",
-    "projectKey": "your_project_key",
-    "organization": "your_organization_key"
+    "url": "https://sonarcloud.io",
+    "token": "YOUR_TOKEN",
+    "organization": "your-org",
+    "defaultProjectKey": "your_project_key"
   },
-  "export": {
-    "outputPath": "./reports",
-    "filename": "sonarqube-report.html",
-    "template": "default",
-    "maxIssues": 10000,
-    "excludeStatuses": ["CLOSED"],
-    "includeResolvedIssues": false
-  },
-  "logging": {
-    "level": "info",
-    "file": "./logs/export.log"
+  "server": {
+    "port": 7010,
+    "host": "127.0.0.1",
+    "open": true,
+    "auth": false,
+    "allowWrite": false
   }
 }
 ```
 
-Then run:
+> **Never commit your token.** Use `sonarqube-exporter setup` — it stores the token in `~/.sonarqube-exporter.env` (chmod 600), separate from the JSON config.
+
+### Environment variables
+
+| Variable                 | Description                           |
+| ------------------------ | ------------------------------------- |
+| `SONARQUBE_URL`          | SonarQube server URL                  |
+| `SONARQUBE_TOKEN`        | Authentication token                  |
+| `SONARQUBE_ORGANIZATION` | Organization key (SonarCloud)         |
+| `SONARQUBE_PROJECT_KEY`  | Default project key                   |
+| `SQ_PORT`                | Server port                           |
+| `SQ_HOST`                | Server host                           |
+| `LOG_LEVEL`              | Logging level (error/warn/info/debug) |
+
+---
+
+## CSV export
+
+Open the dashboard, navigate to **Issues** or **Security Hotspots**, apply any filters, then click **Export CSV** in the toolbar. The downloaded file is RFC 4180 compliant and includes all visible fields.
+
+---
+
+## PDF export
+
+`export-pdf` boots the server on an ephemeral port, renders the report with headless Chromium, writes the file, and exits:
 
 ```bash
-sonarqube-exporter export --config sonarqube.config.json
+sonarqube-exporter export-pdf --project my_project_key -o report.pdf
 ```
 
-### Method 3: Command Line Options
+Chromium is not bundled. On first use it is downloaded once (~150 MB) via the optional `playwright-core` dependency. In CI, pre-install it:
 
 ```bash
-sonarqube-exporter export \
-  --config ./my-config.json \
-  --output ./my-reports \
-  --filename custom-report.html \
-  --template default \
-  --max-issues 5000 \
-  --verbose
+npx playwright-core install chromium
 ```
 
-## 📋 Configuration Options
-
-### Environment Variables
-
-- `SONARQUBE_URL` - SonarQube server URL
-- `SONARQUBE_TOKEN` - Authentication token
-- `SONARQUBE_PROJECT_KEY` - Project key to analyze
-- `SONARQUBE_ORGANIZATION` - Organization key (for SonarCloud)
-- `EXPORT_OUTPUT_PATH` - Output directory
-- `EXPORT_FILENAME` - Output filename
-- `LOG_LEVEL` - Logging level (error, warn, info, debug)
-
-### Configuration File Schema
-
-```json
-{
-  "sonarqube": {
-    "url": "string (required)",
-    "token": "string (required)",
-    "projectKey": "string (required)",
-    "organization": "string (optional)"
-  },
-  "export": {
-    "outputPath": "string (default: './reports')",
-    "filename": "string (default: 'sonarqube-issues-report.html')",
-    "template": "string (default: 'default')",
-    "maxIssues": "number (default: 10000)",
-    "excludeStatuses": "array (default: ['CLOSED'])",
-    "includeResolvedIssues": "boolean (default: false)"
-  },
-  "logging": {
-    "level": "string (default: 'info')",
-    "file": "string (optional)"
-  }
-}
-```
-
-## 🔧 CLI Commands
-
-### Export Command
+Or disable auto-install and rely on the in-app browser-print fallback:
 
 ```bash
-sonarqube-exporter export [options]
+SQ_AUTO_INSTALL_BROWSER=false sonarqube-exporter export-pdf --project my_project_key -o report.pdf
+```
+
+`PLAYWRIGHT_BROWSERS_PATH` and `PLAYWRIGHT_DOWNLOAD_HOST` are respected for shared caches and corporate proxies.
+
+---
+
+## Running a scan
+
+The `scan` command runs `sonarqube-scanner` on the current directory, streams the analysis log, and waits for the quality gate result:
+
+```bash
+sonarqube-exporter scan
+```
 
 Options:
-  -c, --config <path>            Path to configuration file
-  -o, --output <path>            Output directory path
-  -f, --filename <name>          Output filename
-  --template <name>              Template name: "default" or "enhanced"
-  --max-issues <number>          Maximum issues to fetch (default: "10000")
-  --include-resolved             Include resolved issues
-  --exclude-statuses <statuses>  Comma-separated statuses to exclude
-  -v, --verbose                  Enable verbose logging
-  -h, --help                     Display help
+
+```
+--project <key>     SonarQube project key
+--branch <name>     Branch name (defaults to current git branch)
+--url <url>         SonarQube server URL
+--token <token>     Authentication token
 ```
 
-### Validate Command
+The command reads `sonar-project.properties` if present.
 
-```bash
-sonarqube-exporter validate [options]
+---
 
-Options:
-  -c, --config <path>   Path to configuration file
-  --url <url>           SonarQube server URL override
-  --token <token>       Authentication token override
-  --project <key>       Project key override
-  --organization <org>  Organization override
-  -h, --help           Display help
+## Programmatic usage (library API)
+
+The package exports a framework-agnostic SonarQube client:
+
+```ts
+import { loadConfig, toConnection, listProjects, fetchAllIssues } from 'sonarqube-issues-exporter';
+
+const config = loadConfig();
+const conn = toConnection(config);
+const { projects } = await listProjects(conn);
+const issues = await fetchAllIssues(conn, { projectKey: projects[0].key });
 ```
 
-### Setup Command
+---
 
-```bash
-sonarqube-exporter setup [options]
+## Authentication
 
-Options:
-  --global             Create global configuration file
-  -h, --help          Display help
-```
+### SonarQube server
 
-## 🎨 Report Templates
-
-### Default Template
-
-A clean, professional interface with:
-
-- **Overview Dashboard**: Summary statistics and quality indicators
-- **Issues Analysis**: Interactive table with advanced filtering
-- **Responsive Design**: Works perfectly on all devices
-- **Dark/Light Theme**: Professional theme switching
-- **Export Options**: Print-friendly layout
-
-### Enhanced Template ✨ (New!)
-
-An enterprise-grade dashboard with comprehensive analytics and **professional theme design**:
-
-#### � **Professional Design System:**
-
-- **Modern Color Palette**: Slate-based color system with branded blue accents
-- **Enhanced Typography**: Inter font family for modern, readable interface
-- **Subtle Depth**: Professional shadows and layering for visual hierarchy
-- **Gradient Accents**: Beautiful gradient buttons and status indicators
-- **Improved Accessibility**: WCAG AA compliant contrast ratios
-
-#### �🏠 Six Interactive Tabs:
-
-1. **Overview Dashboard** - Executive summary and key metrics
-2. **Charts & Analytics** - Visual data analysis with charts
-3. **Issues Analysis** - Detailed issue breakdown and filtering
-4. **Security Insights** - Security hotspots and vulnerability tracking
-5. **Code Quality** - Coverage, complexity, and maintainability metrics
-6. **Trends & History** - Historical analysis and progress tracking
-
-#### 🎯 Success Animations (New!)
-
-The enhanced template celebrates excellent project metrics:
-
-- **🥇 90%+ Code Coverage**: Medal animation with congratulatory message
-- **🏆 Low Technical Debt**: Trophy display for < 1 hour debt
-- **⭐ Low Complexity**: Star animation for excellent maintainability
-- **🛡️ Zero Security Issues**: Shield animation for perfect security
-
-#### 🚀 Advanced Features:
-
-- **Professional Theme**: Modern slate color palette with branded accents
-- **Enhanced Typography**: Inter font family with improved readability
-- **Interactive Charts**: Chart.js powered visualizations with theme integration
-- **Real-time Filtering**: Advanced search and filter options
-- **Multi-theme Support**: Professional dark/light mode switching with seamless transitions
-- **Responsive Design**: Optimized for all screen sizes with mobile-first approach
-- **Progress Indicators**: Loading states and data fetch progress
-- **Data Export**: Multiple export formats available
-
-Usage:
-
-```bash
-# Use enhanced template
-sonarqube-exporter export --template enhanced
-
-# Configuration file
-{
-  "export": {
-    "template": "enhanced"
-  }
-}
-```
-
-## 💻 Programmatic Usage
-
-### Basic Usage
-
-```javascript
-const { exportSonarQubeIssues, loadConfig } = require('sonarqube-issues-exporter');
-
-async function generateReport() {
-  try {
-    const config = loadConfig();
-    const result = await exportSonarQubeIssues(config);
-
-    if (result.success) {
-      console.log(`Report generated: ${result.outputPath}`);
-      console.log(`Issues exported: ${result.issuesCount}`);
-    }
-  } catch (error) {
-    console.error('Export failed:', error);
-  }
-}
-
-generateReport();
-```
-
-### Advanced Usage with Custom Configuration
-
-```javascript
-const { exportSonarQubeIssues } = require('sonarqube-issues-exporter');
-
-const customConfig = {
-  sonarqube: {
-    url: 'https://sonarcloud.io',
-    token: 'your-token',
-    projectKey: 'your-project',
-    organization: 'your-org',
-  },
-  export: {
-    outputPath: './custom-reports',
-    filename: 'security-report.html',
-    maxIssues: 5000,
-    excludeStatuses: ['CLOSED', 'RESOLVED'],
-  },
-  logging: {
-    level: 'debug',
-  },
-};
-
-exportSonarQubeIssues(customConfig)
-  .then((result) => console.log('Success:', result))
-  .catch((error) => console.error('Error:', error));
-```
-
-## 🔐 Authentication
-
-### SonarQube Server
-
-1. Go to User > My Account > Security
+1. Go to **User > My Account > Security**
 2. Generate a new token
-3. Use the token in your configuration
+3. Pass it via `--token`, the config file, or `SONARQUBE_TOKEN`
 
 ### SonarCloud
 
-1. Go to Account > Security
+1. Go to **Account > Security**
 2. Generate a new token
-3. Include your organization key in the configuration
+3. Include your organization key via `--organization` or the config file
 
-## 📊 Report Features
+---
 
-The generated HTML reports include:
-
-- **Interactive Dashboard** - Overview metrics and charts
-- **Searchable Table** - All issues with filtering capabilities
-- **Dark/Light Theme** - Toggle between themes
-- **Responsive Design** - Works on desktop and mobile
-- **Export Options** - Print-friendly and shareable
-- **GitHub Integration** - Link to source repository
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-1. **Authentication Errors**
-
-   ```
-   Error: Failed to connect to SonarQube
-   ```
-
-   - Check your token permissions
-   - Verify the server URL is correct
-   - Ensure the project key exists
-
-2. **Permission Errors**
-
-   ```
-   Error: Insufficient privileges
-   ```
-
-   - Your token needs "Browse" permission on the project
-   - Contact your SonarQube administrator
-
-3. **Network Issues**
-
-   ```
-   Error: timeout of 30000ms exceeded
-   ```
-
-   - Check your network connection
-   - Verify firewall settings
-   - Try increasing timeout in configuration
-
-### Debug Mode
-
-Enable verbose logging for troubleshooting:
-
-```bash
-sonarqube-exporter export --verbose
-```
-
-Or set log level in configuration:
-
-```json
-{
-  "logging": {
-    "level": "debug",
-    "file": "./debug.log"
-  }
-}
-```
-
-## 📝 Examples
-
-### SonarCloud Example
-
-```bash
-export SONARQUBE_URL="https://sonarcloud.io"
-export SONARQUBE_TOKEN="your_sonarcloud_token"
-export SONARQUBE_PROJECT_KEY="your_project_key"
-export SONARQUBE_ORGANIZATION="your_organization"
-
-sonarqube-exporter export --output ./reports --verbose
-```
-
-### On-Premise SonarQube Example
-
-```bash
-export SONARQUBE_URL="http://localhost:9000"
-export SONARQUBE_TOKEN="your_token"
-export SONARQUBE_PROJECT_KEY="my-project"
-
-sonarqube-exporter export --filename security-audit.html
-```
-
-### CI/CD Integration Example
+## CI/CD example
 
 ```yaml
-# GitHub Actions example
-- name: Generate SonarQube Report
-  run: |
-    npm install -g sonarqube-issues-exporter
-    sonarqube-exporter export --output ./reports
+# GitHub Actions — generate a PDF report after analysis
+- name: Install Chromium
+  run: npx playwright-core install chromium
+
+- name: Export PDF report
+  run: npx sonarqube-issues-exporter export-pdf --project "$PROJECT_KEY" -o report.pdf
   env:
     SONARQUBE_URL: ${{ secrets.SONARQUBE_URL }}
     SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
-    SONARQUBE_PROJECT_KEY: ${{ github.event.repository.name }}
+    PROJECT_KEY: ${{ github.event.repository.name }}
+
+- name: Upload report
+  uses: actions/upload-artifact@v4
+  with:
+    name: sonarqube-report
+    path: report.pdf
 ```
 
-## 🤝 Support
+---
+
+## Troubleshooting
+
+### Authentication errors
+
+```
+Error: Failed to connect to SonarQube
+```
+
+- Check that your token has Browse permission on the project
+- Verify the server URL (include the scheme: `https://`)
+- Run `sonarqube-exporter validate` to confirm connectivity
+
+### Permission errors
+
+```
+Error: Insufficient privileges
+```
+
+Your token needs the **Browse** permission on the target project. Contact your SonarQube administrator.
+
+### Network timeout
+
+```
+Error: timeout of 30000ms exceeded
+```
+
+- Check your network connection and firewall rules
+- Verify the SonarQube server is reachable from your machine
+
+### Debug mode
+
+```bash
+sonarqube-exporter serve --verbose
+```
+
+---
+
+## Support
 
 - **Issues**: [GitHub Issues](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/issues)
-- **Documentation**: [GitHub Repository](https://github.com/The-Lone-Druid/sonarqube-issues-exporter)
+- **Repository**: [GitHub](https://github.com/The-Lone-Druid/sonarqube-issues-exporter)
 - **License**: MIT

@@ -8,6 +8,7 @@ Welcome to the SonarQube Issues Exporter documentation! This directory contains 
 
 - **[NPM Guide](./user-guide/npm-guide.md)** - Complete installation and usage guide
 - **[Migration Guide](./user-guide/migration.md)** - Upgrading from previous versions
+- **[Migration Guide (root)](../MIGRATION.md)** - v3→v4 and v4→v5 breaking changes in detail
 - **[Security Guide](./user-guide/security.md)** - Security best practices and considerations
 
 ### 👨‍💻 For Developers & Contributors
@@ -19,8 +20,7 @@ Welcome to the SonarQube Issues Exporter documentation! This directory contains 
 
 ### 📋 Project Information
 
-- **[Enhancement Plan](./project/enhancement-plan.md)** - Current development roadmap and phases
-- **[Documentation Updates](./project/documentation-updates.md)** - Recent documentation changes
+The `docs/project/` directory contains historical planning documents from the v3.x era (enhancement plans, theme overhaul notes). They are kept for reference but do not reflect the current roadmap.
 
 ## 🚀 Getting Started
 
@@ -34,13 +34,11 @@ Welcome to the SonarQube Issues Exporter documentation! This directory contains 
 
 1. Read the **[Contributing Guide](./development/contributing.md)** for development setup
 2. Follow **[Commit Guidelines](./development/commit-guidelines.md)** for your contributions
-3. Check the **[Enhancement Plan](./project/enhancement-plan.md)** for current development priorities
 
 ### Maintainers
 
 1. Review **[Publishing Guide](./development/publishing.md)** for release process
 2. Understand **[Versioning Guide](./development/versioning.md)** for version management
-3. Monitor **[Documentation Updates](./project/documentation-updates.md)** for recent changes
 
 ## 📁 Directory Structure
 
@@ -56,9 +54,7 @@ docs/
 │   ├── commit-guidelines.md           # Commit conventions
 │   ├── publishing.md                  # Release process
 │   └── versioning.md                  # Version management
-└── project/                          # Project management docs
-    ├── enhancement-plan.md            # Development roadmap
-    └── documentation-updates.md       # Doc change history
+└── project/                          # Historical planning docs (v3.x era)
 ```
 
 ## 🔄 Root Level Files
