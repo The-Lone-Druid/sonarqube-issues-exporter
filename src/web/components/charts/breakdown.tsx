@@ -21,6 +21,7 @@ function tooltipFormatter(
   total: number,
 ): string {
   const p = params[0];
+  if (!p) return '';
   const pct = total > 0 ? ((p.value / total) * 100).toFixed(1) : '0';
   return `
     <div style="display:flex;align-items:center;gap:6px;padding:2px 0">

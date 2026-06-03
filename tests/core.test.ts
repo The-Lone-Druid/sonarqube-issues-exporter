@@ -123,4 +123,12 @@ describe('config', () => {
       loadConfig({ overrides: { sonarqube: { url: 'not a url', token: 'tk' } } }),
     ).toThrow(/Invalid SonarQube URL/);
   });
+
+  it('throws on out-of-range port', () => {
+    expect(() =>
+      loadConfig({
+        overrides: { sonarqube: { url: 'https://s', token: 'tk' }, server: { port: 99999 } },
+      }),
+    ).toThrow(/port must be between/);
+  });
 });

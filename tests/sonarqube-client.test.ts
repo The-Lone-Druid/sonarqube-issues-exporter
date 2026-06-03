@@ -1,13 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  assignIssue,
+  changeHotspotStatus,
+  commentIssue,
   fetchAllIssues,
   fetchIssues,
+  getIssueChangelog,
+  getIssueFilterFacets,
   getIssueFacets,
   getProjectMeasures,
   getQualityGateStatus,
   getScmBlame,
   getSecurityHotspots,
   getSourceLines,
+  setIssueSeverity,
+  setIssueTags,
   SonarQubeApiError,
   transitionIssue,
 } from '../src/core/sonarqube/client';
@@ -44,6 +51,16 @@ beforeEach(() => {
 });
 
 afterEach(() => vi.unstubAllGlobals());
+
+describe('apiRequest error branches', () => {
+  it('throws SonarQubeApiError with status 403 on forbidden', async () => {
+    handler = () => ({ status: 403, json: {} });
+    await expect(fetchIssues(conn, { projectKey: 'p' })).rejects.toMatchObject({
+      name: 'SonarQubeApiError',
+      status: 403,
+    });
+  });
+});
 
 describe('apiRequest / fetchIssues', () => {
   it('builds the issues URL with org, ref and filter params', async () => {
@@ -254,6 +271,14 @@ describe('getProjectMeasures (new code)', () => {
   });
 });
 
+describe('getSecurityHotspots', () => {
+  it('returns empty fallback on error', async () => {
+    handler = () => ({ status: 500, json: {} });
+    const h = await getSecurityHotspots(conn, { projectKey: 'p' });
+    expect(h).toEqual({ total: 0, byPriority: {}, byCategory: {}, hotspots: [] });
+  });
+});
+
 describe('getScmBlame', () => {
   it('maps the scm tuples to objects', async () => {
     handler = () => ({
@@ -266,6 +291,43 @@ describe('getScmBlame', () => {
       date: '2026-01-02T00:00:00+0000',
       revision: 'abcdef1',
     });
+  });
+
+  it('returns [] on error', async () => {
+    handler = () => ({ status: 500, json: {} });
+    expect(await getScmBlame(conn, {}, 'proj:a.ts', 1, 1)).toEqual([]);
+  });
+});
+
+describe('getIssueChangelog', () => {
+  it('maps changelog entries', async () => {
+    handler = () => ({
+      json: {
+        changelog: [
+          {
+            userName: 'alice',
+            creationDate: '2026-01-01',
+            diffs: [{ key: 'severity', newValue: 'MAJOR' }],
+          },
+        ],
+      },
+    });
+    const log = await getIssueChangelog(conn, 'K1');
+    expect(log[0]).toMatchObject({ user: 'alice', creationDate: '2026-01-01' });
+    expect(log[0]?.diffs[0]).toMatchObject({ key: 'severity', newValue: 'MAJOR' });
+  });
+
+  it('returns [] on error', async () => {
+    handler = () => ({ status: 500, json: {} });
+    expect(await getIssueChangelog(conn, 'K1')).toEqual([]);
+  });
+});
+
+describe('getIssueFilterFacets', () => {
+  it('returns empty arrays on error', async () => {
+    handler = () => ({ status: 500, json: {} });
+    const facets = await getIssueFilterFacets(conn, { projectKey: 'p' });
+    expect(facets).toEqual({ tags: [], rules: [], assignees: [] });
   });
 });
 
@@ -301,6 +363,40 @@ describe('write actions', () => {
 
     handler = () => ({ status: 403, json: {} });
     await expect(transitionIssue(conn, 'K', 'resolve')).rejects.toBeInstanceOf(SonarQubeApiError);
+  });
+
+  it('assignIssue sends the assignee param (and omits it when absent)', async () => {
+    handler = () => ({ json: {} });
+    await assignIssue(conn, 'K', 'alice');
+    expect(new URL(lastUrl).pathname).toBe('/api/issues/assign');
+    // Omitting assignee should still resolve (unassign)
+    await assignIssue(conn, 'K', undefined);
+  });
+
+  it('commentIssue posts the comment text', async () => {
+    handler = () => ({ json: {} });
+    await expect(commentIssue(conn, 'K', 'LGTM')).resolves.toBeUndefined();
+    expect(new URL(lastUrl).pathname).toBe('/api/issues/add_comment');
+  });
+
+  it('setIssueSeverity posts the severity', async () => {
+    handler = () => ({ json: {} });
+    await expect(setIssueSeverity(conn, 'K', 'CRITICAL')).resolves.toBeUndefined();
+    expect(new URL(lastUrl).pathname).toBe('/api/issues/set_severity');
+  });
+
+  it('setIssueTags posts comma-joined tags', async () => {
+    handler = () => ({ json: {} });
+    await expect(setIssueTags(conn, 'K', ['security', 'owasp'])).resolves.toBeUndefined();
+    expect(new URL(lastUrl).pathname).toBe('/api/issues/set_tags');
+  });
+
+  it('changeHotspotStatus posts status and optional resolution/comment', async () => {
+    handler = () => ({ json: {} });
+    await expect(changeHotspotStatus(conn, 'H', 'REVIEWED', 'SAFE')).resolves.toBeUndefined();
+    expect(new URL(lastUrl).pathname).toBe('/api/hotspots/change_status');
+    // Without resolution/comment
+    await changeHotspotStatus(conn, 'H', 'TO_REVIEW');
   });
 });
 
