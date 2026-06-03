@@ -30,12 +30,13 @@ export function computeIssueMetrics(issues: SonarQubeIssue[]): IssueMetrics {
     rules: (issue) => issue.rule,
   });
 
+  // calculateMetrics always populates every key it is given, so ! is safe here.
   return {
     total: issues.length,
-    severities: grouped['severities'] ?? {},
-    types: grouped['types'] ?? {},
-    statuses: grouped['statuses'] ?? {},
-    components: grouped['components'] ?? {},
-    rules: grouped['rules'] ?? {},
+    severities: grouped['severities']!,
+    types: grouped['types']!,
+    statuses: grouped['statuses']!,
+    components: grouped['components']!,
+    rules: grouped['rules']!,
   };
 }

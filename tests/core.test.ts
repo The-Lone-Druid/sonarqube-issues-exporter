@@ -1,8 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { writeFileSync, unlinkSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import {
   escapeHtml,
   extractFilename,
   extractPath,
+  formatDate,
   formatRating,
   formatTechnicalDebt,
 } from '../src/core/format';
@@ -39,6 +43,15 @@ describe('format', () => {
     expect(formatRating('5')).toBe('E');
     expect(formatRating(undefined)).toBe('N/A');
     expect(formatRating('9')).toBe('N/A');
+  });
+
+  it('formats a date string and a Date object identically', () => {
+    const iso = '2026-01-15T10:30:00.000Z';
+    const fromString = formatDate(iso);
+    const fromDate = formatDate(new Date(iso));
+    expect(fromString).toBe(fromDate);
+    expect(typeof fromString).toBe('string');
+    expect(fromString.length).toBeGreaterThan(0);
   });
 });
 
@@ -130,5 +143,30 @@ describe('config', () => {
         overrides: { sonarqube: { url: 'https://s', token: 'tk' }, server: { port: 99999 } },
       }),
     ).toThrow(/port must be between/);
+  });
+
+  it('reads sonarqube url and token from a config file on disk', () => {
+    const configPath = join(tmpdir(), `sq-test-${Date.now()}.json`);
+    writeFileSync(
+      configPath,
+      JSON.stringify({ sonarqube: { url: 'https://disk.example.com', token: 'disk-tok' } }),
+    );
+    try {
+      const config = loadConfig({ configPath });
+      expect(config.sonarqube.url).toBe('https://disk.example.com');
+      expect(config.sonarqube.token).toBe('disk-tok');
+    } finally {
+      if (existsSync(configPath)) unlinkSync(configPath);
+    }
+  });
+
+  it('throws when the config file contains malformed JSON', () => {
+    const configPath = join(tmpdir(), `sq-bad-${Date.now()}.json`);
+    writeFileSync(configPath, '{ broken json }');
+    try {
+      expect(() => loadConfig({ configPath })).toThrow(/Failed to load config file/);
+    } finally {
+      if (existsSync(configPath)) unlinkSync(configPath);
+    }
   });
 });

@@ -324,6 +324,30 @@ describe('getIssueChangelog', () => {
 });
 
 describe('getIssueFilterFacets', () => {
+  it('returns tags, rules and assignees from facet data (filters empty vals)', async () => {
+    handler = () => ({
+      json: {
+        paging: { total: 5 },
+        issues: [],
+        facets: [
+          {
+            property: 'tags',
+            values: [
+              { val: 'security', count: 3 },
+              { val: '', count: 1 },
+            ],
+          },
+          { property: 'rules', values: [{ val: 'java:S100', count: 2 }] },
+          { property: 'assignees', values: [{ val: 'alice', count: 5 }] },
+        ],
+      },
+    });
+    const facets = await getIssueFilterFacets(conn, { projectKey: 'p' });
+    expect(facets.tags).toEqual(['security']); // empty val filtered out
+    expect(facets.rules).toEqual(['java:S100']);
+    expect(facets.assignees).toEqual(['alice']);
+  });
+
   it('returns empty arrays on error', async () => {
     handler = () => ({ status: 500, json: {} });
     const facets = await getIssueFilterFacets(conn, { projectKey: 'p' });
