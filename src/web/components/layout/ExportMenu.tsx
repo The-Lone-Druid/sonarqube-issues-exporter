@@ -3,8 +3,8 @@ import { ChevronDown, FileDown, FileSpreadsheet, Loader2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { api, ApiError, reportUrl } from '../../lib/api-client';
 import { useSelection } from '../../hooks/use-selection';
-import { useIssues } from '../../hooks/use-queries';
-import { exportIssuesToCSV } from '../../lib/export';
+import { useHotspots, useIssues } from '../../hooks/use-queries';
+import { exportHotspotsToCSV, exportIssuesToCSV } from '../../lib/export';
 import { cn } from '../../lib/utils';
 
 export function ExportMenu() {
@@ -14,6 +14,7 @@ export function ExportMenu() {
   const menuRef = useRef<HTMLDivElement>(null);
 
   const { data: issuesData } = useIssues(project, ref, newCode);
+  const { data: hotspotsData } = useHotspots(project, ref);
 
   // Close on outside click
   useEffect(() => {
@@ -49,10 +50,16 @@ export function ExportMenu() {
     }
   };
 
-  const exportCsv = (): void => {
+  const exportIssuesCsv = (): void => {
     if (!project || !issuesData?.issues) return;
     setOpen(false);
     exportIssuesToCSV(issuesData.issues, project);
+  };
+
+  const exportHotspotsCsv = (): void => {
+    if (!project || !hotspotsData?.hotspots) return;
+    setOpen(false);
+    exportHotspotsToCSV(hotspotsData.hotspots, project);
   };
 
   return (
@@ -71,11 +78,13 @@ export function ExportMenu() {
           <FileDown className="h-4 w-4" />
         )}
         Export
-        <ChevronDown className={cn('h-3 w-3 transition-transform duration-150', open && 'rotate-180')} />
+        <ChevronDown
+          className={cn('h-3 w-3 transition-transform duration-150', open && 'rotate-180')}
+        />
       </Button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1.5 w-44 overflow-hidden rounded-lg border border-border bg-card shadow-lg animate-fade-in">
+        <div className="absolute right-0 top-full z-50 mt-1.5 w-48 overflow-hidden rounded-lg border border-border bg-card shadow-lg animate-fade-in">
           <button
             type="button"
             onClick={exportPdf}
@@ -84,14 +93,24 @@ export function ExportMenu() {
             <FileDown className="h-4 w-4 text-muted-foreground" />
             Export PDF
           </button>
+          <div className="mx-3 border-t border-border" />
           <button
             type="button"
-            onClick={exportCsv}
+            onClick={exportIssuesCsv}
             disabled={!issuesData?.issues?.length}
             className="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm transition-colors hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
           >
             <FileSpreadsheet className="h-4 w-4 text-muted-foreground" />
-            Export CSV
+            Issues CSV
+          </button>
+          <button
+            type="button"
+            onClick={exportHotspotsCsv}
+            disabled={!hotspotsData?.hotspots?.length}
+            className="flex w-full items-center gap-2.5 px-3 py-2.5 text-sm transition-colors hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
+          >
+            <FileSpreadsheet className="h-4 w-4 text-muted-foreground" />
+            Hotspots CSV
           </button>
         </div>
       )}

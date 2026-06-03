@@ -6,7 +6,6 @@ import type { AppConfig } from '../src/core/types';
 const config: AppConfig = {
   sonarqube: { url: 'https://sonar.example.com', token: 'secret-token', defaultProjectKey: 'demo' },
   server: { port: 7010, host: '127.0.0.1', open: false, auth: false, allowWrite: false },
-  ide: { editor: 'vscode' },
   logging: { level: 'error' },
 };
 

@@ -7,7 +7,6 @@ import type { AppConfig } from '../src/core/types';
 const config: AppConfig = {
   sonarqube: { url: 'https://sonar.example.com', token: 'tok' },
   server: { port: 7010, host: '127.0.0.1', open: false, auth: false, allowWrite: false },
-  ide: { editor: 'vscode', projectRoots: { demo: '/Users/me/demo' } },
   logging: { level: 'error' },
 };
 
@@ -130,24 +129,6 @@ describe('GET /api/rules/:key', () => {
     const body = (await res.json()) as { key: string; descriptionSections: Array<{ key: string }> };
     expect(body.key).toBe('java:S1234');
     expect(body.descriptionSections.map((s) => s.key)).toContain('how_to_fix');
-  });
-});
-
-describe('GET /api/ide/resolve', () => {
-  it('maps a component to a local path + editor URLs using projectRoots', async () => {
-    const res = await app.request(
-      '/api/ide/resolve?project=demo&component=demo:src/Auth.ts&line=42',
-    );
-    const body = (await res.json()) as {
-      absPath: string;
-      line: number;
-      urls: { vscode: string };
-      jetbrainsRest: string;
-    };
-    expect(body.absPath).toBe('/Users/me/demo/src/Auth.ts');
-    expect(body.line).toBe(42);
-    expect(body.urls.vscode).toBe('vscode://file//Users/me/demo/src/Auth.ts:42:1');
-    expect(body.jetbrainsRest).toContain('localhost:63342');
   });
 });
 
