@@ -1,5 +1,38 @@
 # Changelog
 
+## 5.0.0
+
+### Major Changes
+
+- [`27cf18d`](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/27cf18d850ebef09e0a2a68a5caf5f33bc339457) Thanks [@The-Lone-Druid](https://github.com/The-Lone-Druid)! - feat: CSV export, ECharts charts, 2026 UI overhaul, disk cache, IDE integration removal
+
+  ### Breaking changes
+  - Removed `IdeConfig`, `EditorId`, and `IdeResolution` types from the public library surface (`export type * from './types'`). Consumers importing these types will need to remove the imports.
+  - `AppConfig` no longer has an `ide` field. Config files with an `ide` key are silently ignored.
+  - The `--editor` CLI flag for `serve` has been removed.
+
+  ### New features
+  - **Export menu**: Topbar now has a single "Export" dropdown listing both PDF and CSV options side-by-side.
+  - **CSV export**: Downloads all issues for the current project as a standards-compliant CSV (RFC 4180) containing all issue fields — key, rule, severity, type, component, line, status, message, effort, debt, author, assignee, tags, created, updated.
+  - **Disk-based JSON cache**: Server now persists in-memory cache entries to `~/.sq-exporter/cache/` after each successful SonarQube fetch. Cache is warmed from disk on startup, so data survives server restarts.
+
+  ### Enhancements
+  - **Charts**: Replaced Recharts (deprecated 1.x/2.x) with ECharts + echarts-for-react. Charts are now theme-aware, feature gradient bar fills, and rich tooltips showing count + percentage.
+  - **2026 UI overhaul**: New indigo/violet primary palette (light: `#6366f1`, dark: `#818cf8`), deep navy dark background, `fadeInUp`/`slideInRight` keyframe entrance animations, staggered metric card reveals, card hover-lift effect, `active:scale-95` button press feedback, sidebar active-state left-border indicator.
+  - **IDE integration removed**: `EditorPicker` dropdown, "Open in IDE" button, and all server-side IDE path resolution code have been removed to eliminate user confusion.
+
+### Minor Changes
+
+- [`2ec5982`](https://github.com/The-Lone-Druid/sonarqube-issues-exporter/commit/2ec5982ff71b0db1fe273a76aa81fddc506e3d1a) Thanks [@The-Lone-Druid](https://github.com/The-Lone-Druid)! - feat(scan): in-app SonarQube scan — no more leaving the dashboard
+
+  ### New features
+  - **`sonarqube-exporter scan` CLI command**: scans the current directory against your configured SonarQube/SonarCloud instance, streams live logs to stdout, and waits for the Compute Engine task to finish before exiting. Exits 0 on success, 1 on failure.
+  - **Scan button in the dashboard Topbar**: opens a slide-in log drawer showing live scanner output. Polls every second during active scans, auto-refreshes all dashboard data when analysis completes.
+  - **Auto-detects git branch**: passes the current branch name as `sonar.branch.name` automatically.
+  - **Respects `sonar-project.properties`**: if the file exists in the project root, project-level settings are read from it; only connection credentials (URL, token, organization) are injected by the tool.
+  - **No separate install required**: bundles `sonarqube-scanner` as a runtime dependency. On first run the scanner downloads its JRE and engine (~200 MB, cached for subsequent runs).
+  - **SonarCloud support**: `sonar.organization` is forwarded automatically from your existing configuration.
+
 ## 4.0.0
 
 ### Major Changes
