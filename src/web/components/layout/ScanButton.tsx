@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { CheckCircle2, Loader2, Play, ScanLine, X, XCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '../ui/button';
@@ -71,11 +72,11 @@ export function ScanButton() {
       setOpen(true);
       return;
     }
-    // Start a new scan using the currently selected project + branch.
-    const branch = ref?.type === 'branch' ? ref.value : undefined;
     setOpen(true);
+    if (!project) return; // need a project selected first
+    const branch = ref?.type === 'branch' ? ref.value : undefined;
     try {
-      await api.startScan(project ?? '', branch);
+      await api.startScan(project, branch);
       await refetch();
     } catch {
       await refetch();
@@ -96,7 +97,6 @@ export function ScanButton() {
         variant="outline"
         size="sm"
         onClick={handleScan}
-        disabled={busy && !open}
         title={busy ? 'Scan in progress — click to view logs' : 'Scan project with SonarQube'}
         className={cn('gap-1.5', PHASE_COLOR[phase])}
       >
@@ -104,8 +104,12 @@ export function ScanButton() {
         <span className="hidden sm:inline">{PHASE_LABEL[phase]}</span>
       </Button>
 
-      {open && (
-        <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setOpen(false)}>
+      {open &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[9999] flex justify-end bg-black/40"
+            onClick={() => setOpen(false)}
+          >
           <div
             className="relative flex h-full w-[520px] max-w-full flex-col border-l border-border bg-background shadow-2xl animate-slide-in-right"
             onClick={(e) => e.stopPropagation()}
@@ -138,8 +142,9 @@ export function ScanButton() {
             <div className="flex-1 overflow-y-auto px-4 py-3 font-mono text-xs leading-5">
               {!data?.logs.length && phase === 'idle' && (
                 <p className="text-muted-foreground">
-                  Click <strong>Start Scan</strong> to run SonarQube analysis on the current
-                  directory.
+                  {project
+                    ? 'Click Start Scan to run SonarQube analysis on the current directory.'
+                    : 'Select a project first, then click Start Scan.'}
                 </p>
               )}
               {data?.logs.map((line, i) => (
@@ -180,7 +185,8 @@ export function ScanButton() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );

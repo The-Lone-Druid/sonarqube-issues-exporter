@@ -84,7 +84,7 @@ async function doScan(options: ScanOptions, branch?: string): Promise<void> {
 
 async function runScanner(options: ScanOptions, branch?: string): Promise<void> {
   // Dynamic import so the heavy package is only loaded when a scan is triggered.
-  let scannerMod: { default?: unknown; scan?: unknown };
+  let scannerMod: { scan?: unknown; customScanner?: unknown };
   try {
     scannerMod = (await import('sonarqube-scanner')) as typeof scannerMod;
   } catch {
@@ -93,18 +93,13 @@ async function runScanner(options: ScanOptions, branch?: string): Promise<void> 
     );
   }
 
-  // Support both default-export and named-export shapes.
   const scanFn =
-    typeof (scannerMod.default as Record<string, unknown> | undefined)?.['scan'] === 'function'
-      ? ((scannerMod.default as Record<string, unknown>)['scan'] as (o: unknown) => Promise<void>)
-      : typeof scannerMod.scan === 'function'
-        ? (scannerMod.scan as (o: unknown) => Promise<void>)
-        : null;
+    typeof scannerMod.scan === 'function'
+      ? (scannerMod.scan as (o: unknown) => Promise<void>)
+      : null;
 
   if (!scanFn) {
-    throw new Error(
-      'Could not find scan() in @sonarqube/scanner. The package API may have changed — please report this.',
-    );
+    throw new Error('Could not find scan() in sonarqube-scanner. Try reinstalling the package.');
   }
 
   const hasProps = existsSync(join(options.cwd, 'sonar-project.properties'));
@@ -127,6 +122,8 @@ async function runScanner(options: ScanOptions, branch?: string): Promise<void> 
 
   if (branch) sonarOptions['sonar.branch.name'] = branch;
 
+  push('[info] On first run the scanner may download binaries (~200 MB) — this can take a minute.');
+
   // Temporarily capture console output so scanner logs appear in our log panel.
   const capture = (...args: unknown[]): void => {
     const line = args.map(String).join(' ').trim();
@@ -145,6 +142,16 @@ async function runScanner(options: ScanOptions, branch?: string): Promise<void> 
 
   try {
     await scanFn({ serverUrl: options.serverUrl, token: options.token, options: sonarOptions });
+  } catch (err) {
+    // If JRE provisioning failed, the error message will reference missing CLI.
+    // Surface a clearer message so users know what to do.
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes('not found in PATH') || msg.includes('SonarScanner CLI')) {
+      throw new Error(
+        `${msg}\n\nFix: install sonar-scanner CLI (https://docs.sonarsource.com/sonarqube-server/analyzing-source-code/scanners/sonarscanner/) or ensure your SonarQube server supports JRE provisioning (SonarQube 9.7+).`,
+      );
+    }
+    throw err;
   } finally {
     console.log = saved.log;
     console.info = saved.info;
