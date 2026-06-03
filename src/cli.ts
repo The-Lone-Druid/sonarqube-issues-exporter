@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as readline from 'node:readline';
 import { loadConfig, toConnection } from './core/config';
@@ -149,23 +149,70 @@ program
 program
   .command('setup')
   .description('Create a configuration file interactively')
-  .option('--global', 'Write to ~/.sonarqube-exporter.json')
+  .option(
+    '--global',
+    'Write config to ~/.sonarqube-exporter.json (token always goes to ~/.sonarqube-exporter.env)',
+  )
   .action(async (options: { global?: boolean }) => {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     const ask = (prompt: string): Promise<string> =>
       new Promise((resolve) => rl.question(prompt, resolve));
 
+    /** Read a secret without echoing characters to the terminal. */
+    const askSecret = (prompt: string): Promise<string> =>
+      new Promise((resolve) => {
+        process.stdout.write(prompt);
+        let value = '';
+        const onData = (char: Buffer): void => {
+          const c = char.toString('utf8');
+          if (c === '\r' || c === '\n') {
+            process.stdin.setRawMode(false);
+            process.stdin.pause();
+            process.stdin.removeListener('data', onData);
+            process.stdout.write('\n');
+            resolve(value);
+          } else if (c === '') {
+            process.stdout.write('\n');
+            process.exit(1);
+          } else if (c === '') {
+            if (value.length > 0) {
+              value = value.slice(0, -1);
+              process.stdout.write('\b \b');
+            }
+          } else {
+            value += c;
+            process.stdout.write('*');
+          }
+        };
+        process.stdin.setRawMode(true);
+        process.stdin.resume();
+        process.stdin.on('data', onData);
+      });
+
     try {
       console.log('\nSonarQube Dashboard — Setup\n');
       const url = (await ask('SonarQube Server URL (e.g. https://sonarcloud.io): ')).trim();
-      const token = (await ask('SonarQube Token: ')).trim();
+      const token = (await askSecret('SonarQube Token (hidden): ')).trim();
       const organization = (await ask('Organization (optional, SonarCloud): ')).trim();
       const defaultProjectKey = (await ask('Default project key (optional): ')).trim();
 
-      const config = {
+      const home = process.env['HOME'] || '.';
+      const credPath = join(home, '.sonarqube-exporter.env');
+
+      // Write token to the home-directory env file — never in the JSON config.
+      const existingCreds = existsSync(credPath) ? readFileSync(credPath, 'utf-8') : '';
+      const updatedCreds =
+        existingCreds
+          .split('\n')
+          .filter((l) => !l.startsWith('SONARQUBE_TOKEN=') && !l.startsWith('SONARQUBE_URL='))
+          .concat([`SONARQUBE_URL=${url}`, `SONARQUBE_TOKEN=${token}`])
+          .join('\n')
+          .trim() + '\n';
+      writeFileSync(credPath, updatedCreds, { mode: 0o600 });
+
+      // Write everything else (no token) to the JSON config.
+      const configBody = {
         sonarqube: {
-          url,
-          token,
           ...(organization && { organization }),
           ...(defaultProjectKey && { defaultProjectKey }),
         },
@@ -174,12 +221,14 @@ program
       };
 
       const configPath = options.global
-        ? join(process.env['HOME'] || '.', '.sonarqube-exporter.json')
+        ? join(home, '.sonarqube-exporter.json')
         : '.sonarqube-exporter.json';
 
-      writeFileSync(configPath, JSON.stringify(config, null, 2));
-      console.log(`\nConfiguration saved to: ${configPath}`);
-      console.log('\nNext: run `sonarqube-exporter serve`');
+      writeFileSync(configPath, JSON.stringify(configBody, null, 2));
+
+      console.log('\n  ✓ Credentials saved to:  ' + credPath + '  (chmod 600, token not in JSON)');
+      console.log('  ✓ Config saved to:        ' + configPath);
+      console.log('\n  Next: run `sonarqube-exporter serve`\n');
     } catch (error) {
       console.error('Setup failed:', error instanceof Error ? error.message : error);
       process.exit(1);

@@ -120,10 +120,14 @@ function loadConfigFile(configPath: string): LegacyConfigShape {
 }
 
 export function loadConfig(options: ConfigLoadOptions = {}): AppConfig {
+  // Load project-level .env first, then the home-directory credentials file so
+  // that SONARQUBE_TOKEN never has to live inside the JSON config file.
   loadEnvFile();
+  const home = process.env['HOME'];
+  if (home) loadEnvFile(join(home, '.sonarqube-exporter.env'));
+
   let config = getDefaultConfig();
 
-  const home = process.env['HOME'];
   const configPaths = [
     options.configPath,
     ...CONFIG_FILE_NAMES,
