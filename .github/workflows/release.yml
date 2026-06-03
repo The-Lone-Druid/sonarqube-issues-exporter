@@ -37,6 +37,9 @@ jobs:
         with:
           title: 'chore: version packages'
           commit: 'chore: version packages'
+          # Tag the release and create a GitHub Release without publishing to npm.
+          # npm publish remains a manual step (`pnpm release`).
+          publish: pnpm changeset tag
           createGithubReleases: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
