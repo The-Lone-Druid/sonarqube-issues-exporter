@@ -168,7 +168,6 @@ program
           const c = char.toString('utf8');
           if (c === '\r' || c === '\n') {
             process.stdin.setRawMode(false);
-            process.stdin.pause();
             process.stdin.removeListener('data', onData);
             process.stdout.write('\n');
             resolve(value);
