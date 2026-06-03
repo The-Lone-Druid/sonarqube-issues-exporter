@@ -32,6 +32,7 @@ import { cached, clearCache, TTL } from '../cache';
 import { handle } from '../errors';
 import { renderReportPdf } from '../pdf/renderer';
 import { PdfUnavailableError } from '../pdf/install';
+import { getScanState, startScan } from '../scanner';
 
 function parseList(value: string | undefined): string[] | undefined {
   if (!value) return undefined;
@@ -503,6 +504,36 @@ function registerWriteRoutes(api: Hono, ctx: ServerContext): void {
       return c.json({ ok: true });
     } catch (e) {
       return fail(c, e);
+    }
+  });
+
+  // ── Scan ──────────────────────────────────────────────────────────────────
+
+  api.get('/scan/status', (c) => c.json(getScanState()));
+
+  api.post('/scan', async (c) => {
+    const payload = (await c.req.json().catch(() => ({}))) as {
+      projectKey?: string;
+      branch?: string;
+    };
+    const projectKey = payload.projectKey ?? ctx.config.sonarqube.defaultProjectKey;
+    if (!projectKey) {
+      return c.json({ error: 'bad_request', message: 'projectKey is required' }, 400);
+    }
+    try {
+      await startScan({
+        projectKey,
+        cwd: process.cwd(),
+        serverUrl: ctx.conn.url,
+        token: ctx.conn.token,
+        ...(payload.branch && { branch: payload.branch }),
+      });
+      return c.json({ ok: true });
+    } catch (err) {
+      return c.json(
+        { error: 'conflict', message: err instanceof Error ? err.message : 'Scan failed to start' },
+        409,
+      );
     }
   });
 }

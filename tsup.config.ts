@@ -15,6 +15,6 @@ export default defineConfig([
     format: ['cjs'],
     sourcemap: true,
     // Keep ESM-only / native deps out of the CJS bundle; loaded at runtime.
-    external: ['playwright-core', 'open'],
+    external: ['playwright-core', 'open', 'sonarqube-scanner'],
   },
 ]);

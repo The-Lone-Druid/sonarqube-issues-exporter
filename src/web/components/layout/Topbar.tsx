@@ -7,6 +7,7 @@ import { formatRelative } from '../../lib/format';
 import { BranchPrSelector, ProjectSwitcher } from './selectors';
 import { ExportMenu } from './ExportMenu';
 import { NewCodeToggle } from './NewCodeToggle';
+import { ScanButton } from './ScanButton';
 import { cn } from '../../lib/utils';
 
 export function Topbar() {
@@ -27,6 +28,7 @@ export function Topbar() {
             Updated {formatRelative(new Date(summary.dataUpdatedAt).toISOString())}
           </span>
         )}
+        <ScanButton />
         <ExportMenu />
         <Button
           variant="outline"

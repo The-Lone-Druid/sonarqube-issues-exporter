@@ -71,6 +71,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.13.0",
+    "sonarqube-scanner": "^4.3.6",
     "commander": "^12.1.0",
     "echarts": "^6.1.0",
     "echarts-for-react": "^3.0.6",

@@ -11,6 +11,7 @@ import type { DeepPartial, AppConfig } from './core/types';
 import { openBrowser, startServer } from './server/server';
 import { renderReportPdf } from './server/pdf/renderer';
 import { PdfUnavailableError } from './server/pdf/install';
+import { startScan, getScanState } from './server/scanner';
 
 const packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8')) as {
   version: string;
@@ -289,6 +290,75 @@ program
       process.exitCode = 1;
     } finally {
       if (running) await running.close();
+    }
+  });
+
+interface ScanFlags extends ConnectionFlags {
+  project?: string;
+  branch?: string;
+}
+
+program
+  .command('scan')
+  .description('Run a SonarQube scan on the current directory and wait for results to be processed')
+  .option('-c, --config <path>', 'Path to configuration file')
+  .option('--url <url>', 'SonarQube server URL')
+  .option('--token <token>', 'SonarQube authentication token')
+  .option('--organization <org>', 'SonarQube organization (for SonarCloud)')
+  .option('--project <key>', 'Project key (defaults to configured defaultProjectKey)')
+  .option('--branch <name>', 'Branch name (defaults to current git branch)')
+  .option('-v, --verbose', 'Enable verbose logging')
+  .action(async (flags: ScanFlags) => {
+    try {
+      const config = resolveConfig(flags);
+      initLogger(config.logging);
+
+      const projectKey = flags.project ?? config.sonarqube.defaultProjectKey;
+      if (!projectKey) {
+        console.error(
+          'No project key. Pass --project <key> or set defaultProjectKey in your config.',
+        );
+        process.exit(1);
+      }
+
+      console.log(`\n  ◆ Starting SonarQube scan`);
+      console.log(`  ➜ Project: ${projectKey}`);
+      console.log(`  ➜ Directory: ${process.cwd()}`);
+      console.log('');
+
+      await startScan({
+        projectKey,
+        cwd: process.cwd(),
+        serverUrl: config.sonarqube.url,
+        token: config.sonarqube.token,
+        ...(flags.branch && { branch: flags.branch }),
+      });
+
+      // Poll until the scan finishes, printing new log lines as they arrive.
+      let lastLen = 0;
+      const poll = (): Promise<void> =>
+        new Promise((resolve) => {
+          const tick = (): void => {
+            const state = getScanState();
+            const newLines = state.logs.slice(lastLen);
+            for (const line of newLines) process.stdout.write(line + '\n');
+            lastLen = state.logs.length;
+
+            if (state.phase === 'success' || state.phase === 'error') {
+              process.exitCode = state.phase === 'error' ? 1 : 0;
+              resolve();
+            } else {
+              setTimeout(tick, 800);
+            }
+          };
+          tick();
+        });
+
+      await poll();
+      console.log('');
+    } catch (error) {
+      console.error('Scan failed:', error instanceof Error ? error.message : error);
+      process.exit(1);
     }
   });
 

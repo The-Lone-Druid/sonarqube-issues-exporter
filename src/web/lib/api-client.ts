@@ -62,6 +62,15 @@ export interface BranchesResponse {
 /** A branch or pull-request selection; undefined = main branch. */
 export type Ref = { type: 'branch'; value: string } | { type: 'pr'; value: string } | undefined;
 
+export type ScanPhase = 'idle' | 'scanning' | 'processing' | 'success' | 'error';
+
+export interface ScanStatus {
+  phase: ScanPhase;
+  logs: string[];
+  startedAt?: number;
+  endedAt?: number;
+}
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -232,6 +241,11 @@ export const api = {
     postJson(`/api/issues/${enc(key)}/severity`, { severity }),
   hotspotStatus: (key: string, status: string, resolution?: string, comment?: string) =>
     postJson(`/api/hotspots/${enc(key)}/status`, { status, resolution, comment }),
+
+  scanStatus: () => request<ScanStatus>('/api/scan/status'),
+
+  startScan: (projectKey: string, branch?: string) =>
+    postJson<{ ok: boolean }>('/api/scan', { projectKey, ...(branch && { branch }) }),
 
   /** Request a server-rendered PDF; returns the binary blob. */
   exportPdf: async (projectKey: string, ref: Ref, newCode?: boolean): Promise<Blob> => {
