@@ -7,7 +7,7 @@ import * as readline from 'node:readline';
 import { loadConfig, toConnection } from './core/config';
 import { initLogger, logger } from './core/logger';
 import { getSystemStatus, listProjects } from './core/sonarqube/projects';
-import type { DeepPartial, AppConfig, EditorId } from './core/types';
+import type { DeepPartial, AppConfig } from './core/types';
 import { openBrowser, startServer } from './server/server';
 import { renderReportPdf } from './server/pdf/renderer';
 import { PdfUnavailableError } from './server/pdf/install';
@@ -59,7 +59,6 @@ interface ServeFlags extends ConnectionFlags {
   open?: boolean;
   auth?: boolean;
   allowWrite?: boolean;
-  editor?: string;
 }
 
 program
@@ -75,13 +74,11 @@ program
   .option('--no-open', 'Do not open the browser automatically')
   .option('--auth', 'Require a local token for API access (shared machines)')
   .option('--allow-write', 'Enable in-app write actions (issue triage, hotspot status)')
-  .option('--editor <name>', 'Default editor for Open in IDE (vscode|cursor|windsurf|jetbrains)')
   .option('-v, --verbose', 'Enable verbose logging')
   .action(async (flags: ServeFlags) => {
     try {
       const config = resolveConfig(flags);
       if (flags.allowWrite) config.server.allowWrite = true;
-      if (flags.editor) config.ide.editor = flags.editor as EditorId;
       initLogger(config.logging);
 
       logger.info('Validating SonarQube connection...');
@@ -173,8 +170,6 @@ program
           ...(defaultProjectKey && { defaultProjectKey }),
         },
         server: { port: 7010, host: '127.0.0.1', open: true, auth: false, allowWrite: false },
-        // editor omitted → files open with the OS default; set it for exact-line jumps.
-        ide: { projectRoots: {} },
         logging: { level: 'info' },
       };
 

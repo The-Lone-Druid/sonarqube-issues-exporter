@@ -1,10 +1,12 @@
 import { serve } from '@hono/node-server';
 import { randomBytes } from 'node:crypto';
+import { join } from 'node:path';
 import { createServer } from 'node:net';
 import type { AppConfig } from '../core/types';
 import { logger } from '../core/logger';
 import { createApp } from './app';
 import { createServerContext } from './context';
+import { initDiskCache, warmFromDisk } from './cache';
 
 export interface StartServerOptions {
   config: AppConfig;
@@ -51,6 +53,10 @@ export async function startServer(options: StartServerOptions): Promise<RunningS
   const useAuth = options.auth ?? config.server.auth;
   const port = await findFreePort(options.port ?? config.server.port, host);
   const authToken = useAuth ? randomBytes(16).toString('hex') : undefined;
+
+  const cacheDir = join(process.env['HOME'] ?? '.', '.sq-exporter', 'cache');
+  initDiskCache(cacheDir);
+  warmFromDisk();
 
   const ctx = createServerContext(config, { port, ...(authToken && { authToken }) });
   const app = createApp(ctx);

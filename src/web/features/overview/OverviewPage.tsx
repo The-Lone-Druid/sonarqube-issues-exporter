@@ -27,7 +27,7 @@ export function OverviewPage() {
     <div className="flex flex-col gap-6">
       <QualityGateBanner status={qualityGate} />
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6 stagger-children">
         <MetricCard
           label="Bugs"
           value={formatNumber(types['BUG'] ?? 0)}
@@ -77,8 +77,8 @@ export function OverviewPage() {
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card>
+      <div className="grid gap-4 lg:grid-cols-3 stagger-children">
+        <Card className="animate-fade-in-up">
           <CardHeader>
             <CardTitle>Issues by Severity</CardTitle>
           </CardHeader>
@@ -86,7 +86,7 @@ export function OverviewPage() {
             <BreakdownBar data={issues.severities} colors={SEVERITY_COLORS} />
           </CardContent>
         </Card>
-        <Card>
+        <Card className="animate-fade-in-up">
           <CardHeader>
             <CardTitle>Issues by Type</CardTitle>
           </CardHeader>
@@ -94,7 +94,7 @@ export function OverviewPage() {
             <BreakdownDonut data={issues.types} colors={TYPE_COLORS} />
           </CardContent>
         </Card>
-        <Card>
+        <Card className="animate-fade-in-up">
           <CardHeader>
             <CardTitle>Issues by Status</CardTitle>
           </CardHeader>

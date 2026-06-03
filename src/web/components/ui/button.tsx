@@ -7,8 +7,10 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANTS: Record<NonNullable<ButtonProps['variant']>, string> = {
-  default: 'bg-primary text-primary-foreground hover:opacity-90',
-  outline: 'border border-border bg-transparent hover:bg-accent',
+  default:
+    'bg-primary text-primary-foreground hover:opacity-90 shadow-sm shadow-primary/20',
+  outline:
+    'border border-border bg-transparent hover:bg-accent hover:border-primary/30',
   ghost: 'bg-transparent hover:bg-accent',
 };
 
@@ -26,7 +28,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     <button
       ref={ref}
       className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors disabled:pointer-events-none disabled:opacity-50',
+        'inline-flex items-center justify-center gap-2 rounded-md font-medium',
+        'transition-all duration-150 active:scale-95',
+        'disabled:pointer-events-none disabled:opacity-50',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         VARIANTS[variant],
         SIZES[size],

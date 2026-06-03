@@ -281,15 +281,6 @@ export interface NewCodePeriod {
   effectiveValue?: string;
 }
 
-// ── IDE deep-linking ─────────────────────────────────────────────────────────
-
-export interface IdeResolution {
-  absPath: string;
-  line: number;
-  urls: { vscode: string; cursor: string; windsurf: string; idea: string };
-  jetbrainsRest: string;
-}
-
 // ── Computed metrics (UI/report) ─────────────────────────────────────────────
 
 export interface IssueMetrics {
@@ -306,20 +297,7 @@ export interface IssueMetrics {
 export interface AppConfig {
   sonarqube: SonarQubeSettings;
   server: ServerConfig;
-  ide: IdeConfig;
   logging: LoggingConfig;
-}
-
-export type EditorId = 'vscode' | 'cursor' | 'windsurf' | 'jetbrains';
-
-export interface IdeConfig {
-  /**
-   * Optional preferred editor for exact-line "Open in IDE". When unset, files
-   * open with the OS default application (no line positioning).
-   */
-  editor?: EditorId;
-  /** Optional per-project absolute local repo roots (project key → path). */
-  projectRoots?: Record<string, string>;
 }
 
 export interface SonarQubeSettings {

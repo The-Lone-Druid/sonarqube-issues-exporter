@@ -1,12 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import type {
-  AppConfig,
-  ConfigLoadOptions,
-  DeepPartial,
-  EditorId,
-  SonarQubeConnection,
-} from './types';
+import type { AppConfig, ConfigLoadOptions, DeepPartial, SonarQubeConnection } from './types';
 
 const CONFIG_FILE_NAMES = ['.sonarqube-exporter.json', 'sonarqube-exporter.config.json'];
 
@@ -55,12 +49,6 @@ function getDefaultConfig(): AppConfig {
       auth: process.env['SQ_AUTH'] === 'true',
       allowWrite: process.env['SQ_ALLOW_WRITE'] === 'true',
     },
-    ide: {
-      // No default editor → OS-default open; set SQ_EDITOR for exact-line jumps.
-      ...(process.env['SQ_EDITOR'] && {
-        editor: process.env['SQ_EDITOR'] as EditorId,
-      }),
-    },
     logging: {
       level: (process.env['LOG_LEVEL'] as AppConfig['logging']['level']) || 'info',
     },
@@ -71,7 +59,6 @@ function getDefaultConfig(): AppConfig {
 interface LegacyConfigShape {
   sonarqube?: { url?: string; token?: string; organization?: string; projectKey?: string };
   server?: Partial<AppConfig['server']>;
-  ide?: Partial<AppConfig['ide']>;
   logging?: Partial<AppConfig['logging']>;
 }
 
@@ -85,7 +72,6 @@ function mergeFileConfig(base: AppConfig, file: LegacyConfigShape): AppConfig {
       ...(file.sonarqube?.projectKey != null && { defaultProjectKey: file.sonarqube.projectKey }),
     },
     server: { ...base.server, ...file.server },
-    ide: { ...base.ide, ...file.ide },
     logging: { ...base.logging, ...file.logging },
   };
 }
@@ -94,7 +80,6 @@ function mergeOverrides(base: AppConfig, overrides: DeepPartial<AppConfig>): App
   return {
     sonarqube: { ...base.sonarqube, ...overrides.sonarqube },
     server: { ...base.server, ...overrides.server },
-    ide: { ...base.ide, ...overrides.ide },
     logging: { ...base.logging, ...overrides.logging },
   };
 }

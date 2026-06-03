@@ -1,8 +1,6 @@
-import { join } from 'node:path';
 import { Hono } from 'hono';
 import type { Context } from 'hono';
-import type { IdeResolution, IssueFilters } from '../../core/types';
-import { extractPath } from '../../core/format';
+import type { IssueFilters } from '../../core/types';
 import {
   assignIssue,
   changeHotspotStatus,
@@ -90,12 +88,6 @@ export function createApiRoutes(ctx: ServerContext): Hono {
         defaultProjectKey: ctx.config.sonarqube.defaultProjectKey,
       }),
       allowWrite: ctx.config.server.allowWrite,
-      ide: {
-        editor: ctx.config.ide.editor,
-        hasProjectRoots: Boolean(
-          ctx.config.ide.projectRoots && Object.keys(ctx.config.ide.projectRoots).length > 0,
-        ),
-      },
     }),
   );
 
@@ -326,63 +318,6 @@ export function createApiRoutes(ctx: ServerContext): Hono {
       );
     }),
   );
-
-  // Map a SonarQube component to a local absolute path (cwd default + override).
-  const resolveAbsPath = (project: string | undefined, component: string): string => {
-    const roots = ctx.config.ide.projectRoots ?? {};
-    const root = (project && roots[project]) || process.cwd();
-    return join(root, extractPath(component));
-  };
-
-  // Resolve a SonarQube component to a local file + editor deep-links.
-  api.get('/ide/resolve', (c) =>
-    handle(c, async () => {
-      const project = c.req.query('project');
-      const component = c.req.query('component');
-      if (!component) throw new Error('Missing required query param: component');
-      const line = Math.max(1, Number(c.req.query('line') ?? '1'));
-
-      const absPath = resolveAbsPath(project, component);
-      const fileEnc = encodeURIComponent(absPath);
-
-      const resolution: IdeResolution = {
-        absPath,
-        line,
-        urls: {
-          vscode: `vscode://file/${absPath}:${line}:1`,
-          cursor: `cursor://file/${absPath}:${line}:1`,
-          windsurf: `windsurf://file/${absPath}:${line}:1`,
-          idea: `idea://open?file=${fileEnc}&line=${line}`,
-        },
-        jetbrainsRest: `http://localhost:63342/api/file?file=${fileEnc}&line=${line}`,
-      };
-      return resolution;
-    }),
-  );
-
-  // Open a file with the OS default application (no editor configuration needed).
-  api.post('/ide/open', async (c) => {
-    let body: { project?: string; component?: string } = {};
-    try {
-      body = await c.req.json();
-    } catch {
-      /* empty */
-    }
-    if (!body.component) {
-      return c.json({ error: 'bad_request', message: 'component is required' }, 400);
-    }
-    const absPath = resolveAbsPath(body.project, body.component);
-    try {
-      const open = (await import('open')).default;
-      await open(absPath);
-      return c.json({ ok: true, absPath });
-    } catch (error) {
-      return c.json(
-        { error: 'open_failed', message: error instanceof Error ? error.message : String(error) },
-        500,
-      );
-    }
-  });
 
   registerWriteRoutes(api, ctx);
 

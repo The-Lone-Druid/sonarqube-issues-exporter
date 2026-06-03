@@ -5,9 +5,8 @@ import { useSelection } from '../../hooks/use-selection';
 import { useRefresh, useSummary } from '../../hooks/use-queries';
 import { formatRelative } from '../../lib/format';
 import { BranchPrSelector, ProjectSwitcher } from './selectors';
-import { ExportPdfButton } from './ExportPdfButton';
+import { ExportMenu } from './ExportMenu';
 import { NewCodeToggle } from './NewCodeToggle';
-import { EditorPicker } from './EditorPicker';
 import { cn } from '../../lib/utils';
 
 export function Topbar() {
@@ -17,7 +16,7 @@ export function Topbar() {
   const summary = useSummary(project, ref, newCode);
 
   return (
-    <header className="no-print sticky top-0 z-10 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur">
+    <header className="no-print sticky top-0 z-10 flex h-14 items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur-md [background:linear-gradient(to_right,var(--background)/90,var(--background)/95)]">
       <ProjectSwitcher />
       <BranchPrSelector />
       <NewCodeToggle />
@@ -28,8 +27,7 @@ export function Topbar() {
             Updated {formatRelative(new Date(summary.dataUpdatedAt).toISOString())}
           </span>
         )}
-        <EditorPicker />
-        <ExportPdfButton />
+        <ExportMenu />
         <Button
           variant="outline"
           size="icon"

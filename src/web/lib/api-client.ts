@@ -1,8 +1,6 @@
 import type {
   Branch,
-  EditorId,
   HotspotDetail,
-  IdeResolution,
   IssueChangelogEntry,
   ProjectMeasures,
   ProjectsPage,
@@ -20,7 +18,6 @@ export interface AppConfigInfo {
   hasToken: boolean;
   defaultProjectKey?: string;
   allowWrite: boolean;
-  ide: { editor?: EditorId; hasProjectRoots: boolean };
 }
 
 export interface IssueFilterFacets {
@@ -223,18 +220,6 @@ export const api = {
 
   hotspotDetail: (hotspotKey: string) =>
     request<HotspotDetail | null>(`/api/hotspots/${enc(hotspotKey)}`),
-
-  ideResolve: (projectKey: string, component: string, ref: Ref, line: number) =>
-    request<IdeResolution>('/api/ide/resolve', {
-      params: { project: projectKey, component, ...refParams(ref), line: String(line) },
-    }),
-
-  /** Open a file with the OS default application (no editor configured). */
-  ideOpen: (projectKey: string, component: string) =>
-    postJson<{ ok: boolean; absPath: string }>('/api/ide/open', {
-      project: projectKey,
-      component,
-    }),
 
   // ── write actions (require `serve --allow-write`) ──────────────────────────
   issueTransition: (key: string, transition: string) =>

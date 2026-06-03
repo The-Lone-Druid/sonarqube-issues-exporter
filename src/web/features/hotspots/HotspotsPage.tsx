@@ -97,8 +97,6 @@ export function HotspotsPage() {
       {project && (
         <HotspotDetailSheet
           hotspotKey={activeKey}
-          project={project}
-          refSel={ref}
           allowWrite={Boolean(config?.allowWrite)}
           onClose={() => setActiveKey(null)}
         />

@@ -6,7 +6,6 @@ import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { SeverityBadge, StatusBadge, TypeBadge } from '../../components/shared/badges';
 import { SafeHtml } from '../../components/shared/SafeHtml';
-import { OpenInIde } from '../../components/shared/OpenInIde';
 import { Loading } from '../../components/shared/states';
 import { useChangelog, useRule, useScm, useSource } from '../../hooks/use-queries';
 import { filePath, formatDate } from '../../lib/format';
@@ -30,7 +29,7 @@ export function IssueDetailSheet({ issue, project, refSel, allowWrite, onClose }
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative z-10 flex h-full w-full max-w-2xl flex-col overflow-hidden border-l border-border bg-card shadow-xl">
+      <div className="relative z-10 flex h-full w-full max-w-2xl flex-col overflow-hidden border-l border-border bg-card shadow-2xl animate-slide-in-right">
         <div className="flex items-start justify-between gap-3 border-b border-border p-5">
           <div className="min-w-0">
             <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -39,14 +38,8 @@ export function IssueDetailSheet({ issue, project, refSel, allowWrite, onClose }
               <StatusBadge value={issue.status} />
             </div>
             <p className="text-sm font-medium leading-snug">{issue.message}</p>
-            <div className="mt-1 flex items-center gap-2">
-              <OpenInIde
-                project={project}
-                component={issue.component}
-                ref={refSel}
-                line={issue.line ?? 1}
-                label={`${filePath(issue.component)}${issue.line ? `:${issue.line}` : ''}`}
-              />
+            <div className="mt-1 font-mono text-xs text-muted-foreground">
+              {filePath(issue.component)}{issue.line ? `:${issue.line}` : ''}
             </div>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close">

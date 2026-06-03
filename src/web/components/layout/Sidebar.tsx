@@ -25,27 +25,34 @@ const EXTERNAL_LINKS = [
 export function Sidebar() {
   return (
     <aside className="no-print hidden w-56 shrink-0 border-r border-border bg-card md:flex md:flex-col">
-      <div className="flex h-14 items-center gap-2 border-b border-border px-5">
-        <div className="h-2.5 w-2.5 rounded-full bg-primary" />
-        <span className="text-sm font-semibold">SQ Exporter</span>
+      <div className="flex h-14 items-center gap-2.5 border-b border-border px-5">
+        <div className="h-2.5 w-2.5 rounded-full bg-primary shadow-[0_0_8px_var(--primary)]" />
+        <span className="text-sm font-semibold tracking-tight">SQ Exporter</span>
         <span className="ml-auto text-xs text-muted-foreground">v{__APP_VERSION__}</span>
       </div>
-      <nav className="flex flex-col gap-1 p-3">
+      <nav className="flex flex-col gap-0.5 p-3">
         {NAV.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
+                'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-150',
                 isActive
                   ? 'bg-primary/10 font-medium text-primary'
                   : 'text-muted-foreground hover:bg-accent hover:text-foreground',
               )
             }
           >
-            <Icon className="h-4 w-4" />
-            {label}
+            {({ isActive }) => (
+              <>
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r-full bg-primary" />
+                )}
+                <Icon className="h-4 w-4 shrink-0" />
+                {label}
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
@@ -56,7 +63,7 @@ export function Sidebar() {
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-all duration-150 hover:bg-accent hover:text-foreground"
           >
             <Icon className="h-4 w-4" />
             {label}
