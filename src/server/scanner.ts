@@ -22,6 +22,8 @@ export interface ScanOptions {
   cwd: string;
   serverUrl: string;
   token: string;
+  /** Required for SonarCloud; optional for self-hosted SonarQube. */
+  organization?: string;
 }
 
 const MAX_LOGS = 400;
@@ -112,6 +114,8 @@ async function runScanner(options: ScanOptions, branch?: string): Promise<void> 
     'sonar.token': options.token,
     'sonar.projectBaseDir': options.cwd,
   };
+
+  if (options.organization) sonarOptions['sonar.organization'] = options.organization;
 
   if (!hasProps) {
     sonarOptions['sonar.projectKey'] = options.projectKey;

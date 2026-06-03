@@ -332,6 +332,7 @@ program
         serverUrl: config.sonarqube.url,
         token: config.sonarqube.token,
         ...(flags.branch && { branch: flags.branch }),
+        ...(config.sonarqube.organization && { organization: config.sonarqube.organization }),
       });
 
       // Poll until the scan finishes, printing new log lines as they arrive.

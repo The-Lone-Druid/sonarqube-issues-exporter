@@ -527,6 +527,7 @@ function registerWriteRoutes(api: Hono, ctx: ServerContext): void {
         serverUrl: ctx.conn.url,
         token: ctx.conn.token,
         ...(payload.branch && { branch: payload.branch }),
+        ...(ctx.conn.organization && { organization: ctx.conn.organization }),
       });
       return c.json({ ok: true });
     } catch (err) {
