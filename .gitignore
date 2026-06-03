@@ -44,3 +44,4 @@ coverage/
 # Config files (should use examples)
 /config.json
 .scannerwork
+.sonarqube-exporter.json
